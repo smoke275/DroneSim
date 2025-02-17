@@ -1,0 +1,27 @@
+world:
+  maze: data/maze.csv
+  num_evs: 6
+  num_tasks: 35
+  num_uavs_per_bs: 2
+  num_base_stations: 4
+
+ev:
+  range: 1700
+
+uav:
+  range: 2000
+  speed: 3
+
+# world:
+#   maze: data/test_maze.csv
+#   num_evs: 1
+#   num_tasks: 2
+#   num_uavs_per_bs: 2
+#   num_base_stations: 4
+
+# ev:
+#   range: 3000
+
+# uav:
+#   range: 2000
+#   speed: 3

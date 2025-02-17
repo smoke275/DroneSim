@@ -5,7 +5,7 @@ from multiprocessing import Queue, Process
 
 import uvicorn
 
-import drone_sim
+import console
 
 # This is a sample Python script.
 
@@ -14,7 +14,7 @@ import drone_sim
 
 # Press the green button in the gutter to run the script.
 if __name__ == '__main__':
-    drone_sim.startup()
+    console.startup()
 
 
 # See PyCharm help at https://www.jetbrains.com/help/pycharm/
