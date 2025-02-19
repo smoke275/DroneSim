@@ -28,7 +28,7 @@ SEARCH = False
 END = False
 CAPTURE = True
 
-ITERATIONS = 10000
+ITERATIONS = 2
 sem = threading.Semaphore()
 BOUNDARY_X = 500
 BOUNDARY_Y = 500
@@ -62,19 +62,16 @@ drone_offsets = [(random.uniform(-10, 10), random.uniform(-10, 10)) for _ in ran
 
 class Window(QMainWindow):
 
-    def __init__(self, world=None, lmd=None, bms=None):
+    def __init__(self, config):
         super().__init__()
 
         self.title = "Simulation"
+        self.config = config
 
         self.action_stack = []
         self.main_stack = []
         self.permanent_elements = []
         
-        # Load config
-        with open("config/world1.yaml", "r") as file:
-            config = yaml.safe_load(file)
-
         # Load and scale down the truck image
         truck_image = QtGui.QPixmap('truck.png')
         self.scaled_truck_image = truck_image.scaled(40, 40, Qt.KeepAspectRatio)
@@ -84,10 +81,7 @@ class Window(QMainWindow):
         self.scaled_drone_image = drone_image.scaled(50, 50, Qt.KeepAspectRatio)  # Scale to 30x30 pixels
         
         # If no external world is provided, create one
-        if world:
-            self.world = world
-        else:
-            self.world = World(config)
+        self.world = World(config)
         
         self.InitWindow()
 
@@ -501,21 +495,22 @@ class Window(QMainWindow):
         self.previous_positions = []
 
         print("Starting Simulation")
-        logged_flag = False
+        final_frame = None
         for frame in range(ITERATIONS):
             # Step the simulation
             self.world.simulate(timesteps=1)
 
             # Fetch updated state
             world_state = self.world.get_world_state()
-            if not logged_flag:
-                if world_state["tasks_completed_flag"]:
-                    with open("runs/last.txt", 'w') as f:
-                        f.write(f"{frame}\n")
-                    logged_flag = True
+            if world_state["tasks_completed_flag"]:
+                final_frame = frame
+                break
 
             # Render it
             self.draw_state(world_state, self.cell_size/120)
+        
+        with open("runs/results.csv", 'a') as f:
+            f.write(f"{self.config["world"]["num_evs"]},{self.config["world"]["num_tasks"]},{self.config["ev"]["range"]},{final_frame}\n")
 
 def get_color(v):
     x = v % 8
@@ -542,13 +537,13 @@ def get_color(v):
     else:
         return Qt.darkGray
 
-def startup(world=None, lmd=None, bms=None):
+def startup(config):
     """
     Entry point that creates the Window, starts the PyQt event loop,
     and runs the simulation in a separate thread.
     """
     App = QApplication(sys.argv)
-    window = Window(world, lmd, bms)
+    window = Window(config)
     x = threading.Thread(target=window.run, args=())
     x.start()
     sys.exit(App.exec())

@@ -215,7 +215,7 @@ class World:
     def simulate(self, timesteps=1):
         for _ in range(timesteps):
             self.lmd_simulate()
-            self.bms_simulate()
+            # self.bms_simulate()
             if not self.tasks_completed_flag:
                 check = True
                 for i in self.patrol_paths:
