@@ -14,7 +14,7 @@ from world_1.world import World
 # Number of timesteps to iterate unless tasks complete earlier
 ITERATIONS = 1000
 
-def startup(config):
+def startup(config, output_file):
     """
     Runs a console-only simulation (no GUI) for performance logging.
     
@@ -29,6 +29,7 @@ def startup(config):
 
     # print("Starting simulation in console mode...")
     final_frame = ITERATIONS  # Default to the last iteration if tasks never complete
+    num_tasks_completed = None
     
     for frame in range(ITERATIONS):
         # Step the simulation by 1 timestep (or more, if desired)
@@ -38,13 +39,15 @@ def startup(config):
         world_state = world.get_world_state()
         if world_state.get("tasks_completed_flag", False):
             final_frame = frame
+            num_tasks_completed = world_state["completed_tasks"]
             break
 
     # Append performance results to a CSV file
-    with open("runs/lmd_results.csv", "a") as f:
+    with open(output_file, "a") as f:
         f.write(
             f"{config['world']['num_evs']},"
             f"{config['world']['num_tasks']},"
             f"{config['ev']['range']},"
-            f"{final_frame}\n"
+            f"{final_frame},"
+            f"{num_tasks_completed}\n"
         )

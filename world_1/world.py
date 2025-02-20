@@ -92,6 +92,7 @@ class World:
             "active_tasks": self.active_tasks,
             "drone_positions": self.drone_positions,
             "drone_status": self.drone_status,
+            "completed_tasks": self.completed_tasks
         }
 
     def initialize(self, edge_weight):
@@ -134,16 +135,16 @@ class World:
         # print("-----------------------------------------\n\n")
 
         # Determine how many tasks to pick
-        tasks_df = self.df_maze.sample(self.num_tasks, random_state=47)[['row', 'col']]
+        tasks_df = self.df_maze.sample(self.num_tasks)[['row', 'col']]
         task_list = []
         for t in tasks_df.values.tolist():  # e.g. t = [np.int64(15), np.int64(13)]
             task_list.append( (int(t[0]), int(t[1])) )  # cast to (int, int)
         self.all_tasks = task_list
         # Cluster tasks
-        kmeans = KMeans(n_clusters=self.num_patrols, random_state=47).fit(self.all_tasks)
+        kmeans = KMeans(n_clusters=self.num_patrols).fit(self.all_tasks)
         task_clusters = kmeans.labels_
-        print("All tasks", self.all_tasks)
-        print("-----------------------------------------\n\n")
+        # print("All tasks", self.all_tasks)
+        # print("-----------------------------------------\n\n")
 
         # Clear and assign tasks to each patrol
         self.completed_tasks = [set() for _ in range(self.num_patrols)]
@@ -204,13 +205,14 @@ class World:
         self.recharge_request = [0 for _ in range(self.num_patrols)]
 
         self.tasks_completed_flag = False
+        self.completed_tasks = 0
 
         # Update the initial world_state
         self._update_world_state()
-        print("-----------------------------------------\n\n")
-        print("Clusters", self.patrol_tasks)
-        self.print_world_state()
-        print("-----------------------------------------\n\n")
+        # print("-----------------------------------------\n\n")
+        # print("Clusters", self.patrol_tasks)
+        # self.print_world_state()
+        # print("-----------------------------------------\n\n")
 
     def simulate(self, timesteps=1):
         for _ in range(timesteps):
@@ -227,10 +229,10 @@ class World:
                     self.tasks_completed_flag = True
             self.world_state["tasks_completed_flag"] = self.tasks_completed_flag
 
-            print("-----------------------------------------\n\n")
-            print("Clusters", self.patrol_tasks)
-            self.print_world_state()
-            print("-----------------------------------------\n\n")
+            # print("-----------------------------------------\n\n")
+            # print("Clusters", self.patrol_tasks)
+            # self.print_world_state()
+            # print("-----------------------------------------\n\n")
 
     def bms_simulate(self):
         """
@@ -411,11 +413,12 @@ class World:
                     if final_task is not None:
                         # Remove final_task from patrol_tasks
                         if final_task in self.patrol_tasks[i]:
+                            self.completed_tasks += 1
                             final_task_idx = self.patrol_tasks[i].index(final_task)
                             self.patrol_tasks[i].remove(final_task)
                             self.backcost[i].pop(final_task_idx)
-                            # if random.random()<0.9:
-                            if True:
+                            if random.random()<0.9:
+                            # if True:
                                 self.recharge_request[i] = 1
                         
                         elif final_task==self.warehouse_pos:
@@ -481,7 +484,8 @@ class World:
     def print_world_state(self):
         """
         Prints the current world state for debugging purposes, including patrol (EV) and drone information,
-        plus info about recharge requests, assigned EVs for each drone, and distance to assigned EV.
+        plus info about recharge requests, assigned EVs for each drone, distance to assigned EV,
+        and the number of tasks completed vs. tasks remaining.
         """
 
         def _distance(p1, p2):
@@ -489,6 +493,13 @@ class World:
 
         print("\n===== WORLD STATE =====")
         print(f"Number of Patrols (EVs): {self.world_state['num_patrols']}")
+
+        # Display tasks completed and tasks left
+        # Completed tasks count is stored in self.completed_tasks.
+        # Tasks left is computed by summing the remaining tasks in each patrol's list.
+        remaining_tasks = sum(len(tasks) for tasks in self.patrol_tasks)
+        print(f"Total Tasks Completed: {self.completed_tasks}")
+        print(f"Total Tasks Left: {remaining_tasks}")
 
         # 1. Show which EVs are requesting recharge
         requesting_evs = [i+1 for i, req in enumerate(self.recharge_request) if req == 1]
@@ -537,13 +548,11 @@ class World:
                     ev_pos = self.world_state['patrol_positions'][assigned_ev_idx]
                     dist_to_ev = _distance(pos, ev_pos)
                     dist_str = f", Dist to EV: {dist_to_ev:.2f}"
-            print(f"  Drone {d_idx+1}: "
-                f"Position = {pos}, "
-                f"Status = {status_str}, "
-                f"Assigned EV = {assigned_ev_str}, "
-                f"Battery = {battery:.2f}/{self.B}{dist_str}")
+            print(f"  Drone {d_idx+1}: Position = {pos}, Status = {status_str}, "
+                f"Assigned EV = {assigned_ev_str}, Battery = {battery:.2f}/{self.B}{dist_str}")
 
         print("======================\n")
+
 
 
 

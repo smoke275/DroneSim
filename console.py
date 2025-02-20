@@ -28,7 +28,7 @@ SEARCH = False
 END = False
 CAPTURE = True
 
-ITERATIONS = 2
+ITERATIONS = 1000
 sem = threading.Semaphore()
 BOUNDARY_X = 500
 BOUNDARY_Y = 500
@@ -62,15 +62,19 @@ drone_offsets = [(random.uniform(-10, 10), random.uniform(-10, 10)) for _ in ran
 
 class Window(QMainWindow):
 
-    def __init__(self, config):
+    def __init__(self):
         super().__init__()
 
         self.title = "Simulation"
-        self.config = config
 
         self.action_stack = []
         self.main_stack = []
         self.permanent_elements = []
+
+        # Load config
+        with open("config/world1.yaml", "r") as file:
+            config = yaml.safe_load(file)
+        self.config = config
         
         # Load and scale down the truck image
         truck_image = QtGui.QPixmap('truck.png')
@@ -219,6 +223,8 @@ class Window(QMainWindow):
     def keyPressEvent(self, e: QtGui.QKeyEvent) -> None:
         if e.key() == Qt.Key_Escape:
             self.close()
+        if e.key() == Qt.Key_Return:
+            self.tmp = 1
 
     def draw_maze(self, df_maze, base_stations):
         """
@@ -325,14 +331,13 @@ class Window(QMainWindow):
                         [y - size / 2, y - size / 2, y + size / 2, y + size / 2],
                         1, get_color(7)])
 
-    def draw_state(self, world_state, velocity=None):
+    def draw_state(self, world_state, T=120):
         """
         Unpacks the relevant fields from world_state and draws EV positions, paths, tasks, and battery.
         Note: The values in patrol_positions, patrol_paths, and active_tasks are in cell coordinates,
         so we convert them to canvas coordinates first.
         """
-        if velocity is None:
-            velocity = self.cell_size/120
+        velocity = self.cell_size/T
 
         num_patrols = world_state["num_patrols"]
         if len(self.previous_positions) == 0:
@@ -352,7 +357,7 @@ class Window(QMainWindow):
         # If patrol_colors are already valid PyQt colors, you can skip this.
         patrol_colors = [get_color(i) for i in patrol_colors]
         
-        for t in range(120):
+        for t in range(T):
             # 1) Draw current tasks as filled circles in canvas coords
             task_size = 5
             for idx, task in enumerate(active_tasks):
@@ -470,7 +475,7 @@ class Window(QMainWindow):
                 self.draw([OPERATION.image, top_left_x, top_left_y, self.scaled_drone_image])
             
             self.execute()
-            time.sleep(1 / 120)
+            time.sleep(1 / T)
 
 
     def run(self):
@@ -496,7 +501,10 @@ class Window(QMainWindow):
 
         print("Starting Simulation")
         final_frame = None
+        self.tmp = 1
         for frame in range(ITERATIONS):
+            print("Frame Number:", frame+1)
+            self.tmp = 0
             # Step the simulation
             self.world.simulate(timesteps=1)
 
@@ -507,7 +515,9 @@ class Window(QMainWindow):
                 break
 
             # Render it
-            self.draw_state(world_state, self.cell_size/120)
+            self.draw_state(world_state, 120)
+            while self.tmp == 0:
+                time.sleep(1)
         
         with open("runs/results.csv", 'a') as f:
             f.write(f"{self.config["world"]["num_evs"]},{self.config["world"]["num_tasks"]},{self.config["ev"]["range"]},{final_frame}\n")
@@ -537,13 +547,13 @@ def get_color(v):
     else:
         return Qt.darkGray
 
-def startup(config):
+def startup():
     """
     Entry point that creates the Window, starts the PyQt event loop,
     and runs the simulation in a separate thread.
     """
     App = QApplication(sys.argv)
-    window = Window(config)
+    window = Window()
     x = threading.Thread(target=window.run, args=())
     x.start()
     sys.exit(App.exec())
