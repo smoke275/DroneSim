@@ -19,6 +19,10 @@ import pandas as pd
 import networkx as nx
 from sklearn.cluster import KMeans
 import yaml
+import tkinter as tk
+
+# Monkey-patch the 'zoomed' state to 'normal'
+tk.Tk.state = lambda self, s=None: self.wm_state('normal' if s == 'zoomed' else s)
 
 from world_1.world import World  # Adjust the import path to your actual project structure
 

@@ -48,6 +48,8 @@ def startup(config, output_file):
             f"{config['world']['num_evs']},"
             f"{config['world']['num_tasks']},"
             f"{config['ev']['range']},"
+            f"{config["world"]["maze_loop_percentage"]},"
+            f"{config["world"]["maze_size"]},"
             f"{final_frame},"
             f"{num_tasks_completed}\n"
         )

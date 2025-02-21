@@ -4,7 +4,8 @@ from server import startup
 if __name__ == '__main__':
     config = {
         "world": {
-            "maze": "data/maze.csv",
+            "maze_size": 35,
+            "maze_loop_percentage": 80,
             "num_evs": 6,
             "num_tasks": 35,
             "num_uavs_per_bs": 2,
@@ -22,6 +23,8 @@ if __name__ == '__main__':
     evs_range = range(4, 21)  # 5 to 10 inclusive
     tasks_range = range(20,101)  # 35 to 50 inclusive
     R_range = range(100,3001,10)  # 1500 to 3000 inclusive, step 100
+    maze_size_range = range(35,51)
+    maze_loop_percentage = range(60,91,5)
 
     epochs_per_param = 100
 
@@ -33,14 +36,18 @@ if __name__ == '__main__':
     total_iterations = len(evs_range) * len(tasks_range) * len(R_range)
     current = 1
 
-    for num_evs in evs_range:
-        for num_tasks in tasks_range:
-            for ev_range in R_range:
-                print(f"Iteration {current}/{total_iterations}: Num EVs: {num_evs}, Num Tasks: {num_tasks}, EV Range: {ev_range}")
-                for epoch in range(epochs_per_param):
-                    print("Epoch:", epoch)
-                    config["world"]["num_evs"] = num_evs
-                    config["world"]["num_tasks"] = num_tasks
-                    config["ev"]["range"] = ev_range
-                    startup(config, output_file)
-                    current += 1
+    for maze_size in maze_size_range:
+        for loop_per in maze_loop_percentage:
+            for num_evs in evs_range:
+                for num_tasks in tasks_range:
+                    for ev_range in R_range:
+                        print(f"Iteration {current}/{total_iterations}: Num EVs: {num_evs}, Num Tasks: {num_tasks}, EV Range: {ev_range}")
+                        for epoch in range(epochs_per_param):
+                            print("Epoch:", epoch)
+                            config["world"]["num_evs"] = num_evs
+                            config["world"]["num_tasks"] = num_tasks
+                            config["ev"]["range"] = ev_range
+                            config["world"]["maze_loop_percentage"] = loop_per
+                            config["world"]["maze_size"] = maze_size
+                            startup(config, output_file)
+                            current += 1

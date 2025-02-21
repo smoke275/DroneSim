@@ -1,12 +1,14 @@
 world:
   maze: data/maze.csv
-  num_evs: 8
-  num_tasks: 40
+  num_evs: 3
+  num_tasks: 5
   num_uavs_per_bs: 2
   num_base_stations: 4
+  maze_loop_percentage: 10
+  maze_size: 10
 
 ev:
-  range: 3000
+  range: 30000
 
 uav:
   range: 3000

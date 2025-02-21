@@ -3,10 +3,38 @@ import networkx as nx
 from sklearn.cluster import KMeans
 import random
 import math
+from pyamaze import maze
 
 # Helper distance function
 def _distance(p1, p2):
     return math.sqrt((p1[0] - p2[0])**2 + (p1[1] - p2[1])**2)
+
+def generate_df_maze(rows=20, cols=20, lp=80):
+    # Create a Pyamaze maze
+    m = maze(rows, cols)
+    m.CreateMaze(loopPercent=lp)  # No loops to match a grid-like maze
+
+    # List to store cell data
+    maze_data = []
+
+    # Loop through each cell in the maze
+    for y in range(1, rows + 1):
+        for x in range(1, cols + 1):
+            cell = (x, y)
+            cell_walls = m.maze_map[cell]  # Get wall info for each cell
+
+            # Convert to E, W, N, S format (0 for wall, 1 for no wall)
+            E = 1 if cell_walls['E'] else 0
+            W = 1 if cell_walls['W'] else 0
+            N = 1 if cell_walls['N'] else 0
+            S = 1 if cell_walls['S'] else 0
+
+            # Store cell information
+            maze_data.append([f"({x},{y})", E, W, N, S])
+
+    # Create DataFrame
+    df = pd.DataFrame(maze_data, columns=["  cell  ", "E", "W", "N", "S"])
+    return df
 
 class World:
     def __init__(self, config):
@@ -16,7 +44,7 @@ class World:
         """
 
         # Load the maze CSV as a DataFrame
-        self.df_maze = pd.read_csv(config['world']['maze'])
+        self.df_maze = generate_df_maze(config["world"]["maze_size"], config["world"]["maze_size"], config["world"]["maze_loop_percentage"])
         # Ensure row/col are parsed from the 'cell' column if needed
         if '  cell  ' in self.df_maze.columns:
             self.df_maze[['row', 'col']] = (
@@ -92,7 +120,8 @@ class World:
             "active_tasks": self.active_tasks,
             "drone_positions": self.drone_positions,
             "drone_status": self.drone_status,
-            "completed_tasks": self.completed_tasks
+            "completed_tasks": self.completed_tasks,
+            "tasks_completed_flag": self.tasks_completed_flag
         }
 
     def initialize(self, edge_weight):
@@ -206,13 +235,14 @@ class World:
 
         self.tasks_completed_flag = False
         self.completed_tasks = 0
+        self.world_state["tasks_completed_flag"] = self.tasks_completed_flag
 
         # Update the initial world_state
         self._update_world_state()
-        # print("-----------------------------------------\n\n")
-        # print("Clusters", self.patrol_tasks)
-        # self.print_world_state()
-        # print("-----------------------------------------\n\n")
+        print("-----------------------------------------\n\n")
+        print("Clusters", self.patrol_tasks)
+        self.print_world_state()
+        print("-----------------------------------------\n\n")
 
     def simulate(self, timesteps=1):
         for _ in range(timesteps):
@@ -229,10 +259,10 @@ class World:
                     self.tasks_completed_flag = True
             self.world_state["tasks_completed_flag"] = self.tasks_completed_flag
 
-            # print("-----------------------------------------\n\n")
-            # print("Clusters", self.patrol_tasks)
-            # self.print_world_state()
-            # print("-----------------------------------------\n\n")
+            print("-----------------------------------------\n\n")
+            print("Clusters", self.patrol_tasks)
+            self.print_world_state()
+            print("-----------------------------------------\n\n")
 
     def bms_simulate(self):
         """
@@ -493,6 +523,7 @@ class World:
 
         print("\n===== WORLD STATE =====")
         print(f"Number of Patrols (EVs): {self.world_state['num_patrols']}")
+        print(f"Tasks completed flag: {self.world_state["tasks_completed_flag"]}")
 
         # Display tasks completed and tasks left
         # Completed tasks count is stored in self.completed_tasks.
