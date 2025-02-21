@@ -40,16 +40,23 @@ def startup(config, output_file):
         if world_state.get("tasks_completed_flag", False):
             final_frame = frame
             num_tasks_completed = world_state["completed_tasks"]
+            ev_distance_traveled = world_state["ev_distance_traveled"]
+            drone_distance_traveled = world_state["drone_distance_traveled"]
             break
 
-    # Append performance results to a CSV file
+    bms = 1 if config['world']['bms'] else 0
+
     with open(output_file, "a") as f:
         f.write(
             f"{config['world']['num_evs']},"
             f"{config['world']['num_tasks']},"
             f"{config['ev']['range']},"
-            f"{config["world"]["maze_loop_percentage"]},"
-            f"{config["world"]["maze_size"]},"
+            f"{config['world']['maze_loop_percentage']},"
+            f"{config['world']['maze_size']},"
+            f"{bms},"
             f"{final_frame},"
-            f"{num_tasks_completed}\n"
+            f"{num_tasks_completed},"
+            f"{ev_distance_traveled},"
+            f"{drone_distance_traveled}\n"
         )
+
