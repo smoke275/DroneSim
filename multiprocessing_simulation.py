@@ -9,7 +9,7 @@ from server import startup  # Your existing function that runs one simulation
 # ------------------ CONFIGURATION ------------------
 
 # Ranges for the 'fixed' parameters
-NUM_EVS_RANGE       = range(4, 21)        # e.g., 4 to 20
+NUM_EVS_RANGE       = range(4, 21)        # e.g., 4 to 11
 NUM_TASKS_RANGE     = range(20, 101)        # e.g., 20 to 100
 EV_RANGE_RANGE      = range(500, 3001, 10)  # e.g., 100, 110, 120, ..., 3000
 
