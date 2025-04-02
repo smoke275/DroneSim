@@ -70,6 +70,9 @@ class World:
         self.B = config["uav"]["range"]
         self.drone_speed = config["uav"]["speed"]
 
+        self.task_completion_time = config["world"]["task_completion_time"]
+        self.swapping_time = config["uav"]["swapping_time"]
+
         bs_df = self.df_maze.sample(self.num_base_stations, random_state=47)[['row', 'col']]
         bs_list = []
         for t in bs_df.values.tolist():
@@ -119,12 +122,13 @@ class World:
             "tasks_completed_flag": self.tasks_completed_flag,
             # NEW: Add the distance metrics to world_state
             "ev_distance_traveled": self.total_ev_distance,
-            "drone_distance_traveled": self.total_drone_distance
+            "drone_distance_traveled": self.total_drone_distance,
+            "latest_tasks_completed": self.latest_tasks_completed
         }
 
     def initialize(self, edge_weight):
         self.edge_weight = edge_weight
-        tasks_df = self.df_maze.sample(self.num_tasks)[['row', 'col']]
+        tasks_df = self.df_maze[~((self.df_maze['row']==self.warehouse_pos[1])&(self.df_maze['col']==self.warehouse_pos[0]))].sample(self.num_tasks)[['row', 'col']]
         task_list = []
         for t in tasks_df.values.tolist():
             task_list.append( (int(t[0]), int(t[1])) )
@@ -141,6 +145,10 @@ class World:
         self.R_P = [i/self.R for i in self.R_D]
         self.patrol_paths = [[] for _ in range(self.num_patrols)]
         self.backcost = [[] for _ in range(self.num_patrols)]
+        self.patrol_centroids = kmeans.cluster_centers_.tolist()
+        self.latest_tasks_completed = []
+
+        self.patrol_pause = [self.task_completion_time for _ in range(self.num_patrols)]
 
         # NEW: Reset distances on init
         self.total_ev_distance = 0.0
@@ -179,6 +187,7 @@ class World:
         self.drone_status = []
         self.drone_battery = []
         self.drone_targets = []
+        self.drone_pause = []
         for i in range(self.num_base_stations):
             for _ in range(self.num_uavs):
                 x,y = self.base_stations[i]
@@ -187,19 +196,63 @@ class World:
                 self.drone_status.append(0)
                 self.drone_battery.append(self.B)
                 self.drone_targets.append(-1)
+                self.drone_pause.append(0)
 
         self.recharge_request = [0 for _ in range(self.num_patrols)]
         self.tasks_completed_flag = False
         self.world_state["tasks_completed_flag"] = self.tasks_completed_flag
 
         self._update_world_state()
-        # print("-----------------------------------------\n\n")
-        # print("Clusters", self.patrol_tasks)
-        # self.print_world_state()
-        # print("-----------------------------------------\n\n")
+        print("-----------------------------------------\n\n")
+        print("Clusters", self.patrol_tasks)
+        self.print_world_state()
+        print("-----------------------------------------\n\n")
 
     def simulate(self, timesteps=1):
         for _ in range(timesteps):
+            if len(self.all_tasks) < self.num_tasks:
+                ''' 1. spawn some tasks so the the total num of tasks is less than self.num_tasks
+                2. assign the new tasks to the "best" ugv by appending the new task to its task array. To find the "best" ugv for a new task, find the ugv whose tasks cluster centroid is closest to the new task.
+                3. After assigning all new tasks, update the centroid of each cluster
+                '''
+                # 1. Spawn new tasks
+                new_tasks_count = self.num_tasks - len(self.all_tasks)
+                new_tasks_df = self.df_maze[~((self.df_maze['row']==self.warehouse_pos[1])&(self.df_maze['col']==self.warehouse_pos[0]))].sample(new_tasks_count)
+                new_tasks = [tuple(row) for row in new_tasks_df[['row', 'col']].values.tolist()]
+                
+                # 2. Assign new tasks to UGVs
+                for task in new_tasks:
+                    closest_ugv = None
+                    min_dist = float('inf')
+                    for ugv_idx, pat_pos in enumerate(self.patrol_positions):
+                        dist = _distance(task, pat_pos)
+                        if dist < min_dist:
+                            min_dist = dist
+                            closest_ugv = ugv_idx
+                    
+                    # Append task to UGV's list
+                    self.patrol_tasks[closest_ugv].append(task)
+                    self.all_tasks.append(task)
+                    
+                    # NEW: Calculate backcost (task-to-warehouse distance)
+                    try:
+                        wh_dist = nx.shortest_path_length(
+                            self.G, 
+                            source=task, 
+                            target=self.warehouse_pos
+                        )
+                    except nx.NetworkXNoPath:
+                        wh_dist = float('inf')  # Unreachable warehouse
+                    self.backcost[closest_ugv].append(wh_dist)
+                
+                # # 3. Update centroids
+                # for i in range(self.num_patrols):
+                #     if self.patrol_tasks[i]:
+                #         cluster_tasks = self.patrol_tasks[i]
+                #         avg_x = sum(t[0] for t in cluster_tasks) / len(cluster_tasks)
+                #         avg_y = sum(t[1] for t in cluster_tasks) / len(cluster_tasks)
+                #         self.patrol_centroids[i] = (avg_x, avg_y)
+
             self.lmd_simulate()
             if self.bms:
                 self.bms_simulate()  # If you want drones to move, uncomment
@@ -214,10 +267,10 @@ class World:
 
             self.world_state["tasks_completed_flag"] = self.tasks_completed_flag
 
-            # print("-----------------------------------------\n\n")
-            # print("Clusters", self.patrol_tasks)
-            # self.print_world_state()
-            # print("-----------------------------------------\n\n")
+            print("-----------------------------------------\n\n")
+            print("Clusters", self.patrol_tasks)
+            self.print_world_state()
+            print("-----------------------------------------\n\n")
 
     def bms_simulate(self):
         DRONE_SPEED = self.drone_speed
@@ -275,13 +328,14 @@ class World:
                     self.drone_targets[d_idx] = -1
                     continue
 
-                if dist_to_ev <= 1:
+                if dist_to_ev <= 1 and self.drone_pause[d_idx]>=self.swapping_time:
                     # Arrived at EV
                     self.R_D[ev_idx] = self.R
                     self.R_P[ev_idx] = 1
                     self.drone_status[d_idx] = 2
                     self.drone_targets[d_idx] = -1
                     self.recharge_request[ev_idx] = 0
+                    self.drone_pause[d_idx]=0
                 else:
                     # Move drone toward EV
                     step = min(dist_to_ev, DRONE_SPEED)
@@ -302,6 +356,9 @@ class World:
                             self.drone_battery[d_idx] = 0
                             self.drone_status[d_idx] = 2
                             self.drone_targets[d_idx] = -1
+                    if dist_to_ev <= 1:
+                        self.drone_pause[d_idx] += 1
+
 
             elif status == 2:
                 # Returning to base
@@ -336,9 +393,13 @@ class World:
         self._update_world_state()
 
     def lmd_simulate(self):
+        self.latest_tasks_completed = []
         edge_weight = self.edge_weight
         for i in range(self.num_patrols):
             if not self.patrol_paths[i] or self.R_D[i] <= 0:
+                continue
+            if self.patrol_pause[i] < self.task_completion_time:
+                self.patrol_pause[i] += 1
                 continue
 
             # Keep old position for distance calc
@@ -369,9 +430,12 @@ class World:
                         self.completed_tasks += 1
                         final_task_idx = self.patrol_tasks[i].index(final_task)
                         self.patrol_tasks[i].remove(final_task)
+                        self.all_tasks.remove(final_task)
                         self.backcost[i].pop(final_task_idx)
+                        self.latest_tasks_completed.append((i, final_task))
                         if random.random() < 0.9:
                             self.recharge_request[i] = 1
+                        self.patrol_pause[i] = 0
                     elif final_task == self.warehouse_pos:
                         self.R_D[i] = self.R
                         self.R_P[i] = 1
@@ -385,6 +449,11 @@ class World:
                     current_pos = self.patrol_positions[i]
                     for idx, task in enumerate(self.patrol_tasks[i]):
                         try:
+                            # if task == current_pos:
+                            #     closest_dist=0
+                            #     closest_task = (task[0], task[1])
+                            #     closest_task_idx = idx
+                            #     break
                             dist = nx.shortest_path_length(self.G, source=current_pos, target=(task[0], task[1]))
                             if dist < closest_dist:
                                 closest_dist = dist
@@ -394,7 +463,10 @@ class World:
                             continue
 
                     if closest_task is not None and (closest_dist*edge_weight)+(self.backcost[i][closest_task_idx]*edge_weight) <= self.R_D[i]:
-                        self.patrol_paths[i] = nx.shortest_path(self.G, source=current_pos, target=closest_task)[1:]
+                        if closest_dist == 0:
+                            self.patrol_paths[i] = [closest_task]
+                        else:
+                            self.patrol_paths[i] = nx.shortest_path(self.G, source=current_pos, target=closest_task)[1:]
                         self.active_tasks[i] = closest_task
                         continue
 
@@ -423,8 +495,16 @@ class World:
         print(f"Total Tasks Completed: {self.completed_tasks}")
         print(f"Total Tasks Left: {remaining_tasks}")
 
+        # NEW: Print latest tasks completed
+        if self.world_state["latest_tasks_completed"]:
+            print("\n-- Latest Tasks Completed --")
+            for ev_idx, task in self.world_state["latest_tasks_completed"]:
+                print(f"  EV {ev_idx + 1}: Task = ({task[0]}, {task[1]})")
+        else:
+            print("\n-- Latest Tasks Completed: None --")
+
         # Show total distances traveled
-        print(f"EV Distance Traveled: {self.world_state['ev_distance_traveled']:.2f}")
+        print(f"\nEV Distance Traveled: {self.world_state['ev_distance_traveled']:.2f}")
         print(f"Drone Distance Traveled: {self.world_state['drone_distance_traveled']:.2f}")
 
         requesting_evs = [i + 1 for i, req in enumerate(self.recharge_request) if req == 1]

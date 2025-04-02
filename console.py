@@ -32,7 +32,7 @@ SEARCH = False
 END = False
 CAPTURE = True
 
-ITERATIONS = 1000
+ITERATIONS = 90
 sem = threading.Semaphore()
 BOUNDARY_X = 500
 BOUNDARY_Y = 500
@@ -372,14 +372,23 @@ class Window(QMainWindow):
                         OPERATION.filled_circle, 
                         cx, cy, task_size, 1, patrol_colors[idx]
                     ])
+                else:
+                    cx, cy = cell_to_canvas(patrol_positions[i][0], patrol_positions[i][1], self.cell_size)
+                    self.draw([
+                        OPERATION.filled_circle, 
+                        cx, cy, task_size, 1, patrol_colors[idx]
+                    ])
 
             # 2) Draw dotted-line paths for each EV, converting path from cell coords to canvas coords
             converted_paths = []
             for i in range(num_patrols):
                 cell_path = patrol_paths[i]  # list of (row, col)
+                if len(cell_path) == 0:
+                    cell_path.append(patrol_positions[i])
                 if not cell_path:
                     converted_paths.append([])
                     continue
+                
                 
                 # Convert entire path to canvas
                 canvas_path = []
@@ -494,6 +503,10 @@ class Window(QMainWindow):
              - repaint 
              - small delay
         """
+        save_file_name = "tmp"
+        with open(f"runs/{save_file_name}_log.csv", 'w') as f:
+            f.write("task_pos_x,task_pos_y,ugv,timestep\n")
+
         # Draw the maze walls and warehouse once
         df_maze = self.world.df_maze
         base_stations = self.world.base_stations
@@ -504,17 +517,26 @@ class Window(QMainWindow):
         self.previous_positions = []
 
         print("Starting Simulation")
-        final_frame = None
+        final_frame = ITERATIONS  # Default to the last iteration if tasks never complete
+        num_tasks_completed = None
         self.tmp = 1
         for frame in range(ITERATIONS):
             print("Frame Number:", frame+1)
-            self.tmp = 0
+            self.tmp = 1
             # Step the simulation
             self.world.simulate(timesteps=1)
 
             # Fetch updated state
             world_state = self.world.get_world_state()
-            if world_state["tasks_completed_flag"]:
+            latest_completed_tasks = world_state["latest_tasks_completed"]
+            for task_info in latest_completed_tasks:
+                task_pos = task_info[1]
+                ugv_id = task_info[0]
+                with open(f"runs/{save_file_name}_log.csv", 'a') as f:
+                    f.write(f"{task_pos[0]},{task_pos[1]},{ugv_id},{frame}\n")
+            
+
+            if world_state.get("tasks_completed_flag", False):
                 final_frame = frame
                 break
 
@@ -523,8 +545,12 @@ class Window(QMainWindow):
             while self.tmp == 0:
                 time.sleep(1)
         
-        with open("runs/results.csv", 'a') as f:
-            f.write(f"{self.config["world"]["num_evs"]},{self.config["world"]["num_tasks"]},{self.config["ev"]["range"]},{final_frame}\n")
+        world_state = self.world.get_world_state()
+        num_tasks_completed = world_state["completed_tasks"]
+        ev_distance_traveled = world_state["ev_distance_traveled"]
+        drone_distance_traveled = world_state["drone_distance_traveled"]
+        with open(f"runs/{save_file_name}_results.csv", 'w') as f:
+            f.write(f"{num_tasks_completed},{ev_distance_traveled},{drone_distance_traveled}")
 
 def get_color(v):
     x = v % 8
