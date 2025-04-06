@@ -9,7 +9,7 @@ from sklearn.cluster import KMeans
 import yaml
 
 # Adjust the import path to match your project structure
-from world_1.world import World
+from envs.iros import World
 
 # Number of timesteps to iterate unless tasks complete earlier
 ITERATIONS = 1000

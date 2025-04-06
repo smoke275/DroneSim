@@ -2,15 +2,22 @@ world:
   maze: data/maze.csv
   maze_size: 20
   maze_loop_percentage: 60
+  cell_size: 50
+  
   num_tasks: 10
-  num_evs: 3
-  num_uavs_per_bs: 2
-  num_base_stations: 4
-  task_completion_time: 3
-  bms: True
 
-ev:
+  warehouse: center
+    
+  num_base_stations: 4
+  num_uavs_per_bs: 2
+  num_ugvs: 3
+
+  bms: True
+  max_timesteps: 1000
+
+ugv:
   range: 2000
+  num_primitives: 4
 
 uav:
   range: 3000
