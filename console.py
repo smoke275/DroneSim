@@ -24,7 +24,8 @@ tk.Tk.state = lambda self, s=None: self.wm_state('normal' if s == 'zoomed' else 
 import gymnasium as gym
 
 import envs
-from agents.dp import DPAgent   
+from agents.dp import DPAgent
+from agents.sarsa import SARSAAgent  
 
 WRITE_to_file = True
 SET_t = 5
@@ -93,7 +94,7 @@ class Window(QMainWindow):
         # Load the Q-table from a pickle file
 
          # Initialize the DP agent
-        self.agent = DPAgent(self.env, policy_name="8358963b")
+        self.agent = SARSAAgent(self.env, policy_name="23ef8e93")
         
         self.InitWindow()
 

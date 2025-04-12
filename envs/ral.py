@@ -276,23 +276,7 @@ class LMDEnv(gym.Env):
     def _get_reward(self):
         reward = 0.0
         
-        # Reward shaping for getting closer to the task:
-        # Assumption: For single-agent, single-task case, we pick the first task as the target.
-        if self.task_list:
-            target_task = self.task_list[0]
-            for ugv in self.ugv_states:
-                # Compute Manhattan distance from the previous and current positions to the target.
-                old_distance = abs(ugv.prev_position[0] - target_task[0]) + abs(ugv.prev_position[1] - target_task[1])
-                new_distance = abs(ugv.position[0] - target_task[0]) + abs(ugv.position[1] - target_task[1])
-                
-                # If the agent has moved closer, reward proportionally (+0.5 per unit improvement);
-                # if farther, penalize (-0.5 per unit increase).
-                if new_distance < old_distance:
-                    reward += 5.0 * (old_distance - new_distance)
-                elif new_distance > old_distance:
-                    reward -= 5.0 * (new_distance - old_distance)
-        
-        # Check task completion: if the UGV reaches the task, reward highly.
+        # Check task completion: large reward for completing a task.
         completed_tasks = set()
         for task in self.task_list:
             for ugv in self.ugv_states:
@@ -300,21 +284,38 @@ class LMDEnv(gym.Env):
                     reward += 50.0  # Large reward for task completion
                     completed_tasks.add(task)
                     self.num_tasks_completed += 1
-                    
-        # Remove completed tasks from the task list.
+                        
+        # Remove completed tasks.
         for task in completed_tasks:
             self.task_list.remove(task)
         
         # Small step penalty to encourage efficiency.
         reward -= 1.0
 
-        # Penalize invalid moves moderately (instead of a huge penalty);
-        # note: if a move is disallowed, this penalty discourages trying it.
+        # Penalize invalid moves moderately.
         for ar in self.action_response:
             if not ar:
-                reward -= 20.0
+                reward -= 40.0
+
+        # --- Added Shaping Reward: Proximity Bonus ---
+        shaping_bonus = 0.0
+        threshold = 3          # Maximum Manhattan distance to consider for bonus.
+        bonus_factor = 2.0     # Multiplier for reward scaling.
+        
+        # For each UGV, reward being closer to any task.
+        for ugv in self.ugv_states:
+            if self.task_list:  # Only if there are pending tasks.
+                # Compute Manhattan distances from this UGV to every task.
+                distances = [abs(ugv.position[0] - task[0]) + abs(ugv.position[1] - task[1]) for task in self.task_list]
+                min_distance = min(distances)
+                # If UGV is within the threshold, add a bonus.
+                if min_distance < threshold:
+                    shaping_bonus += bonus_factor * (threshold - min_distance)
+                    
+        reward += shaping_bonus
 
         return reward
+
 
 
     def _check_termination_condition(self):

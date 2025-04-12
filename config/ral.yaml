@@ -4,7 +4,7 @@ world:
   maze_loop_percentage: 90
   cell_size: 50
   
-  num_tasks: 1
+  num_tasks: 3
 
   warehouse: center
     

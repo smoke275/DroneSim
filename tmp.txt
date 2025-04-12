@@ -1,200 +1,1001 @@
-Episode 1/200, Reward: -7515.00, Eps: 0.980
-Episode 2/200, Reward: -7095.00, Eps: 0.960
-Episode 3/200, Reward: -7015.00, Eps: 0.941
-Episode 4/200, Reward: -6135.00, Eps: 0.922
-Episode 5/200, Reward: -7085.00, Eps: 0.904
-Episode 6/200, Reward: -6690.00, Eps: 0.886
-Episode 7/200, Reward: -6180.00, Eps: 0.868
-Episode 8/200, Reward: -6570.00, Eps: 0.851
-Episode 9/200, Reward: -5515.00, Eps: 0.834
-Episode 10/200, Reward: -5380.00, Eps: 0.817
-Episode 11/200, Reward: -6145.00, Eps: 0.801
-Episode 12/200, Reward: -5500.00, Eps: 0.785
-Episode 13/200, Reward: -5050.00, Eps: 0.769
-Episode 14/200, Reward: -5250.00, Eps: 0.754
-Episode 15/200, Reward: -4960.00, Eps: 0.739
-Episode 16/200, Reward: -4780.00, Eps: 0.724
-Episode 17/200, Reward: -4225.00, Eps: 0.709
-Episode 18/200, Reward: -3540.00, Eps: 0.695
-Episode 19/200, Reward: -3690.00, Eps: 0.681
-Episode 20/200, Reward: -2460.00, Eps: 0.668
-Episode 21/200, Reward: -2935.00, Eps: 0.654
-Episode 22/200, Reward: -3240.00, Eps: 0.641
-Episode 23/200, Reward: -3515.00, Eps: 0.628
-Episode 24/200, Reward: -2540.00, Eps: 0.616
-Episode 25/200, Reward: -2725.00, Eps: 0.603
-Episode 26/200, Reward: -2430.00, Eps: 0.591
-Episode 27/200, Reward: -2800.00, Eps: 0.580
-Episode 28/200, Reward: -2155.00, Eps: 0.568
-Episode 29/200, Reward: -1705.00, Eps: 0.557
-Episode 30/200, Reward: -1325.00, Eps: 0.545
-Episode 31/200, Reward: -1140.00, Eps: 0.535
-Episode 32/200, Reward: -940.00, Eps: 0.524
-Episode 33/200, Reward: -1360.00, Eps: 0.513
-Episode 34/200, Reward: -610.00, Eps: 0.503
-Episode 35/200, Reward: -1080.00, Eps: 0.493
-Episode 36/200, Reward: -1140.00, Eps: 0.483
-Episode 37/200, Reward: -1220.00, Eps: 0.474
-Episode 38/200, Reward: -375.00, Eps: 0.464
-Episode 39/200, Reward: 15.00, Eps: 0.455
-Episode 40/200, Reward: 635.00, Eps: 0.446
-Episode 41/200, Reward: 590.00, Eps: 0.437
-Episode 42/200, Reward: 1150.00, Eps: 0.428
-Episode 43/200, Reward: -180.00, Eps: 0.419
-Episode 44/200, Reward: 240.00, Eps: 0.411
-Episode 45/200, Reward: 485.00, Eps: 0.403
-Episode 46/200, Reward: 1325.00, Eps: 0.395
-Episode 47/200, Reward: 1290.00, Eps: 0.387
-Episode 48/200, Reward: 1435.00, Eps: 0.379
-Episode 49/200, Reward: 1525.00, Eps: 0.372
-Episode 50/200, Reward: 1705.00, Eps: 0.364
-Episode 51/200, Reward: 1510.00, Eps: 0.357
-Episode 52/200, Reward: 2315.00, Eps: 0.350
-Episode 53/200, Reward: 2010.00, Eps: 0.343
-Episode 54/200, Reward: 1030.00, Eps: 0.336
-Episode 55/200, Reward: 1595.00, Eps: 0.329
-Episode 56/200, Reward: 2555.00, Eps: 0.323
-Episode 57/200, Reward: 2570.00, Eps: 0.316
-Episode 58/200, Reward: 1870.00, Eps: 0.310
-Episode 59/200, Reward: 2445.00, Eps: 0.304
-Episode 60/200, Reward: 2955.00, Eps: 0.298
-Episode 61/200, Reward: 2510.00, Eps: 0.292
-Episode 62/200, Reward: 2595.00, Eps: 0.286
-Episode 63/200, Reward: 2620.00, Eps: 0.280
-Episode 64/200, Reward: 2860.00, Eps: 0.274
-Episode 65/200, Reward: 1700.00, Eps: 0.269
-Episode 66/200, Reward: 2725.00, Eps: 0.264
-Episode 67/200, Reward: 3305.00, Eps: 0.258
-Episode 68/200, Reward: 3080.00, Eps: 0.253
-Episode 69/200, Reward: 3540.00, Eps: 0.248
-Episode 70/200, Reward: 3465.00, Eps: 0.243
-Episode 71/200, Reward: 3475.00, Eps: 0.238
-Episode 72/200, Reward: 3400.00, Eps: 0.233
-Episode 73/200, Reward: 3635.00, Eps: 0.229
-Episode 74/200, Reward: 3285.00, Eps: 0.224
-Episode 75/200, Reward: 3945.00, Eps: 0.220
-Episode 76/200, Reward: 3820.00, Eps: 0.215
-Episode 77/200, Reward: 3735.00, Eps: 0.211
-Episode 78/200, Reward: 4180.00, Eps: 0.207
-Episode 79/200, Reward: 3225.00, Eps: 0.203
-Episode 80/200, Reward: 3000.00, Eps: 0.199
-Episode 81/200, Reward: 4005.00, Eps: 0.195
-Episode 82/200, Reward: 4495.00, Eps: 0.191
-Episode 83/200, Reward: 3905.00, Eps: 0.187
-Episode 84/200, Reward: 3905.00, Eps: 0.183
-Episode 85/200, Reward: 4095.00, Eps: 0.180
-Episode 86/200, Reward: 4455.00, Eps: 0.176
-Episode 87/200, Reward: 4350.00, Eps: 0.172
-Episode 88/200, Reward: 3965.00, Eps: 0.169
-Episode 89/200, Reward: 5300.00, Eps: 0.166
-Episode 90/200, Reward: 4590.00, Eps: 0.162
-Episode 91/200, Reward: 5015.00, Eps: 0.159
-Episode 92/200, Reward: 4300.00, Eps: 0.156
-Episode 93/200, Reward: 3940.00, Eps: 0.153
-Episode 94/200, Reward: 4545.00, Eps: 0.150
-Episode 95/200, Reward: 4230.00, Eps: 0.147
-Episode 96/200, Reward: 4860.00, Eps: 0.144
-Episode 97/200, Reward: 4680.00, Eps: 0.141
-Episode 98/200, Reward: 5130.00, Eps: 0.138
-Episode 99/200, Reward: 4955.00, Eps: 0.135
-Episode 100/200, Reward: 4845.00, Eps: 0.133
-Episode 101/200, Reward: 4655.00, Eps: 0.130
-Episode 102/200, Reward: 5470.00, Eps: 0.127
-Episode 103/200, Reward: 6190.00, Eps: 0.125
-Episode 104/200, Reward: 4630.00, Eps: 0.122
-Episode 105/200, Reward: 4785.00, Eps: 0.120
-Episode 106/200, Reward: 5045.00, Eps: 0.117
-Episode 107/200, Reward: 5110.00, Eps: 0.115
-Episode 108/200, Reward: 5030.00, Eps: 0.113
-Episode 109/200, Reward: 5925.00, Eps: 0.111
-Episode 110/200, Reward: 5110.00, Eps: 0.108
-Episode 111/200, Reward: 5170.00, Eps: 0.106
-Episode 112/200, Reward: 6335.00, Eps: 0.104
-Episode 113/200, Reward: 6370.00, Eps: 0.102
-Episode 114/200, Reward: 5105.00, Eps: 0.100
-Episode 115/200, Reward: 5280.00, Eps: 0.098
-Episode 116/200, Reward: 5490.00, Eps: 0.096
-Episode 117/200, Reward: 5395.00, Eps: 0.094
-Episode 118/200, Reward: 5675.00, Eps: 0.092
-Episode 119/200, Reward: 6120.00, Eps: 0.090
-Episode 120/200, Reward: 4820.00, Eps: 0.089
-Episode 121/200, Reward: 5265.00, Eps: 0.087
-Episode 122/200, Reward: 5340.00, Eps: 0.085
-Episode 123/200, Reward: 5660.00, Eps: 0.083
-Episode 124/200, Reward: 5500.00, Eps: 0.082
-Episode 125/200, Reward: 6330.00, Eps: 0.080
-Episode 126/200, Reward: 6505.00, Eps: 0.078
-Episode 127/200, Reward: 5950.00, Eps: 0.077
-Episode 128/200, Reward: 5280.00, Eps: 0.075
-Episode 129/200, Reward: 5735.00, Eps: 0.074
-Episode 130/200, Reward: 5540.00, Eps: 0.072
-Episode 131/200, Reward: 5865.00, Eps: 0.071
-Episode 132/200, Reward: 6350.00, Eps: 0.069
-Episode 133/200, Reward: 5905.00, Eps: 0.068
-Episode 134/200, Reward: 6155.00, Eps: 0.067
-Episode 135/200, Reward: 5195.00, Eps: 0.065
-Episode 136/200, Reward: 6090.00, Eps: 0.064
-Episode 137/200, Reward: 6395.00, Eps: 0.063
-Episode 138/200, Reward: 6360.00, Eps: 0.062
-Episode 139/200, Reward: 5895.00, Eps: 0.060
-Episode 140/200, Reward: 5425.00, Eps: 0.059
-Episode 141/200, Reward: 6795.00, Eps: 0.058
-Episode 142/200, Reward: 5790.00, Eps: 0.057
-Episode 143/200, Reward: 5955.00, Eps: 0.056
-Episode 144/200, Reward: 5450.00, Eps: 0.055
-Episode 145/200, Reward: 6865.00, Eps: 0.053
-Episode 146/200, Reward: 5505.00, Eps: 0.052
-Episode 147/200, Reward: 6310.00, Eps: 0.051
-Episode 148/200, Reward: 6120.00, Eps: 0.050
-Episode 149/200, Reward: 5625.00, Eps: 0.050
-Episode 150/200, Reward: 6015.00, Eps: 0.050
-Episode 151/200, Reward: 6695.00, Eps: 0.050
-Episode 152/200, Reward: 5825.00, Eps: 0.050
-Episode 153/200, Reward: 5660.00, Eps: 0.050
-Episode 154/200, Reward: 6460.00, Eps: 0.050
-Episode 155/200, Reward: 6570.00, Eps: 0.050
-Episode 156/200, Reward: 6240.00, Eps: 0.050
-Episode 157/200, Reward: 6370.00, Eps: 0.050
-Episode 158/200, Reward: 5955.00, Eps: 0.050
-Episode 159/200, Reward: 6310.00, Eps: 0.050
-Episode 160/200, Reward: 5425.00, Eps: 0.050
-Episode 161/200, Reward: 7045.00, Eps: 0.050
-Episode 162/200, Reward: 5745.00, Eps: 0.050
-Episode 163/200, Reward: 5710.00, Eps: 0.050
-Episode 164/200, Reward: 5390.00, Eps: 0.050
-Episode 165/200, Reward: 6950.00, Eps: 0.050
-Episode 166/200, Reward: 5590.00, Eps: 0.050
-Episode 167/200, Reward: 6240.00, Eps: 0.050
-Episode 168/200, Reward: 6855.00, Eps: 0.050
-Episode 169/200, Reward: 6450.00, Eps: 0.050
-Episode 170/200, Reward: 6830.00, Eps: 0.050
-Episode 171/200, Reward: 6435.00, Eps: 0.050
-Episode 172/200, Reward: 6325.00, Eps: 0.050
-Episode 173/200, Reward: 6300.00, Eps: 0.050
-Episode 174/200, Reward: 6490.00, Eps: 0.050
-Episode 175/200, Reward: 5615.00, Eps: 0.050
-Episode 176/200, Reward: 5880.00, Eps: 0.050
-Episode 177/200, Reward: 6040.00, Eps: 0.050
-Episode 178/200, Reward: 6260.00, Eps: 0.050
-Episode 179/200, Reward: 5970.00, Eps: 0.050
-Episode 180/200, Reward: 6165.00, Eps: 0.050
-Episode 181/200, Reward: 6030.00, Eps: 0.050
-Episode 182/200, Reward: 6480.00, Eps: 0.050
-Episode 183/200, Reward: 6090.00, Eps: 0.050
-Episode 184/200, Reward: 5540.00, Eps: 0.050
-Episode 185/200, Reward: 6980.00, Eps: 0.050
-Episode 186/200, Reward: 6055.00, Eps: 0.050
-Episode 187/200, Reward: 6440.00, Eps: 0.050
-Episode 188/200, Reward: 6130.00, Eps: 0.050
-Episode 189/200, Reward: 6370.00, Eps: 0.050
-Episode 190/200, Reward: 6530.00, Eps: 0.050
-Episode 191/200, Reward: 5580.00, Eps: 0.050
-Episode 192/200, Reward: 5345.00, Eps: 0.050
-Episode 193/200, Reward: 5545.00, Eps: 0.050
-Episode 194/200, Reward: 6395.00, Eps: 0.050
-Episode 195/200, Reward: 5665.00, Eps: 0.050
-Episode 196/200, Reward: 6430.00, Eps: 0.050
-Episode 197/200, Reward: 6400.00, Eps: 0.050
-Episode 198/200, Reward: 6200.00, Eps: 0.050
-Episode 199/200, Reward: 6585.00, Eps: 0.050
-Episode 200/200, Reward: 6800.00, Eps: 0.050
+Episode 1/1000  Total Reward: -702.00  Epsilon: 0.1990
+Episode 2/1000  Total Reward: -1126.00  Epsilon: 0.1980
+Episode 3/1000  Total Reward: -282.00  Epsilon: 0.1970
+Episode 4/1000  Total Reward: -186.00  Epsilon: 0.1960
+Episode 5/1000  Total Reward: -758.00  Epsilon: 0.1950
+Episode 6/1000  Total Reward: -360.00  Epsilon: 0.1941
+Episode 7/1000  Total Reward: 74.00  Epsilon: 0.1931
+Episode 8/1000  Total Reward: 42.00  Epsilon: 0.1921
+Episode 9/1000  Total Reward: 154.00  Epsilon: 0.1912
+Episode 10/1000  Total Reward: 102.00  Epsilon: 0.1902
+Episode 11/1000  Total Reward: 54.00  Epsilon: 0.1893
+Episode 12/1000  Total Reward: 100.00  Epsilon: 0.1883
+Episode 13/1000  Total Reward: 128.00  Epsilon: 0.1874
+Episode 14/1000  Total Reward: 112.00  Epsilon: 0.1864
+Episode 15/1000  Total Reward: 198.00  Epsilon: 0.1855
+Episode 16/1000  Total Reward: 124.00  Epsilon: 0.1846
+Episode 17/1000  Total Reward: -160.00  Epsilon: 0.1837
+Episode 18/1000  Total Reward: 148.00  Epsilon: 0.1827
+Episode 19/1000  Total Reward: 116.00  Epsilon: 0.1818
+Episode 20/1000  Total Reward: 82.00  Epsilon: 0.1809
+Episode 21/1000  Total Reward: 252.00  Epsilon: 0.1800
+Episode 22/1000  Total Reward: 18.00  Epsilon: 0.1791
+Episode 23/1000  Total Reward: 166.00  Epsilon: 0.1782
+Episode 24/1000  Total Reward: 90.00  Epsilon: 0.1773
+Episode 25/1000  Total Reward: 50.00  Epsilon: 0.1764
+Episode 26/1000  Total Reward: 134.00  Epsilon: 0.1756
+Episode 27/1000  Total Reward: 158.00  Epsilon: 0.1747
+Episode 28/1000  Total Reward: 140.00  Epsilon: 0.1738
+Episode 29/1000  Total Reward: 88.00  Epsilon: 0.1729
+Episode 30/1000  Total Reward: 2.00  Epsilon: 0.1721
+Episode 31/1000  Total Reward: 4.00  Epsilon: 0.1712
+Episode 32/1000  Total Reward: 98.00  Epsilon: 0.1704
+Episode 33/1000  Total Reward: 102.00  Epsilon: 0.1695
+Episode 34/1000  Total Reward: 28.00  Epsilon: 0.1687
+Episode 35/1000  Total Reward: -928.00  Epsilon: 0.1678
+Episode 36/1000  Total Reward: -542.00  Epsilon: 0.1670
+Episode 37/1000  Total Reward: -316.00  Epsilon: 0.1661
+Episode 38/1000  Total Reward: -176.00  Epsilon: 0.1653
+Episode 39/1000  Total Reward: -476.00  Epsilon: 0.1645
+Episode 40/1000  Total Reward: -534.00  Epsilon: 0.1637
+Episode 41/1000  Total Reward: -794.00  Epsilon: 0.1628
+Episode 42/1000  Total Reward: -642.00  Epsilon: 0.1620
+Episode 43/1000  Total Reward: -416.00  Epsilon: 0.1612
+Episode 44/1000  Total Reward: 170.00  Epsilon: 0.1604
+Episode 45/1000  Total Reward: -286.00  Epsilon: 0.1596
+Episode 46/1000  Total Reward: 26.00  Epsilon: 0.1588
+Episode 47/1000  Total Reward: -44.00  Epsilon: 0.1580
+Episode 48/1000  Total Reward: -332.00  Epsilon: 0.1572
+Episode 49/1000  Total Reward: -354.00  Epsilon: 0.1564
+Episode 50/1000  Total Reward: -80.00  Epsilon: 0.1557
+Episode 51/1000  Total Reward: 112.00  Epsilon: 0.1549
+Episode 52/1000  Total Reward: -12.00  Epsilon: 0.1541
+Episode 53/1000  Total Reward: -46.00  Epsilon: 0.1533
+Episode 54/1000  Total Reward: -170.00  Epsilon: 0.1526
+Episode 55/1000  Total Reward: -218.00  Epsilon: 0.1518
+Episode 56/1000  Total Reward: 104.00  Epsilon: 0.1511
+Episode 57/1000  Total Reward: -262.00  Epsilon: 0.1503
+Episode 58/1000  Total Reward: -68.00  Epsilon: 0.1495
+Episode 59/1000  Total Reward: 216.00  Epsilon: 0.1488
+Episode 60/1000  Total Reward: 206.00  Epsilon: 0.1481
+Episode 61/1000  Total Reward: 170.00  Epsilon: 0.1473
+Episode 62/1000  Total Reward: -152.00  Epsilon: 0.1466
+Episode 63/1000  Total Reward: -82.00  Epsilon: 0.1458
+Episode 64/1000  Total Reward: 134.00  Epsilon: 0.1451
+Episode 65/1000  Total Reward: 234.00  Epsilon: 0.1444
+Episode 66/1000  Total Reward: 202.00  Epsilon: 0.1437
+Episode 67/1000  Total Reward: 272.00  Epsilon: 0.1429
+Episode 68/1000  Total Reward: -584.00  Epsilon: 0.1422
+Episode 69/1000  Total Reward: -984.00  Epsilon: 0.1415
+Episode 70/1000  Total Reward: -370.00  Epsilon: 0.1408
+Episode 71/1000  Total Reward: 102.00  Epsilon: 0.1401
+Episode 72/1000  Total Reward: 112.00  Epsilon: 0.1394
+Episode 73/1000  Total Reward: 232.00  Epsilon: 0.1387
+Episode 74/1000  Total Reward: 162.00  Epsilon: 0.1380
+Episode 75/1000  Total Reward: 86.00  Epsilon: 0.1373
+Episode 76/1000  Total Reward: 120.00  Epsilon: 0.1366
+Episode 77/1000  Total Reward: 200.00  Epsilon: 0.1360
+Episode 78/1000  Total Reward: 120.00  Epsilon: 0.1353
+Episode 79/1000  Total Reward: 128.00  Epsilon: 0.1346
+Episode 80/1000  Total Reward: 248.00  Epsilon: 0.1339
+Episode 81/1000  Total Reward: 122.00  Epsilon: 0.1333
+Episode 82/1000  Total Reward: 164.00  Epsilon: 0.1326
+Episode 83/1000  Total Reward: 204.00  Epsilon: 0.1319
+Episode 84/1000  Total Reward: 208.00  Epsilon: 0.1313
+Episode 85/1000  Total Reward: 204.00  Epsilon: 0.1306
+Episode 86/1000  Total Reward: 162.00  Epsilon: 0.1300
+Episode 87/1000  Total Reward: 162.00  Epsilon: 0.1293
+Episode 88/1000  Total Reward: 186.00  Epsilon: 0.1287
+Episode 89/1000  Total Reward: 72.00  Epsilon: 0.1280
+Episode 90/1000  Total Reward: 60.00  Epsilon: 0.1274
+Episode 91/1000  Total Reward: -376.00  Epsilon: 0.1267
+Episode 92/1000  Total Reward: 212.00  Epsilon: 0.1261
+Episode 93/1000  Total Reward: 40.00  Epsilon: 0.1255
+Episode 94/1000  Total Reward: 250.00  Epsilon: 0.1249
+Episode 95/1000  Total Reward: 208.00  Epsilon: 0.1242
+Episode 96/1000  Total Reward: 98.00  Epsilon: 0.1236
+Episode 97/1000  Total Reward: 216.00  Epsilon: 0.1230
+Episode 98/1000  Total Reward: 252.00  Epsilon: 0.1224
+Episode 99/1000  Total Reward: 212.00  Epsilon: 0.1218
+Episode 100/1000  Total Reward: 168.00  Epsilon: 0.1212
+Episode 101/1000  Total Reward: 336.00  Epsilon: 0.1205
+Episode 102/1000  Total Reward: 212.00  Epsilon: 0.1199
+Episode 103/1000  Total Reward: 168.00  Epsilon: 0.1193
+Episode 104/1000  Total Reward: 132.00  Epsilon: 0.1187
+Episode 105/1000  Total Reward: 116.00  Epsilon: 0.1182
+Episode 106/1000  Total Reward: 242.00  Epsilon: 0.1176
+Episode 107/1000  Total Reward: 190.00  Epsilon: 0.1170
+Episode 108/1000  Total Reward: 282.00  Epsilon: 0.1164
+Episode 109/1000  Total Reward: 206.00  Epsilon: 0.1158
+Episode 110/1000  Total Reward: 344.00  Epsilon: 0.1152
+Episode 111/1000  Total Reward: -184.00  Epsilon: 0.1147
+Episode 112/1000  Total Reward: -138.00  Epsilon: 0.1141
+Episode 113/1000  Total Reward: -336.00  Epsilon: 0.1135
+Episode 114/1000  Total Reward: -180.00  Epsilon: 0.1129
+Episode 115/1000  Total Reward: -110.00  Epsilon: 0.1124
+Episode 116/1000  Total Reward: -40.00  Epsilon: 0.1118
+Episode 117/1000  Total Reward: 308.00  Epsilon: 0.1113
+Episode 118/1000  Total Reward: -220.00  Epsilon: 0.1107
+Episode 119/1000  Total Reward: -244.00  Epsilon: 0.1101
+Episode 120/1000  Total Reward: -124.00  Epsilon: 0.1096
+Episode 121/1000  Total Reward: -158.00  Epsilon: 0.1090
+Episode 122/1000  Total Reward: -68.00  Epsilon: 0.1085
+Episode 123/1000  Total Reward: -108.00  Epsilon: 0.1080
+Episode 124/1000  Total Reward: -62.00  Epsilon: 0.1074
+Episode 125/1000  Total Reward: -154.00  Epsilon: 0.1069
+Episode 126/1000  Total Reward: -6.00  Epsilon: 0.1064
+Episode 127/1000  Total Reward: 198.00  Epsilon: 0.1058
+Episode 128/1000  Total Reward: -42.00  Epsilon: 0.1053
+Episode 129/1000  Total Reward: 196.00  Epsilon: 0.1048
+Episode 130/1000  Total Reward: 148.00  Epsilon: 0.1042
+Episode 131/1000  Total Reward: -366.00  Epsilon: 0.1037
+Episode 132/1000  Total Reward: -248.00  Epsilon: 0.1032
+Episode 133/1000  Total Reward: 176.00  Epsilon: 0.1027
+Episode 134/1000  Total Reward: 68.00  Epsilon: 0.1022
+Episode 135/1000  Total Reward: 188.00  Epsilon: 0.1017
+Episode 136/1000  Total Reward: 92.00  Epsilon: 0.1012
+Episode 137/1000  Total Reward: 114.00  Epsilon: 0.1006
+Episode 138/1000  Total Reward: 146.00  Epsilon: 0.1001
+Episode 139/1000  Total Reward: 8.00  Epsilon: 0.0996
+Episode 140/1000  Total Reward: 130.00  Epsilon: 0.0991
+Episode 141/1000  Total Reward: 130.00  Epsilon: 0.0986
+Episode 142/1000  Total Reward: 90.00  Epsilon: 0.0982
+Episode 143/1000  Total Reward: 92.00  Epsilon: 0.0977
+Episode 144/1000  Total Reward: 202.00  Epsilon: 0.0972
+Episode 145/1000  Total Reward: 170.00  Epsilon: 0.0967
+Episode 146/1000  Total Reward: 168.00  Epsilon: 0.0962
+Episode 147/1000  Total Reward: -54.00  Epsilon: 0.0957
+Episode 148/1000  Total Reward: 160.00  Epsilon: 0.0952
+Episode 149/1000  Total Reward: 116.00  Epsilon: 0.0948
+Episode 150/1000  Total Reward: 288.00  Epsilon: 0.0943
+Episode 151/1000  Total Reward: 208.00  Epsilon: 0.0938
+Episode 152/1000  Total Reward: 248.00  Epsilon: 0.0934
+Episode 153/1000  Total Reward: 294.00  Epsilon: 0.0929
+Episode 154/1000  Total Reward: 246.00  Epsilon: 0.0924
+Episode 155/1000  Total Reward: 208.00  Epsilon: 0.0920
+Episode 156/1000  Total Reward: 284.00  Epsilon: 0.0915
+Episode 157/1000  Total Reward: 170.00  Epsilon: 0.0910
+Episode 158/1000  Total Reward: 178.00  Epsilon: 0.0906
+Episode 159/1000  Total Reward: 218.00  Epsilon: 0.0901
+Episode 160/1000  Total Reward: 172.00  Epsilon: 0.0897
+Episode 161/1000  Total Reward: 254.00  Epsilon: 0.0892
+Episode 162/1000  Total Reward: 284.00  Epsilon: 0.0888
+Episode 163/1000  Total Reward: 206.00  Epsilon: 0.0883
+Episode 164/1000  Total Reward: 94.00  Epsilon: 0.0879
+Episode 165/1000  Total Reward: 208.00  Epsilon: 0.0875
+Episode 166/1000  Total Reward: 128.00  Epsilon: 0.0870
+Episode 167/1000  Total Reward: 286.00  Epsilon: 0.0866
+Episode 168/1000  Total Reward: 284.00  Epsilon: 0.0862
+Episode 169/1000  Total Reward: 212.00  Epsilon: 0.0857
+Episode 170/1000  Total Reward: 170.00  Epsilon: 0.0853
+Episode 171/1000  Total Reward: 254.00  Epsilon: 0.0849
+Episode 172/1000  Total Reward: 132.00  Epsilon: 0.0845
+Episode 173/1000  Total Reward: 212.00  Epsilon: 0.0840
+Episode 174/1000  Total Reward: 208.00  Epsilon: 0.0836
+Episode 175/1000  Total Reward: 126.00  Epsilon: 0.0832
+Episode 176/1000  Total Reward: 250.00  Epsilon: 0.0828
+Episode 177/1000  Total Reward: 284.00  Epsilon: 0.0824
+Episode 178/1000  Total Reward: 202.00  Epsilon: 0.0819
+Episode 179/1000  Total Reward: 214.00  Epsilon: 0.0815
+Episode 180/1000  Total Reward: 212.00  Epsilon: 0.0811
+Episode 181/1000  Total Reward: 216.00  Epsilon: 0.0807
+Episode 182/1000  Total Reward: 16.00  Epsilon: 0.0803
+Episode 183/1000  Total Reward: 212.00  Epsilon: 0.0799
+Episode 184/1000  Total Reward: 256.00  Epsilon: 0.0795
+Episode 185/1000  Total Reward: 250.00  Epsilon: 0.0791
+Episode 186/1000  Total Reward: 288.00  Epsilon: 0.0787
+Episode 187/1000  Total Reward: 256.00  Epsilon: 0.0783
+Episode 188/1000  Total Reward: 122.00  Epsilon: 0.0779
+Episode 189/1000  Total Reward: 216.00  Epsilon: 0.0776
+Episode 190/1000  Total Reward: 254.00  Epsilon: 0.0772
+Episode 191/1000  Total Reward: 240.00  Epsilon: 0.0768
+Episode 192/1000  Total Reward: 216.00  Epsilon: 0.0764
+Episode 193/1000  Total Reward: 252.00  Epsilon: 0.0760
+Episode 194/1000  Total Reward: 282.00  Epsilon: 0.0756
+Episode 195/1000  Total Reward: 208.00  Epsilon: 0.0753
+Episode 196/1000  Total Reward: 246.00  Epsilon: 0.0749
+Episode 197/1000  Total Reward: 254.00  Epsilon: 0.0745
+Episode 198/1000  Total Reward: 284.00  Epsilon: 0.0741
+Episode 199/1000  Total Reward: 254.00  Epsilon: 0.0738
+Episode 200/1000  Total Reward: 258.00  Epsilon: 0.0734
+Episode 201/1000  Total Reward: 288.00  Epsilon: 0.0730
+Episode 202/1000  Total Reward: 286.00  Epsilon: 0.0727
+Episode 203/1000  Total Reward: 294.00  Epsilon: 0.0723
+Episode 204/1000  Total Reward: 206.00  Epsilon: 0.0719
+Episode 205/1000  Total Reward: 92.00  Epsilon: 0.0716
+Episode 206/1000  Total Reward: 252.00  Epsilon: 0.0712
+Episode 207/1000  Total Reward: 288.00  Epsilon: 0.0709
+Episode 208/1000  Total Reward: 286.00  Epsilon: 0.0705
+Episode 209/1000  Total Reward: 248.00  Epsilon: 0.0702
+Episode 210/1000  Total Reward: 254.00  Epsilon: 0.0698
+Episode 211/1000  Total Reward: 290.00  Epsilon: 0.0695
+Episode 212/1000  Total Reward: 290.00  Epsilon: 0.0691
+Episode 213/1000  Total Reward: 292.00  Epsilon: 0.0688
+Episode 214/1000  Total Reward: 216.00  Epsilon: 0.0684
+Episode 215/1000  Total Reward: 212.00  Epsilon: 0.0681
+Episode 216/1000  Total Reward: 166.00  Epsilon: 0.0677
+Episode 217/1000  Total Reward: 246.00  Epsilon: 0.0674
+Episode 218/1000  Total Reward: 254.00  Epsilon: 0.0671
+Episode 219/1000  Total Reward: 248.00  Epsilon: 0.0667
+Episode 220/1000  Total Reward: 292.00  Epsilon: 0.0664
+Episode 221/1000  Total Reward: 254.00  Epsilon: 0.0661
+Episode 222/1000  Total Reward: 254.00  Epsilon: 0.0657
+Episode 223/1000  Total Reward: 210.00  Epsilon: 0.0654
+Episode 224/1000  Total Reward: 168.00  Epsilon: 0.0651
+Episode 225/1000  Total Reward: 254.00  Epsilon: 0.0647
+Episode 226/1000  Total Reward: 292.00  Epsilon: 0.0644
+Episode 227/1000  Total Reward: 214.00  Epsilon: 0.0641
+Episode 228/1000  Total Reward: 210.00  Epsilon: 0.0638
+Episode 229/1000  Total Reward: 250.00  Epsilon: 0.0635
+Episode 230/1000  Total Reward: 214.00  Epsilon: 0.0631
+Episode 231/1000  Total Reward: 252.00  Epsilon: 0.0628
+Episode 232/1000  Total Reward: 254.00  Epsilon: 0.0625
+Episode 233/1000  Total Reward: 288.00  Epsilon: 0.0622
+Episode 234/1000  Total Reward: 288.00  Epsilon: 0.0619
+Episode 235/1000  Total Reward: 252.00  Epsilon: 0.0616
+Episode 236/1000  Total Reward: 214.00  Epsilon: 0.0613
+Episode 237/1000  Total Reward: 164.00  Epsilon: 0.0610
+Episode 238/1000  Total Reward: 326.00  Epsilon: 0.0607
+Episode 239/1000  Total Reward: 256.00  Epsilon: 0.0604
+Episode 240/1000  Total Reward: 206.00  Epsilon: 0.0601
+Episode 241/1000  Total Reward: 294.00  Epsilon: 0.0598
+Episode 242/1000  Total Reward: 214.00  Epsilon: 0.0595
+Episode 243/1000  Total Reward: 294.00  Epsilon: 0.0592
+Episode 244/1000  Total Reward: 298.00  Epsilon: 0.0589
+Episode 245/1000  Total Reward: 296.00  Epsilon: 0.0586
+Episode 246/1000  Total Reward: 254.00  Epsilon: 0.0583
+Episode 247/1000  Total Reward: 246.00  Epsilon: 0.0580
+Episode 248/1000  Total Reward: 176.00  Epsilon: 0.0577
+Episode 249/1000  Total Reward: 258.00  Epsilon: 0.0574
+Episode 250/1000  Total Reward: 292.00  Epsilon: 0.0571
+Episode 251/1000  Total Reward: 172.00  Epsilon: 0.0568
+Episode 252/1000  Total Reward: 290.00  Epsilon: 0.0566
+Episode 253/1000  Total Reward: 288.00  Epsilon: 0.0563
+Episode 254/1000  Total Reward: 154.00  Epsilon: 0.0560
+Episode 255/1000  Total Reward: 282.00  Epsilon: 0.0557
+Episode 256/1000  Total Reward: 290.00  Epsilon: 0.0554
+Episode 257/1000  Total Reward: 252.00  Epsilon: 0.0552
+Episode 258/1000  Total Reward: 290.00  Epsilon: 0.0549
+Episode 259/1000  Total Reward: 212.00  Epsilon: 0.0546
+Episode 260/1000  Total Reward: 206.00  Epsilon: 0.0543
+Episode 261/1000  Total Reward: 294.00  Epsilon: 0.0541
+Episode 262/1000  Total Reward: 260.00  Epsilon: 0.0538
+Episode 263/1000  Total Reward: 258.00  Epsilon: 0.0535
+Episode 264/1000  Total Reward: 292.00  Epsilon: 0.0533
+Episode 265/1000  Total Reward: 248.00  Epsilon: 0.0530
+Episode 266/1000  Total Reward: 256.00  Epsilon: 0.0527
+Episode 267/1000  Total Reward: 218.00  Epsilon: 0.0525
+Episode 268/1000  Total Reward: 214.00  Epsilon: 0.0522
+Episode 269/1000  Total Reward: 252.00  Epsilon: 0.0519
+Episode 270/1000  Total Reward: 246.00  Epsilon: 0.0517
+Episode 271/1000  Total Reward: 210.00  Epsilon: 0.0514
+Episode 272/1000  Total Reward: 294.00  Epsilon: 0.0512
+Episode 273/1000  Total Reward: 250.00  Epsilon: 0.0509
+Episode 274/1000  Total Reward: 294.00  Epsilon: 0.0506
+Episode 275/1000  Total Reward: 334.00  Epsilon: 0.0504
+Episode 276/1000  Total Reward: 260.00  Epsilon: 0.0501
+Episode 277/1000  Total Reward: 290.00  Epsilon: 0.0499
+Episode 278/1000  Total Reward: 252.00  Epsilon: 0.0496
+Episode 279/1000  Total Reward: 296.00  Epsilon: 0.0494
+Episode 280/1000  Total Reward: 298.00  Epsilon: 0.0491
+Episode 281/1000  Total Reward: 214.00  Epsilon: 0.0489
+Episode 282/1000  Total Reward: 300.00  Epsilon: 0.0487
+Episode 283/1000  Total Reward: 218.00  Epsilon: 0.0484
+Episode 284/1000  Total Reward: 296.00  Epsilon: 0.0482
+Episode 285/1000  Total Reward: 210.00  Epsilon: 0.0479
+Episode 286/1000  Total Reward: 296.00  Epsilon: 0.0477
+Episode 287/1000  Total Reward: 256.00  Epsilon: 0.0475
+Episode 288/1000  Total Reward: 252.00  Epsilon: 0.0472
+Episode 289/1000  Total Reward: 298.00  Epsilon: 0.0470
+Episode 290/1000  Total Reward: 258.00  Epsilon: 0.0467
+Episode 291/1000  Total Reward: 298.00  Epsilon: 0.0465
+Episode 292/1000  Total Reward: 242.00  Epsilon: 0.0463
+Episode 293/1000  Total Reward: 254.00  Epsilon: 0.0460
+Episode 294/1000  Total Reward: 250.00  Epsilon: 0.0458
+Episode 295/1000  Total Reward: 296.00  Epsilon: 0.0456
+Episode 296/1000  Total Reward: 254.00  Epsilon: 0.0454
+Episode 297/1000  Total Reward: 252.00  Epsilon: 0.0451
+Episode 298/1000  Total Reward: 292.00  Epsilon: 0.0449
+Episode 299/1000  Total Reward: 256.00  Epsilon: 0.0447
+Episode 300/1000  Total Reward: 256.00  Epsilon: 0.0445
+Episode 301/1000  Total Reward: 216.00  Epsilon: 0.0442
+Episode 302/1000  Total Reward: 178.00  Epsilon: 0.0440
+Episode 303/1000  Total Reward: 294.00  Epsilon: 0.0438
+Episode 304/1000  Total Reward: 254.00  Epsilon: 0.0436
+Episode 305/1000  Total Reward: 294.00  Epsilon: 0.0434
+Episode 306/1000  Total Reward: 248.00  Epsilon: 0.0431
+Episode 307/1000  Total Reward: 214.00  Epsilon: 0.0429
+Episode 308/1000  Total Reward: 298.00  Epsilon: 0.0427
+Episode 309/1000  Total Reward: 296.00  Epsilon: 0.0425
+Episode 310/1000  Total Reward: 290.00  Epsilon: 0.0423
+Episode 311/1000  Total Reward: 298.00  Epsilon: 0.0421
+Episode 312/1000  Total Reward: 218.00  Epsilon: 0.0419
+Episode 313/1000  Total Reward: 298.00  Epsilon: 0.0417
+Episode 314/1000  Total Reward: 208.00  Epsilon: 0.0414
+Episode 315/1000  Total Reward: 258.00  Epsilon: 0.0412
+Episode 316/1000  Total Reward: 216.00  Epsilon: 0.0410
+Episode 317/1000  Total Reward: 294.00  Epsilon: 0.0408
+Episode 318/1000  Total Reward: 174.00  Epsilon: 0.0406
+Episode 319/1000  Total Reward: 160.00  Epsilon: 0.0404
+Episode 320/1000  Total Reward: 200.00  Epsilon: 0.0402
+Episode 321/1000  Total Reward: 256.00  Epsilon: 0.0400
+Episode 322/1000  Total Reward: 300.00  Epsilon: 0.0398
+Episode 323/1000  Total Reward: 298.00  Epsilon: 0.0396
+Episode 324/1000  Total Reward: 296.00  Epsilon: 0.0394
+Episode 325/1000  Total Reward: 300.00  Epsilon: 0.0392
+Episode 326/1000  Total Reward: 214.00  Epsilon: 0.0390
+Episode 327/1000  Total Reward: 300.00  Epsilon: 0.0388
+Episode 328/1000  Total Reward: 296.00  Epsilon: 0.0386
+Episode 329/1000  Total Reward: 176.00  Epsilon: 0.0384
+Episode 330/1000  Total Reward: 292.00  Epsilon: 0.0383
+Episode 331/1000  Total Reward: 294.00  Epsilon: 0.0381
+Episode 332/1000  Total Reward: 214.00  Epsilon: 0.0379
+Episode 333/1000  Total Reward: 284.00  Epsilon: 0.0377
+Episode 334/1000  Total Reward: 258.00  Epsilon: 0.0375
+Episode 335/1000  Total Reward: 254.00  Epsilon: 0.0373
+Episode 336/1000  Total Reward: 256.00  Epsilon: 0.0371
+Episode 337/1000  Total Reward: 216.00  Epsilon: 0.0369
+Episode 338/1000  Total Reward: 292.00  Epsilon: 0.0367
+Episode 339/1000  Total Reward: 294.00  Epsilon: 0.0366
+Episode 340/1000  Total Reward: 252.00  Epsilon: 0.0364
+Episode 341/1000  Total Reward: 256.00  Epsilon: 0.0362
+Episode 342/1000  Total Reward: 256.00  Epsilon: 0.0360
+Episode 343/1000  Total Reward: 298.00  Epsilon: 0.0358
+Episode 344/1000  Total Reward: 256.00  Epsilon: 0.0357
+Episode 345/1000  Total Reward: 290.00  Epsilon: 0.0355
+Episode 346/1000  Total Reward: 296.00  Epsilon: 0.0353
+Episode 347/1000  Total Reward: 300.00  Epsilon: 0.0351
+Episode 348/1000  Total Reward: 252.00  Epsilon: 0.0350
+Episode 349/1000  Total Reward: 290.00  Epsilon: 0.0348
+Episode 350/1000  Total Reward: 296.00  Epsilon: 0.0346
+Episode 351/1000  Total Reward: 218.00  Epsilon: 0.0344
+Episode 352/1000  Total Reward: 258.00  Epsilon: 0.0343
+Episode 353/1000  Total Reward: 220.00  Epsilon: 0.0341
+Episode 354/1000  Total Reward: 212.00  Epsilon: 0.0339
+Episode 355/1000  Total Reward: 254.00  Epsilon: 0.0337
+Episode 356/1000  Total Reward: 294.00  Epsilon: 0.0336
+Episode 357/1000  Total Reward: 286.00  Epsilon: 0.0334
+Episode 358/1000  Total Reward: 252.00  Epsilon: 0.0332
+Episode 359/1000  Total Reward: 296.00  Epsilon: 0.0331
+Episode 360/1000  Total Reward: 298.00  Epsilon: 0.0329
+Episode 361/1000  Total Reward: 294.00  Epsilon: 0.0327
+Episode 362/1000  Total Reward: 256.00  Epsilon: 0.0326
+Episode 363/1000  Total Reward: 170.00  Epsilon: 0.0324
+Episode 364/1000  Total Reward: 200.00  Epsilon: 0.0323
+Episode 365/1000  Total Reward: 216.00  Epsilon: 0.0321
+Episode 366/1000  Total Reward: 292.00  Epsilon: 0.0319
+Episode 367/1000  Total Reward: 298.00  Epsilon: 0.0318
+Episode 368/1000  Total Reward: 258.00  Epsilon: 0.0316
+Episode 369/1000  Total Reward: 296.00  Epsilon: 0.0315
+Episode 370/1000  Total Reward: 294.00  Epsilon: 0.0313
+Episode 371/1000  Total Reward: 256.00  Epsilon: 0.0311
+Episode 372/1000  Total Reward: 256.00  Epsilon: 0.0310
+Episode 373/1000  Total Reward: 300.00  Epsilon: 0.0308
+Episode 374/1000  Total Reward: 294.00  Epsilon: 0.0307
+Episode 375/1000  Total Reward: 294.00  Epsilon: 0.0305
+Episode 376/1000  Total Reward: 256.00  Epsilon: 0.0304
+Episode 377/1000  Total Reward: 300.00  Epsilon: 0.0302
+Episode 378/1000  Total Reward: 254.00  Epsilon: 0.0301
+Episode 379/1000  Total Reward: 260.00  Epsilon: 0.0299
+Episode 380/1000  Total Reward: 296.00  Epsilon: 0.0298
+Episode 381/1000  Total Reward: 260.00  Epsilon: 0.0296
+Episode 382/1000  Total Reward: 256.00  Epsilon: 0.0295
+Episode 383/1000  Total Reward: 294.00  Epsilon: 0.0293
+Episode 384/1000  Total Reward: 300.00  Epsilon: 0.0292
+Episode 385/1000  Total Reward: 296.00  Epsilon: 0.0290
+Episode 386/1000  Total Reward: 296.00  Epsilon: 0.0289
+Episode 387/1000  Total Reward: 254.00  Epsilon: 0.0287
+Episode 388/1000  Total Reward: 294.00  Epsilon: 0.0286
+Episode 389/1000  Total Reward: 298.00  Epsilon: 0.0285
+Episode 390/1000  Total Reward: 176.00  Epsilon: 0.0283
+Episode 391/1000  Total Reward: 256.00  Epsilon: 0.0282
+Episode 392/1000  Total Reward: 258.00  Epsilon: 0.0280
+Episode 393/1000  Total Reward: 296.00  Epsilon: 0.0279
+Episode 394/1000  Total Reward: 294.00  Epsilon: 0.0278
+Episode 395/1000  Total Reward: 258.00  Epsilon: 0.0276
+Episode 396/1000  Total Reward: 294.00  Epsilon: 0.0275
+Episode 397/1000  Total Reward: 294.00  Epsilon: 0.0273
+Episode 398/1000  Total Reward: 300.00  Epsilon: 0.0272
+Episode 399/1000  Total Reward: 258.00  Epsilon: 0.0271
+Episode 400/1000  Total Reward: 294.00  Epsilon: 0.0269
+Episode 401/1000  Total Reward: 298.00  Epsilon: 0.0268
+Episode 402/1000  Total Reward: 298.00  Epsilon: 0.0267
+Episode 403/1000  Total Reward: 256.00  Epsilon: 0.0265
+Episode 404/1000  Total Reward: 298.00  Epsilon: 0.0264
+Episode 405/1000  Total Reward: 178.00  Epsilon: 0.0263
+Episode 406/1000  Total Reward: 258.00  Epsilon: 0.0261
+Episode 407/1000  Total Reward: 300.00  Epsilon: 0.0260
+Episode 408/1000  Total Reward: 220.00  Epsilon: 0.0259
+Episode 409/1000  Total Reward: 220.00  Epsilon: 0.0257
+Episode 410/1000  Total Reward: 296.00  Epsilon: 0.0256
+Episode 411/1000  Total Reward: 294.00  Epsilon: 0.0255
+Episode 412/1000  Total Reward: 218.00  Epsilon: 0.0254
+Episode 413/1000  Total Reward: 288.00  Epsilon: 0.0252
+Episode 414/1000  Total Reward: 218.00  Epsilon: 0.0251
+Episode 415/1000  Total Reward: 298.00  Epsilon: 0.0250
+Episode 416/1000  Total Reward: 256.00  Epsilon: 0.0249
+Episode 417/1000  Total Reward: 176.00  Epsilon: 0.0247
+Episode 418/1000  Total Reward: 212.00  Epsilon: 0.0246
+Episode 419/1000  Total Reward: 252.00  Epsilon: 0.0245
+Episode 420/1000  Total Reward: 300.00  Epsilon: 0.0244
+Episode 421/1000  Total Reward: 220.00  Epsilon: 0.0242
+Episode 422/1000  Total Reward: 258.00  Epsilon: 0.0241
+Episode 423/1000  Total Reward: 218.00  Epsilon: 0.0240
+Episode 424/1000  Total Reward: 296.00  Epsilon: 0.0239
+Episode 425/1000  Total Reward: 256.00  Epsilon: 0.0238
+Episode 426/1000  Total Reward: 296.00  Epsilon: 0.0236
+Episode 427/1000  Total Reward: 298.00  Epsilon: 0.0235
+Episode 428/1000  Total Reward: 214.00  Epsilon: 0.0234
+Episode 429/1000  Total Reward: 254.00  Epsilon: 0.0233
+Episode 430/1000  Total Reward: 256.00  Epsilon: 0.0232
+Episode 431/1000  Total Reward: 260.00  Epsilon: 0.0231
+Episode 432/1000  Total Reward: 258.00  Epsilon: 0.0229
+Episode 433/1000  Total Reward: 290.00  Epsilon: 0.0228
+Episode 434/1000  Total Reward: 296.00  Epsilon: 0.0227
+Episode 435/1000  Total Reward: 300.00  Epsilon: 0.0226
+Episode 436/1000  Total Reward: 178.00  Epsilon: 0.0225
+Episode 437/1000  Total Reward: 296.00  Epsilon: 0.0224
+Episode 438/1000  Total Reward: 300.00  Epsilon: 0.0223
+Episode 439/1000  Total Reward: 296.00  Epsilon: 0.0221
+Episode 440/1000  Total Reward: 300.00  Epsilon: 0.0220
+Episode 441/1000  Total Reward: 254.00  Epsilon: 0.0219
+Episode 442/1000  Total Reward: 260.00  Epsilon: 0.0218
+Episode 443/1000  Total Reward: 256.00  Epsilon: 0.0217
+Episode 444/1000  Total Reward: 296.00  Epsilon: 0.0216
+Episode 445/1000  Total Reward: 218.00  Epsilon: 0.0215
+Episode 446/1000  Total Reward: 296.00  Epsilon: 0.0214
+Episode 447/1000  Total Reward: 298.00  Epsilon: 0.0213
+Episode 448/1000  Total Reward: 216.00  Epsilon: 0.0212
+Episode 449/1000  Total Reward: 254.00  Epsilon: 0.0211
+Episode 450/1000  Total Reward: 256.00  Epsilon: 0.0210
+Episode 451/1000  Total Reward: 296.00  Epsilon: 0.0209
+Episode 452/1000  Total Reward: 298.00  Epsilon: 0.0208
+Episode 453/1000  Total Reward: 296.00  Epsilon: 0.0206
+Episode 454/1000  Total Reward: 296.00  Epsilon: 0.0205
+Episode 455/1000  Total Reward: 300.00  Epsilon: 0.0204
+Episode 456/1000  Total Reward: 296.00  Epsilon: 0.0203
+Episode 457/1000  Total Reward: 214.00  Epsilon: 0.0202
+Episode 458/1000  Total Reward: 300.00  Epsilon: 0.0201
+Episode 459/1000  Total Reward: 298.00  Epsilon: 0.0200
+Episode 460/1000  Total Reward: 298.00  Epsilon: 0.0199
+Episode 461/1000  Total Reward: 296.00  Epsilon: 0.0198
+Episode 462/1000  Total Reward: 300.00  Epsilon: 0.0197
+Episode 463/1000  Total Reward: 300.00  Epsilon: 0.0196
+Episode 464/1000  Total Reward: 296.00  Epsilon: 0.0195
+Episode 465/1000  Total Reward: 300.00  Epsilon: 0.0194
+Episode 466/1000  Total Reward: 258.00  Epsilon: 0.0193
+Episode 467/1000  Total Reward: 258.00  Epsilon: 0.0192
+Episode 468/1000  Total Reward: 298.00  Epsilon: 0.0192
+Episode 469/1000  Total Reward: 260.00  Epsilon: 0.0191
+Episode 470/1000  Total Reward: 298.00  Epsilon: 0.0190
+Episode 471/1000  Total Reward: 298.00  Epsilon: 0.0189
+Episode 472/1000  Total Reward: 300.00  Epsilon: 0.0188
+Episode 473/1000  Total Reward: 290.00  Epsilon: 0.0187
+Episode 474/1000  Total Reward: 298.00  Epsilon: 0.0186
+Episode 475/1000  Total Reward: 300.00  Epsilon: 0.0185
+Episode 476/1000  Total Reward: 298.00  Epsilon: 0.0184
+Episode 477/1000  Total Reward: 260.00  Epsilon: 0.0183
+Episode 478/1000  Total Reward: 298.00  Epsilon: 0.0182
+Episode 479/1000  Total Reward: 300.00  Epsilon: 0.0181
+Episode 480/1000  Total Reward: 300.00  Epsilon: 0.0180
+Episode 481/1000  Total Reward: 292.00  Epsilon: 0.0179
+Episode 482/1000  Total Reward: 260.00  Epsilon: 0.0179
+Episode 483/1000  Total Reward: 250.00  Epsilon: 0.0178
+Episode 484/1000  Total Reward: 168.00  Epsilon: 0.0177
+Episode 485/1000  Total Reward: 234.00  Epsilon: 0.0176
+Episode 486/1000  Total Reward: 254.00  Epsilon: 0.0175
+Episode 487/1000  Total Reward: 298.00  Epsilon: 0.0174
+Episode 488/1000  Total Reward: 254.00  Epsilon: 0.0173
+Episode 489/1000  Total Reward: 298.00  Epsilon: 0.0172
+Episode 490/1000  Total Reward: 300.00  Epsilon: 0.0172
+Episode 491/1000  Total Reward: 296.00  Epsilon: 0.0171
+Episode 492/1000  Total Reward: 300.00  Epsilon: 0.0170
+Episode 493/1000  Total Reward: 296.00  Epsilon: 0.0169
+Episode 494/1000  Total Reward: 254.00  Epsilon: 0.0168
+Episode 495/1000  Total Reward: 298.00  Epsilon: 0.0167
+Episode 496/1000  Total Reward: 300.00  Epsilon: 0.0166
+Episode 497/1000  Total Reward: 216.00  Epsilon: 0.0166
+Episode 498/1000  Total Reward: 294.00  Epsilon: 0.0165
+Episode 499/1000  Total Reward: 218.00  Epsilon: 0.0164
+Episode 500/1000  Total Reward: 258.00  Epsilon: 0.0163
+Episode 501/1000  Total Reward: 300.00  Epsilon: 0.0162
+Episode 502/1000  Total Reward: 298.00  Epsilon: 0.0162
+Episode 503/1000  Total Reward: 220.00  Epsilon: 0.0161
+Episode 504/1000  Total Reward: 296.00  Epsilon: 0.0160
+Episode 505/1000  Total Reward: 220.00  Epsilon: 0.0159
+Episode 506/1000  Total Reward: 256.00  Epsilon: 0.0158
+Episode 507/1000  Total Reward: 298.00  Epsilon: 0.0158
+Episode 508/1000  Total Reward: 220.00  Epsilon: 0.0157
+Episode 509/1000  Total Reward: 258.00  Epsilon: 0.0156
+Episode 510/1000  Total Reward: 300.00  Epsilon: 0.0155
+Episode 511/1000  Total Reward: 260.00  Epsilon: 0.0154
+Episode 512/1000  Total Reward: 218.00  Epsilon: 0.0154
+Episode 513/1000  Total Reward: 300.00  Epsilon: 0.0153
+Episode 514/1000  Total Reward: 260.00  Epsilon: 0.0152
+Episode 515/1000  Total Reward: 258.00  Epsilon: 0.0151
+Episode 516/1000  Total Reward: 258.00  Epsilon: 0.0151
+Episode 517/1000  Total Reward: 300.00  Epsilon: 0.0150
+Episode 518/1000  Total Reward: 260.00  Epsilon: 0.0149
+Episode 519/1000  Total Reward: 298.00  Epsilon: 0.0148
+Episode 520/1000  Total Reward: 300.00  Epsilon: 0.0148
+Episode 521/1000  Total Reward: 300.00  Epsilon: 0.0147
+Episode 522/1000  Total Reward: 254.00  Epsilon: 0.0146
+Episode 523/1000  Total Reward: 298.00  Epsilon: 0.0145
+Episode 524/1000  Total Reward: 296.00  Epsilon: 0.0145
+Episode 525/1000  Total Reward: 300.00  Epsilon: 0.0144
+Episode 526/1000  Total Reward: 296.00  Epsilon: 0.0143
+Episode 527/1000  Total Reward: 298.00  Epsilon: 0.0142
+Episode 528/1000  Total Reward: 298.00  Epsilon: 0.0142
+Episode 529/1000  Total Reward: 258.00  Epsilon: 0.0141
+Episode 530/1000  Total Reward: 300.00  Epsilon: 0.0140
+Episode 531/1000  Total Reward: 300.00  Epsilon: 0.0140
+Episode 532/1000  Total Reward: 300.00  Epsilon: 0.0139
+Episode 533/1000  Total Reward: 294.00  Epsilon: 0.0138
+Episode 534/1000  Total Reward: 258.00  Epsilon: 0.0138
+Episode 535/1000  Total Reward: 256.00  Epsilon: 0.0137
+Episode 536/1000  Total Reward: 300.00  Epsilon: 0.0136
+Episode 537/1000  Total Reward: 300.00  Epsilon: 0.0136
+Episode 538/1000  Total Reward: 300.00  Epsilon: 0.0135
+Episode 539/1000  Total Reward: 216.00  Epsilon: 0.0134
+Episode 540/1000  Total Reward: 260.00  Epsilon: 0.0134
+Episode 541/1000  Total Reward: 260.00  Epsilon: 0.0133
+Episode 542/1000  Total Reward: 300.00  Epsilon: 0.0132
+Episode 543/1000  Total Reward: 298.00  Epsilon: 0.0132
+Episode 544/1000  Total Reward: 300.00  Epsilon: 0.0131
+Episode 545/1000  Total Reward: 300.00  Epsilon: 0.0130
+Episode 546/1000  Total Reward: 300.00  Epsilon: 0.0130
+Episode 547/1000  Total Reward: 298.00  Epsilon: 0.0129
+Episode 548/1000  Total Reward: 296.00  Epsilon: 0.0128
+Episode 549/1000  Total Reward: 260.00  Epsilon: 0.0128
+Episode 550/1000  Total Reward: 298.00  Epsilon: 0.0127
+Episode 551/1000  Total Reward: 298.00  Epsilon: 0.0126
+Episode 552/1000  Total Reward: 298.00  Epsilon: 0.0126
+Episode 553/1000  Total Reward: 260.00  Epsilon: 0.0125
+Episode 554/1000  Total Reward: 300.00  Epsilon: 0.0124
+Episode 555/1000  Total Reward: 298.00  Epsilon: 0.0124
+Episode 556/1000  Total Reward: 296.00  Epsilon: 0.0123
+Episode 557/1000  Total Reward: 298.00  Epsilon: 0.0123
+Episode 558/1000  Total Reward: 300.00  Epsilon: 0.0122
+Episode 559/1000  Total Reward: 260.00  Epsilon: 0.0121
+Episode 560/1000  Total Reward: 296.00  Epsilon: 0.0121
+Episode 561/1000  Total Reward: 260.00  Epsilon: 0.0120
+Episode 562/1000  Total Reward: 294.00  Epsilon: 0.0120
+Episode 563/1000  Total Reward: 258.00  Epsilon: 0.0119
+Episode 564/1000  Total Reward: 298.00  Epsilon: 0.0118
+Episode 565/1000  Total Reward: 300.00  Epsilon: 0.0118
+Episode 566/1000  Total Reward: 258.00  Epsilon: 0.0117
+Episode 567/1000  Total Reward: 260.00  Epsilon: 0.0117
+Episode 568/1000  Total Reward: 296.00  Epsilon: 0.0116
+Episode 569/1000  Total Reward: 300.00  Epsilon: 0.0115
+Episode 570/1000  Total Reward: 298.00  Epsilon: 0.0115
+Episode 571/1000  Total Reward: 300.00  Epsilon: 0.0114
+Episode 572/1000  Total Reward: 298.00  Epsilon: 0.0114
+Episode 573/1000  Total Reward: 298.00  Epsilon: 0.0113
+Episode 574/1000  Total Reward: 300.00  Epsilon: 0.0113
+Episode 575/1000  Total Reward: 260.00  Epsilon: 0.0112
+Episode 576/1000  Total Reward: 300.00  Epsilon: 0.0111
+Episode 577/1000  Total Reward: 300.00  Epsilon: 0.0111
+Episode 578/1000  Total Reward: 300.00  Epsilon: 0.0110
+Episode 579/1000  Total Reward: 296.00  Epsilon: 0.0110
+Episode 580/1000  Total Reward: 300.00  Epsilon: 0.0109
+Episode 581/1000  Total Reward: 256.00  Epsilon: 0.0109
+Episode 582/1000  Total Reward: 300.00  Epsilon: 0.0108
+Episode 583/1000  Total Reward: 300.00  Epsilon: 0.0108
+Episode 584/1000  Total Reward: 300.00  Epsilon: 0.0107
+Episode 585/1000  Total Reward: 296.00  Epsilon: 0.0107
+Episode 586/1000  Total Reward: 300.00  Epsilon: 0.0106
+Episode 587/1000  Total Reward: 296.00  Epsilon: 0.0105
+Episode 588/1000  Total Reward: 300.00  Epsilon: 0.0105
+Episode 589/1000  Total Reward: 220.00  Epsilon: 0.0104
+Episode 590/1000  Total Reward: 296.00  Epsilon: 0.0104
+Episode 591/1000  Total Reward: 258.00  Epsilon: 0.0103
+Episode 592/1000  Total Reward: 298.00  Epsilon: 0.0103
+Episode 593/1000  Total Reward: 300.00  Epsilon: 0.0102
+Episode 594/1000  Total Reward: 296.00  Epsilon: 0.0102
+Episode 595/1000  Total Reward: 296.00  Epsilon: 0.0101
+Episode 596/1000  Total Reward: 298.00  Epsilon: 0.0101
+Episode 597/1000  Total Reward: 298.00  Epsilon: 0.0100
+Episode 598/1000  Total Reward: 298.00  Epsilon: 0.0100
+Episode 599/1000  Total Reward: 294.00  Epsilon: 0.0099
+Episode 600/1000  Total Reward: 300.00  Epsilon: 0.0099
+Episode 601/1000  Total Reward: 260.00  Epsilon: 0.0098
+Episode 602/1000  Total Reward: 298.00  Epsilon: 0.0098
+Episode 603/1000  Total Reward: 300.00  Epsilon: 0.0097
+Episode 604/1000  Total Reward: 300.00  Epsilon: 0.0097
+Episode 605/1000  Total Reward: 300.00  Epsilon: 0.0096
+Episode 606/1000  Total Reward: 298.00  Epsilon: 0.0096
+Episode 607/1000  Total Reward: 298.00  Epsilon: 0.0095
+Episode 608/1000  Total Reward: 298.00  Epsilon: 0.0095
+Episode 609/1000  Total Reward: 300.00  Epsilon: 0.0094
+Episode 610/1000  Total Reward: 298.00  Epsilon: 0.0094
+Episode 611/1000  Total Reward: 296.00  Epsilon: 0.0094
+Episode 612/1000  Total Reward: 296.00  Epsilon: 0.0093
+Episode 613/1000  Total Reward: 300.00  Epsilon: 0.0093
+Episode 614/1000  Total Reward: 296.00  Epsilon: 0.0092
+Episode 615/1000  Total Reward: 300.00  Epsilon: 0.0092
+Episode 616/1000  Total Reward: 298.00  Epsilon: 0.0091
+Episode 617/1000  Total Reward: 298.00  Epsilon: 0.0091
+Episode 618/1000  Total Reward: 298.00  Epsilon: 0.0090
+Episode 619/1000  Total Reward: 300.00  Epsilon: 0.0090
+Episode 620/1000  Total Reward: 298.00  Epsilon: 0.0089
+Episode 621/1000  Total Reward: 300.00  Epsilon: 0.0089
+Episode 622/1000  Total Reward: 258.00  Epsilon: 0.0089
+Episode 623/1000  Total Reward: 258.00  Epsilon: 0.0088
+Episode 624/1000  Total Reward: 202.00  Epsilon: 0.0088
+Episode 625/1000  Total Reward: 212.00  Epsilon: 0.0087
+Episode 626/1000  Total Reward: 300.00  Epsilon: 0.0087
+Episode 627/1000  Total Reward: 298.00  Epsilon: 0.0086
+Episode 628/1000  Total Reward: 300.00  Epsilon: 0.0086
+Episode 629/1000  Total Reward: 300.00  Epsilon: 0.0085
+Episode 630/1000  Total Reward: 300.00  Epsilon: 0.0085
+Episode 631/1000  Total Reward: 300.00  Epsilon: 0.0085
+Episode 632/1000  Total Reward: 300.00  Epsilon: 0.0084
+Episode 633/1000  Total Reward: 300.00  Epsilon: 0.0084
+Episode 634/1000  Total Reward: 300.00  Epsilon: 0.0083
+Episode 635/1000  Total Reward: 300.00  Epsilon: 0.0083
+Episode 636/1000  Total Reward: 300.00  Epsilon: 0.0083
+Episode 637/1000  Total Reward: 260.00  Epsilon: 0.0082
+Episode 638/1000  Total Reward: 260.00  Epsilon: 0.0082
+Episode 639/1000  Total Reward: 298.00  Epsilon: 0.0081
+Episode 640/1000  Total Reward: 300.00  Epsilon: 0.0081
+Episode 641/1000  Total Reward: 298.00  Epsilon: 0.0080
+Episode 642/1000  Total Reward: 300.00  Epsilon: 0.0080
+Episode 643/1000  Total Reward: 300.00  Epsilon: 0.0080
+Episode 644/1000  Total Reward: 300.00  Epsilon: 0.0079
+Episode 645/1000  Total Reward: 300.00  Epsilon: 0.0079
+Episode 646/1000  Total Reward: 298.00  Epsilon: 0.0078
+Episode 647/1000  Total Reward: 300.00  Epsilon: 0.0078
+Episode 648/1000  Total Reward: 300.00  Epsilon: 0.0078
+Episode 649/1000  Total Reward: 300.00  Epsilon: 0.0077
+Episode 650/1000  Total Reward: 300.00  Epsilon: 0.0077
+Episode 651/1000  Total Reward: 260.00  Epsilon: 0.0077
+Episode 652/1000  Total Reward: 300.00  Epsilon: 0.0076
+Episode 653/1000  Total Reward: 298.00  Epsilon: 0.0076
+Episode 654/1000  Total Reward: 260.00  Epsilon: 0.0075
+Episode 655/1000  Total Reward: 256.00  Epsilon: 0.0075
+Episode 656/1000  Total Reward: 300.00  Epsilon: 0.0075
+Episode 657/1000  Total Reward: 298.00  Epsilon: 0.0074
+Episode 658/1000  Total Reward: 300.00  Epsilon: 0.0074
+Episode 659/1000  Total Reward: 260.00  Epsilon: 0.0074
+Episode 660/1000  Total Reward: 218.00  Epsilon: 0.0073
+Episode 661/1000  Total Reward: 298.00  Epsilon: 0.0073
+Episode 662/1000  Total Reward: 260.00  Epsilon: 0.0072
+Episode 663/1000  Total Reward: 298.00  Epsilon: 0.0072
+Episode 664/1000  Total Reward: 298.00  Epsilon: 0.0072
+Episode 665/1000  Total Reward: 298.00  Epsilon: 0.0071
+Episode 666/1000  Total Reward: 298.00  Epsilon: 0.0071
+Episode 667/1000  Total Reward: 300.00  Epsilon: 0.0071
+Episode 668/1000  Total Reward: 300.00  Epsilon: 0.0070
+Episode 669/1000  Total Reward: 298.00  Epsilon: 0.0070
+Episode 670/1000  Total Reward: 298.00  Epsilon: 0.0070
+Episode 671/1000  Total Reward: 298.00  Epsilon: 0.0069
+Episode 672/1000  Total Reward: 298.00  Epsilon: 0.0069
+Episode 673/1000  Total Reward: 296.00  Epsilon: 0.0069
+Episode 674/1000  Total Reward: 298.00  Epsilon: 0.0068
+Episode 675/1000  Total Reward: 260.00  Epsilon: 0.0068
+Episode 676/1000  Total Reward: 300.00  Epsilon: 0.0068
+Episode 677/1000  Total Reward: 300.00  Epsilon: 0.0067
+Episode 678/1000  Total Reward: 298.00  Epsilon: 0.0067
+Episode 679/1000  Total Reward: 298.00  Epsilon: 0.0067
+Episode 680/1000  Total Reward: 298.00  Epsilon: 0.0066
+Episode 681/1000  Total Reward: 300.00  Epsilon: 0.0066
+Episode 682/1000  Total Reward: 298.00  Epsilon: 0.0066
+Episode 683/1000  Total Reward: 260.00  Epsilon: 0.0065
+Episode 684/1000  Total Reward: 300.00  Epsilon: 0.0065
+Episode 685/1000  Total Reward: 300.00  Epsilon: 0.0065
+Episode 686/1000  Total Reward: 300.00  Epsilon: 0.0064
+Episode 687/1000  Total Reward: 296.00  Epsilon: 0.0064
+Episode 688/1000  Total Reward: 298.00  Epsilon: 0.0064
+Episode 689/1000  Total Reward: 298.00  Epsilon: 0.0063
+Episode 690/1000  Total Reward: 300.00  Epsilon: 0.0063
+Episode 691/1000  Total Reward: 300.00  Epsilon: 0.0063
+Episode 692/1000  Total Reward: 298.00  Epsilon: 0.0062
+Episode 693/1000  Total Reward: 300.00  Epsilon: 0.0062
+Episode 694/1000  Total Reward: 300.00  Epsilon: 0.0062
+Episode 695/1000  Total Reward: 300.00  Epsilon: 0.0061
+Episode 696/1000  Total Reward: 260.00  Epsilon: 0.0061
+Episode 697/1000  Total Reward: 298.00  Epsilon: 0.0061
+Episode 698/1000  Total Reward: 298.00  Epsilon: 0.0060
+Episode 699/1000  Total Reward: 298.00  Epsilon: 0.0060
+Episode 700/1000  Total Reward: 260.00  Epsilon: 0.0060
+Episode 701/1000  Total Reward: 300.00  Epsilon: 0.0060
+Episode 702/1000  Total Reward: 298.00  Epsilon: 0.0059
+Episode 703/1000  Total Reward: 300.00  Epsilon: 0.0059
+Episode 704/1000  Total Reward: 300.00  Epsilon: 0.0059
+Episode 705/1000  Total Reward: 298.00  Epsilon: 0.0058
+Episode 706/1000  Total Reward: 300.00  Epsilon: 0.0058
+Episode 707/1000  Total Reward: 300.00  Epsilon: 0.0058
+Episode 708/1000  Total Reward: 300.00  Epsilon: 0.0058
+Episode 709/1000  Total Reward: 300.00  Epsilon: 0.0057
+Episode 710/1000  Total Reward: 300.00  Epsilon: 0.0057
+Episode 711/1000  Total Reward: 300.00  Epsilon: 0.0057
+Episode 712/1000  Total Reward: 298.00  Epsilon: 0.0056
+Episode 713/1000  Total Reward: 260.00  Epsilon: 0.0056
+Episode 714/1000  Total Reward: 298.00  Epsilon: 0.0056
+Episode 715/1000  Total Reward: 300.00  Epsilon: 0.0056
+Episode 716/1000  Total Reward: 296.00  Epsilon: 0.0055
+Episode 717/1000  Total Reward: 300.00  Epsilon: 0.0055
+Episode 718/1000  Total Reward: 300.00  Epsilon: 0.0055
+Episode 719/1000  Total Reward: 298.00  Epsilon: 0.0054
+Episode 720/1000  Total Reward: 300.00  Epsilon: 0.0054
+Episode 721/1000  Total Reward: 260.00  Epsilon: 0.0054
+Episode 722/1000  Total Reward: 300.00  Epsilon: 0.0054
+Episode 723/1000  Total Reward: 298.00  Epsilon: 0.0053
+Episode 724/1000  Total Reward: 300.00  Epsilon: 0.0053
+Episode 725/1000  Total Reward: 300.00  Epsilon: 0.0053
+Episode 726/1000  Total Reward: 300.00  Epsilon: 0.0053
+Episode 727/1000  Total Reward: 300.00  Epsilon: 0.0052
+Episode 728/1000  Total Reward: 300.00  Epsilon: 0.0052
+Episode 729/1000  Total Reward: 300.00  Epsilon: 0.0052
+Episode 730/1000  Total Reward: 298.00  Epsilon: 0.0052
+Episode 731/1000  Total Reward: 300.00  Epsilon: 0.0051
+Episode 732/1000  Total Reward: 300.00  Epsilon: 0.0051
+Episode 733/1000  Total Reward: 300.00  Epsilon: 0.0051
+Episode 734/1000  Total Reward: 298.00  Epsilon: 0.0050
+Episode 735/1000  Total Reward: 300.00  Epsilon: 0.0050
+Episode 736/1000  Total Reward: 300.00  Epsilon: 0.0050
+Episode 737/1000  Total Reward: 300.00  Epsilon: 0.0050
+Episode 738/1000  Total Reward: 300.00  Epsilon: 0.0049
+Episode 739/1000  Total Reward: 300.00  Epsilon: 0.0049
+Episode 740/1000  Total Reward: 298.00  Epsilon: 0.0049
+Episode 741/1000  Total Reward: 300.00  Epsilon: 0.0049
+Episode 742/1000  Total Reward: 300.00  Epsilon: 0.0049
+Episode 743/1000  Total Reward: 300.00  Epsilon: 0.0048
+Episode 744/1000  Total Reward: 296.00  Epsilon: 0.0048
+Episode 745/1000  Total Reward: 298.00  Epsilon: 0.0048
+Episode 746/1000  Total Reward: 300.00  Epsilon: 0.0048
+Episode 747/1000  Total Reward: 300.00  Epsilon: 0.0047
+Episode 748/1000  Total Reward: 296.00  Epsilon: 0.0047
+Episode 749/1000  Total Reward: 298.00  Epsilon: 0.0047
+Episode 750/1000  Total Reward: 298.00  Epsilon: 0.0047
+Episode 751/1000  Total Reward: 300.00  Epsilon: 0.0046
+Episode 752/1000  Total Reward: 298.00  Epsilon: 0.0046
+Episode 753/1000  Total Reward: 260.00  Epsilon: 0.0046
+Episode 754/1000  Total Reward: 300.00  Epsilon: 0.0046
+Episode 755/1000  Total Reward: 298.00  Epsilon: 0.0045
+Episode 756/1000  Total Reward: 298.00  Epsilon: 0.0045
+Episode 757/1000  Total Reward: 298.00  Epsilon: 0.0045
+Episode 758/1000  Total Reward: 298.00  Epsilon: 0.0045
+Episode 759/1000  Total Reward: 298.00  Epsilon: 0.0045
+Episode 760/1000  Total Reward: 300.00  Epsilon: 0.0044
+Episode 761/1000  Total Reward: 300.00  Epsilon: 0.0044
+Episode 762/1000  Total Reward: 260.00  Epsilon: 0.0044
+Episode 763/1000  Total Reward: 202.00  Epsilon: 0.0044
+Episode 764/1000  Total Reward: 280.00  Epsilon: 0.0043
+Episode 765/1000  Total Reward: 300.00  Epsilon: 0.0043
+Episode 766/1000  Total Reward: 300.00  Epsilon: 0.0043
+Episode 767/1000  Total Reward: 228.00  Epsilon: 0.0043
+Episode 768/1000  Total Reward: 300.00  Epsilon: 0.0043
+Episode 769/1000  Total Reward: 300.00  Epsilon: 0.0042
+Episode 770/1000  Total Reward: 260.00  Epsilon: 0.0042
+Episode 771/1000  Total Reward: 290.00  Epsilon: 0.0042
+Episode 772/1000  Total Reward: 300.00  Epsilon: 0.0042
+Episode 773/1000  Total Reward: 260.00  Epsilon: 0.0042
+Episode 774/1000  Total Reward: 300.00  Epsilon: 0.0041
+Episode 775/1000  Total Reward: 300.00  Epsilon: 0.0041
+Episode 776/1000  Total Reward: 300.00  Epsilon: 0.0041
+Episode 777/1000  Total Reward: 300.00  Epsilon: 0.0041
+Episode 778/1000  Total Reward: 300.00  Epsilon: 0.0040
+Episode 779/1000  Total Reward: 298.00  Epsilon: 0.0040
+Episode 780/1000  Total Reward: 300.00  Epsilon: 0.0040
+Episode 781/1000  Total Reward: 300.00  Epsilon: 0.0040
+Episode 782/1000  Total Reward: 300.00  Epsilon: 0.0040
+Episode 783/1000  Total Reward: 300.00  Epsilon: 0.0039
+Episode 784/1000  Total Reward: 300.00  Epsilon: 0.0039
+Episode 785/1000  Total Reward: 296.00  Epsilon: 0.0039
+Episode 786/1000  Total Reward: 260.00  Epsilon: 0.0039
+Episode 787/1000  Total Reward: 300.00  Epsilon: 0.0039
+Episode 788/1000  Total Reward: 300.00  Epsilon: 0.0039
+Episode 789/1000  Total Reward: 300.00  Epsilon: 0.0038
+Episode 790/1000  Total Reward: 300.00  Epsilon: 0.0038
+Episode 791/1000  Total Reward: 300.00  Epsilon: 0.0038
+Episode 792/1000  Total Reward: 298.00  Epsilon: 0.0038
+Episode 793/1000  Total Reward: 300.00  Epsilon: 0.0038
+Episode 794/1000  Total Reward: 300.00  Epsilon: 0.0037
+Episode 795/1000  Total Reward: 300.00  Epsilon: 0.0037
+Episode 796/1000  Total Reward: 300.00  Epsilon: 0.0037
+Episode 797/1000  Total Reward: 300.00  Epsilon: 0.0037
+Episode 798/1000  Total Reward: 300.00  Epsilon: 0.0037
+Episode 799/1000  Total Reward: 300.00  Epsilon: 0.0036
+Episode 800/1000  Total Reward: 298.00  Epsilon: 0.0036
+Episode 801/1000  Total Reward: 300.00  Epsilon: 0.0036
+Episode 802/1000  Total Reward: 300.00  Epsilon: 0.0036
+Episode 803/1000  Total Reward: 298.00  Epsilon: 0.0036
+Episode 804/1000  Total Reward: 298.00  Epsilon: 0.0036
+Episode 805/1000  Total Reward: 298.00  Epsilon: 0.0035
+Episode 806/1000  Total Reward: 300.00  Epsilon: 0.0035
+Episode 807/1000  Total Reward: 296.00  Epsilon: 0.0035
+Episode 808/1000  Total Reward: 300.00  Epsilon: 0.0035
+Episode 809/1000  Total Reward: 260.00  Epsilon: 0.0035
+Episode 810/1000  Total Reward: 300.00  Epsilon: 0.0034
+Episode 811/1000  Total Reward: 300.00  Epsilon: 0.0034
+Episode 812/1000  Total Reward: 300.00  Epsilon: 0.0034
+Episode 813/1000  Total Reward: 258.00  Epsilon: 0.0034
+Episode 814/1000  Total Reward: 300.00  Epsilon: 0.0034
+Episode 815/1000  Total Reward: 300.00  Epsilon: 0.0034
+Episode 816/1000  Total Reward: 300.00  Epsilon: 0.0033
+Episode 817/1000  Total Reward: 300.00  Epsilon: 0.0033
+Episode 818/1000  Total Reward: 300.00  Epsilon: 0.0033
+Episode 819/1000  Total Reward: 258.00  Epsilon: 0.0033
+Episode 820/1000  Total Reward: 298.00  Epsilon: 0.0033
+Episode 821/1000  Total Reward: 300.00  Epsilon: 0.0033
+Episode 822/1000  Total Reward: 300.00  Epsilon: 0.0032
+Episode 823/1000  Total Reward: 300.00  Epsilon: 0.0032
+Episode 824/1000  Total Reward: 300.00  Epsilon: 0.0032
+Episode 825/1000  Total Reward: 300.00  Epsilon: 0.0032
+Episode 826/1000  Total Reward: 300.00  Epsilon: 0.0032
+Episode 827/1000  Total Reward: 300.00  Epsilon: 0.0032
+Episode 828/1000  Total Reward: 300.00  Epsilon: 0.0032
+Episode 829/1000  Total Reward: 300.00  Epsilon: 0.0031
+Episode 830/1000  Total Reward: 298.00  Epsilon: 0.0031
+Episode 831/1000  Total Reward: 300.00  Epsilon: 0.0031
+Episode 832/1000  Total Reward: 300.00  Epsilon: 0.0031
+Episode 833/1000  Total Reward: 300.00  Epsilon: 0.0031
+Episode 834/1000  Total Reward: 260.00  Epsilon: 0.0031
+Episode 835/1000  Total Reward: 300.00  Epsilon: 0.0030
+Episode 836/1000  Total Reward: 298.00  Epsilon: 0.0030
+Episode 837/1000  Total Reward: 260.00  Epsilon: 0.0030
+Episode 838/1000  Total Reward: 300.00  Epsilon: 0.0030
+Episode 839/1000  Total Reward: 298.00  Epsilon: 0.0030
+Episode 840/1000  Total Reward: 298.00  Epsilon: 0.0030
+Episode 841/1000  Total Reward: 300.00  Epsilon: 0.0030
+Episode 842/1000  Total Reward: 300.00  Epsilon: 0.0029
+Episode 843/1000  Total Reward: 300.00  Epsilon: 0.0029
+Episode 844/1000  Total Reward: 300.00  Epsilon: 0.0029
+Episode 845/1000  Total Reward: 300.00  Epsilon: 0.0029
+Episode 846/1000  Total Reward: 300.00  Epsilon: 0.0029
+Episode 847/1000  Total Reward: 300.00  Epsilon: 0.0029
+Episode 848/1000  Total Reward: 300.00  Epsilon: 0.0029
+Episode 849/1000  Total Reward: 300.00  Epsilon: 0.0028
+Episode 850/1000  Total Reward: 300.00  Epsilon: 0.0028
+Episode 851/1000  Total Reward: 300.00  Epsilon: 0.0028
+Episode 852/1000  Total Reward: 300.00  Epsilon: 0.0028
+Episode 853/1000  Total Reward: 300.00  Epsilon: 0.0028
+Episode 854/1000  Total Reward: 300.00  Epsilon: 0.0028
+Episode 855/1000  Total Reward: 300.00  Epsilon: 0.0028
+Episode 856/1000  Total Reward: 300.00  Epsilon: 0.0027
+Episode 857/1000  Total Reward: 300.00  Epsilon: 0.0027
+Episode 858/1000  Total Reward: 300.00  Epsilon: 0.0027
+Episode 859/1000  Total Reward: 300.00  Epsilon: 0.0027
+Episode 860/1000  Total Reward: 300.00  Epsilon: 0.0027
+Episode 861/1000  Total Reward: 260.00  Epsilon: 0.0027
+Episode 862/1000  Total Reward: 300.00  Epsilon: 0.0027
+Episode 863/1000  Total Reward: 300.00  Epsilon: 0.0026
+Episode 864/1000  Total Reward: 258.00  Epsilon: 0.0026
+Episode 865/1000  Total Reward: 298.00  Epsilon: 0.0026
+Episode 866/1000  Total Reward: 300.00  Epsilon: 0.0026
+Episode 867/1000  Total Reward: 300.00  Epsilon: 0.0026
+Episode 868/1000  Total Reward: 300.00  Epsilon: 0.0026
+Episode 869/1000  Total Reward: 300.00  Epsilon: 0.0026
+Episode 870/1000  Total Reward: 300.00  Epsilon: 0.0026
+Episode 871/1000  Total Reward: 300.00  Epsilon: 0.0025
+Episode 872/1000  Total Reward: 300.00  Epsilon: 0.0025
+Episode 873/1000  Total Reward: 300.00  Epsilon: 0.0025
+Episode 874/1000  Total Reward: 300.00  Epsilon: 0.0025
+Episode 875/1000  Total Reward: 300.00  Epsilon: 0.0025
+Episode 876/1000  Total Reward: 300.00  Epsilon: 0.0025
+Episode 877/1000  Total Reward: 300.00  Epsilon: 0.0025
+Episode 878/1000  Total Reward: 300.00  Epsilon: 0.0025
+Episode 879/1000  Total Reward: 300.00  Epsilon: 0.0024
+Episode 880/1000  Total Reward: 300.00  Epsilon: 0.0024
+Episode 881/1000  Total Reward: 300.00  Epsilon: 0.0024
+Episode 882/1000  Total Reward: 300.00  Epsilon: 0.0024
+Episode 883/1000  Total Reward: 300.00  Epsilon: 0.0024
+Episode 884/1000  Total Reward: 300.00  Epsilon: 0.0024
+Episode 885/1000  Total Reward: 300.00  Epsilon: 0.0024
+Episode 886/1000  Total Reward: 300.00  Epsilon: 0.0024
+Episode 887/1000  Total Reward: 300.00  Epsilon: 0.0023
+Episode 888/1000  Total Reward: 300.00  Epsilon: 0.0023
+Episode 889/1000  Total Reward: 300.00  Epsilon: 0.0023
+Episode 890/1000  Total Reward: 258.00  Epsilon: 0.0023
+Episode 891/1000  Total Reward: 298.00  Epsilon: 0.0023
+Episode 892/1000  Total Reward: 300.00  Epsilon: 0.0023
+Episode 893/1000  Total Reward: 300.00  Epsilon: 0.0023
+Episode 894/1000  Total Reward: 300.00  Epsilon: 0.0023
+Episode 895/1000  Total Reward: 300.00  Epsilon: 0.0023
+Episode 896/1000  Total Reward: 300.00  Epsilon: 0.0022
+Episode 897/1000  Total Reward: 300.00  Epsilon: 0.0022
+Episode 898/1000  Total Reward: 300.00  Epsilon: 0.0022
+Episode 899/1000  Total Reward: 300.00  Epsilon: 0.0022
+Episode 900/1000  Total Reward: 300.00  Epsilon: 0.0022
+Episode 901/1000  Total Reward: 298.00  Epsilon: 0.0022
+Episode 902/1000  Total Reward: 300.00  Epsilon: 0.0022
+Episode 903/1000  Total Reward: 300.00  Epsilon: 0.0022
+Episode 904/1000  Total Reward: 300.00  Epsilon: 0.0022
+Episode 905/1000  Total Reward: 300.00  Epsilon: 0.0021
+Episode 906/1000  Total Reward: 300.00  Epsilon: 0.0021
+Episode 907/1000  Total Reward: 300.00  Epsilon: 0.0021
+Episode 908/1000  Total Reward: 300.00  Epsilon: 0.0021
+Episode 909/1000  Total Reward: 300.00  Epsilon: 0.0021
+Episode 910/1000  Total Reward: 300.00  Epsilon: 0.0021
+Episode 911/1000  Total Reward: 300.00  Epsilon: 0.0021
+Episode 912/1000  Total Reward: 300.00  Epsilon: 0.0021
+Episode 913/1000  Total Reward: 300.00  Epsilon: 0.0021
+Episode 914/1000  Total Reward: 298.00  Epsilon: 0.0020
+Episode 915/1000  Total Reward: 300.00  Epsilon: 0.0020
+Episode 916/1000  Total Reward: 300.00  Epsilon: 0.0020
+Episode 917/1000  Total Reward: 300.00  Epsilon: 0.0020
+Episode 918/1000  Total Reward: 260.00  Epsilon: 0.0020
+Episode 919/1000  Total Reward: 300.00  Epsilon: 0.0020
+Episode 920/1000  Total Reward: 300.00  Epsilon: 0.0020
+Episode 921/1000  Total Reward: 298.00  Epsilon: 0.0020
+Episode 922/1000  Total Reward: 300.00  Epsilon: 0.0020
+Episode 923/1000  Total Reward: 300.00  Epsilon: 0.0020
+Episode 924/1000  Total Reward: 300.00  Epsilon: 0.0019
+Episode 925/1000  Total Reward: 300.00  Epsilon: 0.0019
+Episode 926/1000  Total Reward: 300.00  Epsilon: 0.0019
+Episode 927/1000  Total Reward: 300.00  Epsilon: 0.0019
+Episode 928/1000  Total Reward: 300.00  Epsilon: 0.0019
+Episode 929/1000  Total Reward: 300.00  Epsilon: 0.0019
+Episode 930/1000  Total Reward: 300.00  Epsilon: 0.0019
+Episode 931/1000  Total Reward: 300.00  Epsilon: 0.0019
+Episode 932/1000  Total Reward: 298.00  Epsilon: 0.0019
+Episode 933/1000  Total Reward: 300.00  Epsilon: 0.0019
+Episode 934/1000  Total Reward: 300.00  Epsilon: 0.0019
+Episode 935/1000  Total Reward: 300.00  Epsilon: 0.0018
+Episode 936/1000  Total Reward: 300.00  Epsilon: 0.0018
+Episode 937/1000  Total Reward: 300.00  Epsilon: 0.0018
+Episode 938/1000  Total Reward: 298.00  Epsilon: 0.0018
+Episode 939/1000  Total Reward: 300.00  Epsilon: 0.0018
+Episode 940/1000  Total Reward: 300.00  Epsilon: 0.0018
+Episode 941/1000  Total Reward: 300.00  Epsilon: 0.0018
+Episode 942/1000  Total Reward: 300.00  Epsilon: 0.0018
+Episode 943/1000  Total Reward: 300.00  Epsilon: 0.0018
+Episode 944/1000  Total Reward: 300.00  Epsilon: 0.0018
+Episode 945/1000  Total Reward: 300.00  Epsilon: 0.0018
+Episode 946/1000  Total Reward: 300.00  Epsilon: 0.0017
+Episode 947/1000  Total Reward: 300.00  Epsilon: 0.0017
+Episode 948/1000  Total Reward: 300.00  Epsilon: 0.0017
+Episode 949/1000  Total Reward: 300.00  Epsilon: 0.0017
+Episode 950/1000  Total Reward: 300.00  Epsilon: 0.0017
+Episode 951/1000  Total Reward: 300.00  Epsilon: 0.0017
+Episode 952/1000  Total Reward: 300.00  Epsilon: 0.0017
+Episode 953/1000  Total Reward: 298.00  Epsilon: 0.0017
+Episode 954/1000  Total Reward: 300.00  Epsilon: 0.0017
+Episode 955/1000  Total Reward: 300.00  Epsilon: 0.0017
+Episode 956/1000  Total Reward: 300.00  Epsilon: 0.0017
+Episode 957/1000  Total Reward: 300.00  Epsilon: 0.0017
+Episode 958/1000  Total Reward: 300.00  Epsilon: 0.0016
+Episode 959/1000  Total Reward: 300.00  Epsilon: 0.0016
+Episode 960/1000  Total Reward: 300.00  Epsilon: 0.0016
+Episode 961/1000  Total Reward: 300.00  Epsilon: 0.0016
+Episode 962/1000  Total Reward: 300.00  Epsilon: 0.0016
+Episode 963/1000  Total Reward: 300.00  Epsilon: 0.0016
+Episode 964/1000  Total Reward: 300.00  Epsilon: 0.0016
+Episode 965/1000  Total Reward: 260.00  Epsilon: 0.0016
+Episode 966/1000  Total Reward: 300.00  Epsilon: 0.0016
+Episode 967/1000  Total Reward: 300.00  Epsilon: 0.0016
+Episode 968/1000  Total Reward: 300.00  Epsilon: 0.0016
+Episode 969/1000  Total Reward: 300.00  Epsilon: 0.0016
+Episode 970/1000  Total Reward: 300.00  Epsilon: 0.0015
+Episode 971/1000  Total Reward: 300.00  Epsilon: 0.0015
+Episode 972/1000  Total Reward: 300.00  Epsilon: 0.0015
+Episode 973/1000  Total Reward: 300.00  Epsilon: 0.0015
+Episode 974/1000  Total Reward: 298.00  Epsilon: 0.0015
+Episode 975/1000  Total Reward: 300.00  Epsilon: 0.0015
+Episode 976/1000  Total Reward: 300.00  Epsilon: 0.0015
+Episode 977/1000  Total Reward: 300.00  Epsilon: 0.0015
+Episode 978/1000  Total Reward: 300.00  Epsilon: 0.0015
+Episode 979/1000  Total Reward: 300.00  Epsilon: 0.0015
+Episode 980/1000  Total Reward: 300.00  Epsilon: 0.0015
+Episode 981/1000  Total Reward: 300.00  Epsilon: 0.0015
+Episode 982/1000  Total Reward: 298.00  Epsilon: 0.0015
+Episode 983/1000  Total Reward: 300.00  Epsilon: 0.0014
+Episode 984/1000  Total Reward: 300.00  Epsilon: 0.0014
+Episode 985/1000  Total Reward: 298.00  Epsilon: 0.0014
+Episode 986/1000  Total Reward: 300.00  Epsilon: 0.0014
+Episode 987/1000  Total Reward: 300.00  Epsilon: 0.0014
+Episode 988/1000  Total Reward: 300.00  Epsilon: 0.0014
+Episode 989/1000  Total Reward: 300.00  Epsilon: 0.0014
+Episode 990/1000  Total Reward: 300.00  Epsilon: 0.0014
+Episode 991/1000  Total Reward: 300.00  Epsilon: 0.0014
+Episode 992/1000  Total Reward: 300.00  Epsilon: 0.0014
+Episode 993/1000  Total Reward: 298.00  Epsilon: 0.0014
+Episode 994/1000  Total Reward: 300.00  Epsilon: 0.0014
+Episode 995/1000  Total Reward: 300.00  Epsilon: 0.0014
+Episode 996/1000  Total Reward: 300.00  Epsilon: 0.0014
+Episode 997/1000  Total Reward: 300.00  Epsilon: 0.0014
+Episode 998/1000  Total Reward: 300.00  Epsilon: 0.0013
+Episode 999/1000  Total Reward: 300.00  Epsilon: 0.0013
+Episode 1000/1000  Total Reward: 298.00  Epsilon: 0.0013
+Policy saved to runs/sarsa/policies/policy_c15bea38.pkl

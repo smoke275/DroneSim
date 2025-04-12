@@ -6,7 +6,7 @@ import gymnasium as gym
 # from your_file import LMDEnv  # e.g. if the environment is in your file
 
 import envs  # This will register the environment
-from agents.dp import DPAgent
+from agents.sarsa import SARSAAgent
 
 if __name__ == "__main__":
     # Load config
@@ -17,7 +17,7 @@ if __name__ == "__main__":
     env = gym.make('LMDEnv-v0', config=env_config)
 
     # Initialize the DP agent
-    dp_agent = DPAgent(env)
+    dp_agent = SARSAAgent(env)
 
     dp_agent.learn()
 
