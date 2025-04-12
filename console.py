@@ -2,16 +2,16 @@ import os
 import sys
 import threading
 from enum import Enum, auto
-import csv
 import time
-import math
 import numpy as np
 import random
-import pandas as pd
-import networkx as nx
 from sklearn.cluster import KMeans
 import yaml
 import tkinter as tk
+import numpy as np
+import itertools
+from collections import defaultdict
+import pickle
 
 from PyQt5 import QtGui
 from PyQt5.QtCore import Qt, QRect, QPointF, QTimer
@@ -23,7 +23,8 @@ tk.Tk.state = lambda self, s=None: self.wm_state('normal' if s == 'zoomed' else 
 
 import gymnasium as gym
 
-from envs.ral import LMDEnv
+import envs
+from agents.dp import DPAgent   
 
 WRITE_to_file = True
 SET_t = 5
@@ -89,6 +90,10 @@ class Window(QMainWindow):
         
         # If no external world is provided, create one
         self.env = gym.make("LMDEnv-v0", config=self.config, render_mode="human")
+        # Load the Q-table from a pickle file
+
+         # Initialize the DP agent
+        self.agent = DPAgent(self.env, policy_name="8358963b")
         
         self.InitWindow()
 
@@ -252,6 +257,27 @@ class Window(QMainWindow):
 
         base_stations = [cell_to_canvas(x,y,self.cell_size) for x,y in base_stations]
 
+        # Draw the maze grid
+        # Draw vertical grid lines
+        for col in range(self.max_col + 1):
+            x = -BOUNDARY_X + col * self.cell_size
+            self.permanent_elements.append([
+                OPERATION.line, 
+                x, BOUNDARY_Y, 
+                x, BOUNDARY_Y - self.maze_height * self.cell_size, 
+                1, Qt.gray
+            ])
+
+        # Draw horizontal grid lines
+        for row in range(self.max_row + 1):
+            y = BOUNDARY_Y - row * self.cell_size
+            self.permanent_elements.append([
+                OPERATION.line, 
+                -BOUNDARY_X, y, 
+                -BOUNDARY_X + self.maze_width * self.cell_size, y, 
+                1, Qt.gray
+            ])
+
         # Draw the maze walls
         processed_cells = set()
         wall_thickness = 3
@@ -260,11 +286,11 @@ class Window(QMainWindow):
             if (row_idx, col_idx) in processed_cells:
                 continue
 
-            processed_cells.add((row_idx, col_idx))
+            # processed_cells.add((row_idx, col_idx))
             x, y = cell_to_canvas(row_idx, col_idx, self.cell_size)
 
             if row_data['E'] == 0:  # East wall
-                if 0 < col_idx < self.max_col and (row_idx, col_idx + 1) not in processed_cells:
+                if 0 < col_idx < self.max_col:# and (row_idx, col_idx + 1) not in processed_cells:
                     self.permanent_elements.append([
                         OPERATION.line,
                         x + self.cell_size / 2,
@@ -274,10 +300,10 @@ class Window(QMainWindow):
                         wall_thickness,
                         Qt.black
                     ])
-                    processed_cells.add((row_idx, col_idx + 1))
+                    # processed_cells.add((row_idx, col_idx + 1))
 
             if row_data['W'] == 0:  # West wall
-                if 0 < col_idx <= self.max_col and (row_idx, col_idx - 1) not in processed_cells:
+                if 0 < col_idx <= self.max_col:# and (row_idx, col_idx - 1) not in processed_cells:
                     self.permanent_elements.append([
                         OPERATION.line,
                         x - self.cell_size / 2,
@@ -287,10 +313,10 @@ class Window(QMainWindow):
                         wall_thickness,
                         Qt.black
                     ])
-                    processed_cells.add((row_idx, col_idx - 1))
+                    # processed_cells.add((row_idx, col_idx - 1))
 
             if row_data['N'] == 0:  # North wall
-                if 0 < row_idx < self.max_row and (row_idx + 1, col_idx) not in processed_cells:
+                if 0 < row_idx < self.max_row:# and (row_idx + 1, col_idx) not in processed_cells:
                     self.permanent_elements.append([
                         OPERATION.line,
                         x - self.cell_size / 2,
@@ -300,10 +326,10 @@ class Window(QMainWindow):
                         wall_thickness,
                         Qt.black
                     ])
-                    processed_cells.add((row_idx + 1, col_idx))
+                    # processed_cells.add((row_idx + 1, col_idx))
 
             if row_data['S'] == 0:  # South wall
-                if 0 < row_idx <= self.max_row and (row_idx - 1, col_idx) not in processed_cells:
+                if 0 < row_idx <= self.max_row:# and (row_idx - 1, col_idx) not in processed_cells:
                     self.permanent_elements.append([
                         OPERATION.line,
                         x - self.cell_size / 2,
@@ -313,7 +339,7 @@ class Window(QMainWindow):
                         wall_thickness,
                         Qt.black
                     ])
-                    processed_cells.add((row_idx - 1, col_idx))
+                    # processed_cells.add((row_idx - 1, col_idx))
 
         # Draw the warehouse as a permanent element
         warehouse_size = 15
@@ -347,36 +373,36 @@ class Window(QMainWindow):
             self.previous_positions = [(self.warehouse_x, self.warehouse_y) for _ in range(num_patrols)]    
 
         patrol_positions = world_state["patrol_positions"]  # cell coords
-        patrol_colors = world_state["patrol_colors"]
+        # patrol_colors = world_state["patrol_colors"]
         # patrol_paths = world_state["patrol_paths"]          # each path in cell coords
         scaled_truck_image = self.scaled_truck_image
         R_P = world_state["R_P"]                            # battery fraction
-        # active_tasks = world_state["active_tasks"]          # list of cell coords for tasks
+        active_tasks = world_state["active_tasks"]          # list of cell coords for tasks
         # drone_positions = world_state['drone_positions']
         # drone_status = world_state['drone_status']
         # doff = drone_offsets[:8]
 
         # Convert numeric color IDs to actual QColor via get_color (if needed)
         # If patrol_colors are already valid PyQt colors, you can skip this.
-        patrol_colors = [get_color(i) for i in patrol_colors]
+        # patrol_colors = [get_color(i) for i in patrol_colors]
         
         for t in range(T):
-            # # 1) Draw current tasks as filled circles in canvas coords
-            # task_size = 5
-            # for idx, task in enumerate(active_tasks):
-            #     if task is not None:
-            #         # Convert cell coords (task[0], task[1]) -> canvas coords
-            #         cx, cy = cell_to_canvas(task[0], task[1], self.cell_size)
-            #         self.draw([
-            #             OPERATION.filled_circle, 
-            #             cx, cy, task_size, 1, patrol_colors[idx]
-            #         ])
-            #     else:
-            #         cx, cy = cell_to_canvas(patrol_positions[i][0], patrol_positions[i][1], self.cell_size)
-            #         self.draw([
-            #             OPERATION.filled_circle, 
-            #             cx, cy, task_size, 1, patrol_colors[idx]
-            #         ])
+            # 1) Draw current tasks as filled circles in canvas coords
+            task_size = 5
+            for idx, task in enumerate(active_tasks):
+                if task is not None:
+                    # Convert cell coords (task[0], task[1]) -> canvas coords
+                    cx, cy = cell_to_canvas(task[0], task[1], self.cell_size)
+                    self.draw([
+                        OPERATION.filled_circle, 
+                        cx, cy, task_size, 1, get_color(0)
+                    ])
+                else:
+                    cx, cy = cell_to_canvas(patrol_positions[i][0], patrol_positions[i][1], self.cell_size)
+                    self.draw([
+                        OPERATION.filled_circle, 
+                        cx, cy, task_size, 1, get_color(0)
+                    ])
 
             # # 2) Draw dotted-line paths for each EV, converting path from cell coords to canvas coords
             # converted_paths = []
@@ -502,31 +528,35 @@ class Window(QMainWindow):
              - repaint 
              - small delay
         """
+        # model = PPO.load("/home/shinobi-owl/PhD/battery/DroneSim/models/8ipq56jq/lmd_model_840000_steps.zip")
         # Draw the maze walls and warehouse once
         observation, info = self.env.reset(seed=47)
-        # _, info = self.env._get_observation()
         df_maze = info['maze']
+
         base_stations = info['base_stations']
-        print("Maze DataFrame:\n", df_maze)
-        print("Base stations:\n", base_stations)
         self.draw_maze(df_maze, base_stations)
+
+        acts = ["Up", "Right", "Down", "Left", "Stay"]
 
         # # Initialize the world (assign tasks, positions, etc.)
         self.previous_positions = []
 
         print("Starting Simulation")
-        final_frame = ITERATIONS  # Default to the last iteration if tasks never complete
+        done = False
+        frame_num = 0
+        total_reward = 0.0
         self.tmp = 1
-        for frame in range(ITERATIONS):
-            print("Frame Number:", frame+1)
+        while not done:
             self.tmp = 1
-            action = self.env.action_space.sample()
+            print("Frame Number:", frame_num+1)
+            action = self.agent.predict(observation)
             # Step the simulation
             observation, reward, done, _, world_state = self.env.step(action)
-
-            if done:
-                final_frame = frame
-                break
+            total_reward += reward
+            frame_num += 1
+            print("Action taken:", acts[action[0]])
+            print("Observation:", observation)
+            print("Reward:", reward)
 
             # Render it
             self.draw_state(world_state, 120)
@@ -534,12 +564,14 @@ class Window(QMainWindow):
                 time.sleep(1)
         
         world_state = self.world.get_world_state()
-        num_tasks_completed = world_state["completed_tasks"]
+        num_tasks_completed = world_state["latest_tasks_completed"]
         ev_distance_traveled = world_state["ev_distance_traveled"]
         print("Simulation completed.")
-        print(f"Final frame: {final_frame}")
+        print(f"Final frame: {frame_num}")
         print(f"Tasks completed: {num_tasks_completed}")
         print(f"EV distance traveled: {ev_distance_traveled}")
+
+        self.env.close()
         
 
 def get_color(v):

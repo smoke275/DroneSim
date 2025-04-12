@@ -1,3 +1,7 @@
+stable-baselines3>=2.0.0
+wandb
+gymnasium
+torch
 numpy
 pandas
 networkx
