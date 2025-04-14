@@ -45,17 +45,49 @@ class SARSAAgent(Agent):
             print(f"Policy loaded from {self.policy_name}")
 
     def _observation_to_state(self, observation):
+        # Nearest task Only
         ugv = tuple(map(int, observation['ugv_positions']))
         task_flat = observation['task_positions']
         task_coords = [(int(task_flat[i]), int(task_flat[i+1])) for i in range(0, len(task_flat), 2)]
-
         # Find nearest task
         if task_coords:
             nearest_task = min(task_coords, key=lambda t: abs(ugv[0]-t[0]) + abs(ugv[1]-t[1]))
         else:
             nearest_task = (-1, -1)  # dummy if no tasks
-
         return (ugv, nearest_task)
+
+        # # Distance to the nearest task
+        # ugv = tuple(map(int, observation['ugv_positions']))
+        # task_flat = observation['task_positions']
+        # task_coords = [(int(task_flat[i]), int(task_flat[i+1])) for i in range(0, len(task_flat), 2)]
+        # if task_coords:
+        #     min_dist = min([abs(ugv[0] - t[0]) + abs(ugv[1] - t[1]) for t in task_coords])
+        # else:
+        #     min_dist = 0
+        # return (ugv, min_dist)
+
+        # # Direction to Nearest Task
+        # ugv = tuple(map(int, observation['ugv_positions']))
+        # task_flat = observation['task_positions']
+        # task_coords = [(int(task_flat[i]), int(task_flat[i+1])) for i in range(0, len(task_flat), 2)]
+
+        # def direction_to(ugv, task):
+        #     dy = task[0] - ugv[0]
+        #     dx = task[1] - ugv[1]
+        #     if abs(dy) > abs(dx):
+        #         return "S" if dy > 0 else "N"
+        #     elif dx != 0:
+        #         return "E" if dx > 0 else "W"
+        #     else:
+        #         return "STAY"
+
+        # if task_coords:
+        #     nearest_task = min(task_coords, key=lambda t: abs(ugv[0]-t[0]) + abs(ugv[1]-t[1]))
+        #     direction = direction_to(ugv, nearest_task)
+        # else:
+        #     direction = "STAY"
+
+        # return (ugv, direction)
 
 
 

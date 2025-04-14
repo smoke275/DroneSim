@@ -217,8 +217,8 @@ class LMDEnv(gym.Env):
             'ugv_positions': ugv_positions_flat,
         }
     
-    def _get_graph(self):
-        return self.G
+    def _get_info(self):
+        return self.info
 
     def update_info(self):
         self.info["patrol_positions"] = [ugv.position for ugv in self.ugv_states]

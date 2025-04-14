@@ -67,7 +67,7 @@ drone_offsets = [(random.uniform(-10, 10), random.uniform(-10, 10)) for _ in ran
 
 class Window(QMainWindow):
 
-    def __init__(self):
+    def __init__(self, config_file, policy_name):
         super().__init__()
 
         self.title = "Simulation"
@@ -77,9 +77,19 @@ class Window(QMainWindow):
         self.permanent_elements = []
 
         # Load config
-        with open("config/ral.yaml", "r") as file:
+        with open(config_file, "r") as file:
             config = yaml.safe_load(file)
         self.config = config
+
+        # Check if the inference log directory exists, if not create it
+        if not os.path.exists(f"runs/sarsa/inference/{policy_name}"):
+            os.makedirs(f"runs/sarsa/inference/{policy_name}")
+
+        self.log_file = f"runs/sarsa/inference/{policy_name}/log.txt"
+        
+        with open(self.log_file, 'w') as f:
+            f.write("Inference Log\n")
+            f.write("=============\n")
         
         # Load and scale down the truck image
         truck_image = QtGui.QPixmap('data/truck.png')
@@ -94,7 +104,7 @@ class Window(QMainWindow):
         # Load the Q-table from a pickle file
 
          # Initialize the DP agent
-        self.agent = SARSAAgent(self.env, policy_name="fbd7c745")
+        self.agent = SARSAAgent(self.env, policy_name=policy_name)
         
         self.InitWindow()
 
@@ -231,6 +241,12 @@ class Window(QMainWindow):
 
     def keyPressEvent(self, e: QtGui.QKeyEvent) -> None:
         if e.key() == Qt.Key_Escape:
+            # world_state = self.env._get_info()
+            # num_tasks_completed = world_state["num_tasks_completed"]
+            # ev_distance_traveled = world_state["ev_distance_traveled"]
+            # print("Simulation completed.")
+            # print(f"Tasks completed: {num_tasks_completed}")
+            # print(f"EV distance traveled: {ev_distance_traveled}")
             self.close()
         if e.key() == Qt.Key_Return:
             self.tmp = 1
@@ -564,15 +580,20 @@ class Window(QMainWindow):
             while self.tmp == 0:
                 time.sleep(1)
         
-        world_state = self.world.get_world_state()
-        num_tasks_completed = world_state["latest_tasks_completed"]
+        num_tasks_completed = world_state["num_tasks_completed"]
         ev_distance_traveled = world_state["ev_distance_traveled"]
         print("Simulation completed.")
         print(f"Final frame: {frame_num}")
         print(f"Tasks completed: {num_tasks_completed}")
         print(f"EV distance traveled: {ev_distance_traveled}")
+        with open(self.log_file, 'a') as f:
+            f.write(f"Final frame: {frame_num}\n")
+            f.write(f"Tasks completed: {num_tasks_completed}\n")
+            f.write(f"EV distance traveled: {ev_distance_traveled}\n")
+            f.write("=============\n")
 
         self.env.close()
+        self.close()
         
 
 def get_color(v):
@@ -600,13 +621,13 @@ def get_color(v):
     else:
         return Qt.darkGray
 
-def startup():
+def startup(config_file, policy_name):
     """
     Entry point that creates the Window, starts the PyQt event loop,
     and runs the simulation in a separate thread.
     """
     App = QApplication(sys.argv)
-    window = Window()
+    window = Window(config_file, policy_name)
     x = threading.Thread(target=window.run, args=())
     x.start()
     sys.exit(App.exec())

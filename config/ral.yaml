@@ -13,7 +13,7 @@ world:
   num_ugvs: 1
 
   bms: False
-  max_timesteps: 1000
+  max_timesteps: 10
 
 ugv:
   range: 100000000
