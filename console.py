@@ -94,7 +94,7 @@ class Window(QMainWindow):
         # Load the Q-table from a pickle file
 
          # Initialize the DP agent
-        self.agent = SARSAAgent(self.env, policy_name="d5ef3717")
+        self.agent = SARSAAgent(self.env, policy_name="fbd7c745")
         
         self.InitWindow()
 

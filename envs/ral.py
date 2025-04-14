@@ -68,22 +68,6 @@ class LMDEnv(gym.Env):
         self.cell_size = config["world"]["cell_size"]
         self.G = self._build_graph()
 
-        # # Arrange nodes in a grid layout
-        # pos = {(row['col'], row['row']): (row['row'], -row['col']) for _, row in self.df_maze.iterrows()}
-
-        # # Draw the graph
-        # plt.figure(figsize=(10, 10))
-        # nx.draw(self.G, pos, with_labels=True, node_color='lightblue', node_size=500, font_size=10, edge_color='gray')
-        # plt.title("Graph Visualization in Grid Layout")
-        # # save the plot
-        # plt.savefig("graph_visualization.png")
-
-
-        # Print the edges of the center node
-        center_row = self.max_row // 2
-        center_col = self.max_col // 2
-
-
         # Task vars
         self.num_tasks = config["world"]["num_tasks"]
 
@@ -122,12 +106,15 @@ class LMDEnv(gym.Env):
         self.task_list = []
         self.action_response = [None]*self.num_patrols
         self.prev_task_distances = [float('inf')]*self.num_patrols
+        # NEW: Initialize position history for oscillation detection.
+        self.prev_positions = [[] for _ in range(self.num_patrols)]
+        self.oscillation_counter = [0 for _ in range(self.num_patrols)]
+
 
         '''METRICS DEFINITIONS'''
-        # NEW: Track total distance traveled by EVs and drones
+        # NEW: Track total distance traveled by EVs and drones.
         self.total_ev_distance = 0.0
         self.num_tasks_completed = 0
-
         self.current_timestep = 0
         self.info = {
             "maze": self.df_maze,
@@ -155,16 +142,9 @@ class LMDEnv(gym.Env):
             np.array([self.max_row+1, self.max_col+1] * self.num_patrols)
         )
         
-        # battery_space = spaces.Box(
-        #     low=np.zeros(self.num_patrols),
-        #     high=np.array([config['ugv']['range']]*self.num_patrols),  # assuming battery level 0-100
-        #     dtype=np.float32
-        # )
-        
         self.observation_space = spaces.Dict({
             'task_positions': task_space,
             'ugv_positions': ugv_pos_space,
-            # 'battery_levels': battery_space,
         })
         
         self.reset()
@@ -185,39 +165,35 @@ class LMDEnv(gym.Env):
         return G
 
     def reset(self, seed=None, options=None):
-        # 2) Reset your environment
-        # - Re-initialize or reset your world to a starting condition
-        # - Return the initial observation
+        # Reset the environment to a starting condition.
         self.fill_task_list()
         self.ugv_states = [UGV(i, self.warehouse_pos, self.max_ugv_range) for i in range(self.num_patrols)]
         self.action_response = [None]*self.num_patrols
+        # Initialize previous task distances and position history.
         self.prev_task_distances = [100]*self.num_patrols
+        self.prev_positions = [[] for _ in range(self.num_patrols)]
+        self.oscillation_counter = [0 for _ in range(self.num_patrols)]
+        
         self.total_ev_distance = 0.0
         self.num_tasks_completed = 0
         self.current_timestep = 0
             
         initial_obs = self._get_observation()
         self.update_info()
-
         return initial_obs, self.info
     
     def fill_task_list(self):
-        # Fill the task list with random positions
-        # 1. Spawn new tasks
+        # Fill the task list with random positions.
         new_tasks_count = self.num_tasks - len(self.task_list)
         new_tasks_df = self.df_maze[~((self.df_maze['row']==self.warehouse_pos[1])&(self.df_maze['col']==self.warehouse_pos[0]))].sample(new_tasks_count)
         new_tasks = [tuple(row) for row in new_tasks_df[['row', 'col']].values.tolist()]
-        # 2. Add new tasks to the task list
         self.task_list.extend(new_tasks)
 
     def step(self, action):
-        # 3) Apply the chosen action
-        # - Decide how the agent’s action affects the environment
-        # - Step the simulation by one timeslice (or timesteps)
+        # Apply the chosen action.
         self._apply_action(action)
         self.current_timestep += 1
 
-        # 4) Compute next observation, reward, done, info
         obs = self._get_observation()
         reward = self._get_reward()
         self.update_info()
@@ -228,30 +204,22 @@ class LMDEnv(gym.Env):
         return obs, reward, done, False, self.info
 
     def render(self, mode='human'):
-        # 5) (Optional) If you want a custom display or separate window
+        # (Optional) Custom display.
         pass
 
-    # Helper methods below
     def _get_observation(self):
-        # Convert task positions (shape [num_tasks, 2]) into a flat integer array (shape [2*num_tasks]).
+        # Convert task positions into a flat integer array.
         task_positions_flat = np.array(self.task_list, dtype=np.int32).flatten()
-
-        # Same idea for UGV positions: flatten from [num_ugvs, 2] -> [2*num_ugvs].
+        # Convert UGV positions similarly.
         ugv_positions_flat = np.array([ugv.position for ugv in self.ugv_states], dtype=np.int32).flatten()
-
-        # # Battery levels can stay as a 1D float array.
-        # battery_levels = np.array([ugv.current_range for ugv in self.ugv_states], dtype=np.float32)
-
         return {
             'task_positions': task_positions_flat,
             'ugv_positions': ugv_positions_flat,
-            # 'battery_levels': battery_levels
         }
     
     def _get_graph(self):
         return self.G
 
-    
     def update_info(self):
         self.info["patrol_positions"] = [ugv.position for ugv in self.ugv_states]
         self.info["patrol_colors"] = [ugv.agent_id for ugv in self.ugv_states]
@@ -266,14 +234,13 @@ class LMDEnv(gym.Env):
         self.info["ev_distance_traveled"] = self.total_ev_distance
     
     def _apply_action(self, action):
-        # Define how agent’s action modifies the simulation
+        # Define how each agent’s action modifies the simulation.
         for i, act in enumerate(action):
             if act < self.action_space.nvec[i]:
                 ugv_i = self.ugv_states[i]
                 check_move = ugv_i.move(act, self.cell_size)
                 if check_move:
-                    # Check if the move is valid (not out of bounds)
-                    if act==4 or (ugv_i.tmp_position in self.G.nodes and (ugv_i.tmp_position, ugv_i.position) in self.G.edges):
+                    if act == 4 or (ugv_i.tmp_position in self.G.nodes and (ugv_i.tmp_position, ugv_i.position) in self.G.edges):
                         ugv_i.move_approved = True
                         check_move = True
                     else:
@@ -281,6 +248,16 @@ class LMDEnv(gym.Env):
                         check_move = False
                 ugv_i.update_move(self.cell_size)
                 self.action_response[i] = check_move
+
+                if len(self.prev_positions[i]) < 2:
+                    self.prev_positions[i].append(ugv_i.position)
+                else:
+                    osc_idx = self.oscillation_counter[i]%2
+                    if self.prev_positions[i][osc_idx] == ugv_i.position:
+                        self.oscillation_counter[i] += 1
+                    else:
+                        self.prev_positions[i] = []
+                        self.oscillation_counter[i] = 0
         
     def _get_reward(self):
         reward = 0.0
@@ -293,7 +270,6 @@ class LMDEnv(gym.Env):
                     reward += 50.0
                     completed_tasks.add(task)
                     self.num_tasks_completed += 1                       
-        # Remove completed tasks.
         for task in completed_tasks:
             self.task_list.remove(task)
         
@@ -306,27 +282,30 @@ class LMDEnv(gym.Env):
                 reward -= 40.0
 
         # --- Progress-Based Shaping Reward ---
-        # For each UGV, only reward progress if it gets closer to a task than previously.
         bonus_factor = 2.0
         for i, ugv in enumerate(self.ugv_states):
             if self.task_list:
                 distances = [abs(ugv.position[0] - task[0]) + abs(ugv.position[1] - task[1]) for task in self.task_list]
                 current_min_distance = min(distances)
-                # Reward progress only when current distance is smaller than previous.
                 if current_min_distance < self.prev_task_distances[i]:
                     reward += bonus_factor * (self.prev_task_distances[i] - current_min_distance)
                 if current_min_distance == 0:
-                    self.prev_task_distances[i] = 100  # Reset to infinity if task is completed
+                    self.prev_task_distances[i] = 100  # Reset if task is completed.
                 else:
                     self.prev_task_distances[i] = current_min_distance
 
+        # --- Oscillation Penalty ---
+        # Penalize if a UGV oscillates between two positions.
+        oscillation_penalty = 0.0
+        osc_penalty_value = 10.0  # Penalty per oscillatory instance.
+        for i, ugv in enumerate(self.ugv_states):
+            oscillation_penalty += self.oscillation_counter[i] * osc_penalty_value
+        reward -= oscillation_penalty
+
         return reward
 
-
-
     def _check_termination_condition(self):
-        # Return True if the episode is finished (e.g., tasks done, time exceeded, etc.)
+        # Terminate if maximum timesteps are reached.
         if self.current_timestep >= self.max_timesteps:
             return True
         return False
-
