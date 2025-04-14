@@ -121,11 +121,13 @@ class LMDEnv(gym.Env):
         # Creating Task state variables
         self.task_list = []
         self.action_response = [None]*self.num_patrols
+        self.prev_task_distances = [float('inf')]*self.num_patrols
 
         '''METRICS DEFINITIONS'''
         # NEW: Track total distance traveled by EVs and drones
         self.total_ev_distance = 0.0
         self.num_tasks_completed = 0
+
         self.current_timestep = 0
         self.info = {
             "maze": self.df_maze,
@@ -137,7 +139,7 @@ class LMDEnv(gym.Env):
             "patrol_paths": [],
             "R_P": [],
             "ev_distance_traveled": self.total_ev_distance,
-            "latest_tasks_completed": self.num_tasks_completed,
+            "num_tasks_completed": self.num_tasks_completed,
             "active_tasks": []
         }
 
@@ -189,6 +191,7 @@ class LMDEnv(gym.Env):
         self.fill_task_list()
         self.ugv_states = [UGV(i, self.warehouse_pos, self.max_ugv_range) for i in range(self.num_patrols)]
         self.action_response = [None]*self.num_patrols
+        self.prev_task_distances = [100]*self.num_patrols
         self.total_ev_distance = 0.0
         self.num_tasks_completed = 0
         self.current_timestep = 0
@@ -215,11 +218,12 @@ class LMDEnv(gym.Env):
         self.current_timestep += 1
 
         # 4) Compute next observation, reward, done, info
-        self.update_info()
         obs = self._get_observation()
         reward = self._get_reward()
+        self.update_info()
         done = self._check_termination_condition()
         self.fill_task_list()
+        self.action_response = [None]*self.num_patrols
 
         return obs, reward, done, False, self.info
 
@@ -252,9 +256,14 @@ class LMDEnv(gym.Env):
         self.info["patrol_positions"] = [ugv.position for ugv in self.ugv_states]
         self.info["patrol_colors"] = [ugv.agent_id for ugv in self.ugv_states]
         self.info["R_P"] = [ugv.current_range_percent for ugv in self.ugv_states]
-        self.info["ev_distance_traveled"] = self.total_ev_distance
-        self.info["latest_tasks_completed"] = self.num_tasks_completed
         self.info["active_tasks"] = self.task_list
+        self.info["num_tasks_completed"] = self.num_tasks_completed
+
+        self.total_ev_distance = 0.0
+        for ugv in self.ugv_states:
+            self.total_ev_distance += ugv.distance_traveled
+
+        self.info["ev_distance_traveled"] = self.total_ev_distance
     
     def _apply_action(self, action):
         # Define how agent’s action modifies the simulation
@@ -276,43 +285,40 @@ class LMDEnv(gym.Env):
     def _get_reward(self):
         reward = 0.0
         
-        # Check task completion: large reward for completing a task.
+        # Task completion: reward for completing a task.
         completed_tasks = set()
         for task in self.task_list:
             for ugv in self.ugv_states:
                 if task == ugv.position:
-                    reward += 50.0  # Large reward for task completion
+                    reward += 50.0
                     completed_tasks.add(task)
-                    self.num_tasks_completed += 1
-                        
+                    self.num_tasks_completed += 1                       
         # Remove completed tasks.
         for task in completed_tasks:
             self.task_list.remove(task)
         
-        # Small step penalty to encourage efficiency.
+        # Small step penalty.
         reward -= 1.0
 
-        # Penalize invalid moves moderately.
+        # Penalize invalid moves.
         for ar in self.action_response:
             if not ar:
                 reward -= 40.0
 
-        # --- Added Shaping Reward: Proximity Bonus ---
-        shaping_bonus = 0.0
-        threshold = 3          # Maximum Manhattan distance to consider for bonus.
-        bonus_factor = 2.0     # Multiplier for reward scaling.
-        
-        # For each UGV, reward being closer to any task.
-        for ugv in self.ugv_states:
-            if self.task_list:  # Only if there are pending tasks.
-                # Compute Manhattan distances from this UGV to every task.
+        # --- Progress-Based Shaping Reward ---
+        # For each UGV, only reward progress if it gets closer to a task than previously.
+        bonus_factor = 2.0
+        for i, ugv in enumerate(self.ugv_states):
+            if self.task_list:
                 distances = [abs(ugv.position[0] - task[0]) + abs(ugv.position[1] - task[1]) for task in self.task_list]
-                min_distance = min(distances)
-                # If UGV is within the threshold, add a bonus.
-                if min_distance < threshold:
-                    shaping_bonus += bonus_factor * (threshold - min_distance)
-                    
-        reward += shaping_bonus
+                current_min_distance = min(distances)
+                # Reward progress only when current distance is smaller than previous.
+                if current_min_distance < self.prev_task_distances[i]:
+                    reward += bonus_factor * (self.prev_task_distances[i] - current_min_distance)
+                if current_min_distance == 0:
+                    self.prev_task_distances[i] = 100  # Reset to infinity if task is completed
+                else:
+                    self.prev_task_distances[i] = current_min_distance
 
         return reward
 
