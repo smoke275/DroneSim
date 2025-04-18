@@ -1,6 +1,0 @@
-Inference Log
-=============
-Final frame: 10
-Tasks completed: 2
-EV distance traveled: 450.0
-=============

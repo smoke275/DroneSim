@@ -1,0 +1,158 @@
+Inference Log
+=============
+Starting Simulation
+Frame Number: 1
+Action taken: Up
+Observation: {'task_positions': array([1, 3, 5, 5, 3, 5], dtype=int32), 'ugv_positions': array([1, 2], dtype=int32), 'nb_traffic': array([0, 0, 0, 0], dtype=int32)}
+Reward: 193.0
+Frame Number: 2
+Action taken: Up
+Observation: {'task_positions': array([1, 3, 5, 5, 3, 5], dtype=int32), 'ugv_positions': array([1, 2], dtype=int32), 'nb_traffic': array([0, 0, 0, 0], dtype=int32)}
+Reward: -41.0
+Frame Number: 3
+Action taken: Up
+Observation: {'task_positions': array([1, 3, 5, 5, 3, 5], dtype=int32), 'ugv_positions': array([1, 2], dtype=int32), 'nb_traffic': array([0, 0, 0, 0], dtype=int32)}
+Reward: -41.0
+Frame Number: 4
+Action taken: Up
+Observation: {'task_positions': array([1, 3, 5, 5, 3, 5], dtype=int32), 'ugv_positions': array([1, 2], dtype=int32), 'nb_traffic': array([0, 0, 0, 0], dtype=int32)}
+Reward: -41.0
+Frame Number: 5
+Action taken: Up
+Observation: {'task_positions': array([1, 3, 5, 5, 3, 5], dtype=int32), 'ugv_positions': array([1, 2], dtype=int32), 'nb_traffic': array([0, 0, 0, 0], dtype=int32)}
+Reward: -41.0
+Frame Number: 6
+Action taken: Up
+Observation: {'task_positions': array([1, 3, 5, 5, 3, 5], dtype=int32), 'ugv_positions': array([1, 2], dtype=int32), 'nb_traffic': array([0, 0, 0, 0], dtype=int32)}
+Reward: -41.0
+Frame Number: 7
+Action taken: Up
+Observation: {'task_positions': array([1, 3, 5, 5, 3, 5], dtype=int32), 'ugv_positions': array([1, 2], dtype=int32), 'nb_traffic': array([0, 0, 0, 0], dtype=int32)}
+Reward: -41.0
+Frame Number: 8
+Action taken: Up
+Observation: {'task_positions': array([1, 3, 5, 5, 3, 5], dtype=int32), 'ugv_positions': array([1, 2], dtype=int32), 'nb_traffic': array([0, 0, 0, 0], dtype=int32)}
+Reward: -41.0
+Frame Number: 9
+Action taken: Up
+Observation: {'task_positions': array([1, 3, 5, 5, 3, 5], dtype=int32), 'ugv_positions': array([1, 2], dtype=int32), 'nb_traffic': array([0, 0, 0, 0], dtype=int32)}
+Reward: -41.0
+Frame Number: 10
+Action taken: Up
+Observation: {'task_positions': array([1, 3, 5, 5, 3, 5], dtype=int32), 'ugv_positions': array([1, 2], dtype=int32), 'nb_traffic': array([0, 0, 0, 0], dtype=int32)}
+Reward: -41.0
+Frame Number: 11
+Action taken: Up
+Observation: {'task_positions': array([1, 3, 5, 5, 3, 5], dtype=int32), 'ugv_positions': array([1, 2], dtype=int32), 'nb_traffic': array([0, 0, 0, 0], dtype=int32)}
+Reward: -41.0
+Frame Number: 12
+Action taken: Up
+Observation: {'task_positions': array([1, 3, 5, 5, 3, 5], dtype=int32), 'ugv_positions': array([1, 2], dtype=int32), 'nb_traffic': array([0, 0, 0, 0], dtype=int32)}
+Reward: -41.0
+Frame Number: 13
+Action taken: Up
+Observation: {'task_positions': array([1, 3, 5, 5, 3, 5], dtype=int32), 'ugv_positions': array([1, 2], dtype=int32), 'nb_traffic': array([0, 0, 0, 0], dtype=int32)}
+Reward: -41.0
+Frame Number: 14
+Action taken: Up
+Observation: {'task_positions': array([1, 3, 5, 5, 3, 5], dtype=int32), 'ugv_positions': array([1, 2], dtype=int32), 'nb_traffic': array([0, 0, 0, 0], dtype=int32)}
+Reward: -41.0
+Frame Number: 15
+Action taken: Up
+Observation: {'task_positions': array([1, 3, 5, 5, 3, 5], dtype=int32), 'ugv_positions': array([1, 2], dtype=int32), 'nb_traffic': array([0, 0, 0, 0], dtype=int32)}
+Reward: -41.0
+Frame Number: 16
+Action taken: Up
+Observation: {'task_positions': array([1, 3, 5, 5, 3, 5], dtype=int32), 'ugv_positions': array([1, 2], dtype=int32), 'nb_traffic': array([0, 0, 0, 0], dtype=int32)}
+Reward: -41.0
+Frame Number: 17
+Action taken: Up
+Observation: {'task_positions': array([1, 3, 5, 5, 3, 5], dtype=int32), 'ugv_positions': array([1, 2], dtype=int32), 'nb_traffic': array([0, 0, 0, 0], dtype=int32)}
+Reward: -41.0
+Frame Number: 18
+Action taken: Up
+Observation: {'task_positions': array([1, 3, 5, 5, 3, 5], dtype=int32), 'ugv_positions': array([1, 2], dtype=int32), 'nb_traffic': array([0, 0, 0, 0], dtype=int32)}
+Reward: -41.0
+Frame Number: 19
+Action taken: Up
+Observation: {'task_positions': array([1, 3, 5, 5, 3, 5], dtype=int32), 'ugv_positions': array([1, 2], dtype=int32), 'nb_traffic': array([0, 0, 0, 0], dtype=int32)}
+Reward: -41.0
+Frame Number: 20
+Action taken: Up
+Observation: {'task_positions': array([1, 3, 5, 5, 3, 5], dtype=int32), 'ugv_positions': array([1, 2], dtype=int32), 'nb_traffic': array([0, 0, 0, 0], dtype=int32)}
+Reward: -41.0
+Frame Number: 21
+Action taken: Up
+Observation: {'task_positions': array([1, 3, 5, 5, 3, 5], dtype=int32), 'ugv_positions': array([1, 2], dtype=int32), 'nb_traffic': array([0, 0, 0, 0], dtype=int32)}
+Reward: -41.0
+Frame Number: 22
+Action taken: Up
+Observation: {'task_positions': array([1, 3, 5, 5, 3, 5], dtype=int32), 'ugv_positions': array([1, 2], dtype=int32), 'nb_traffic': array([0, 0, 0, 0], dtype=int32)}
+Reward: -41.0
+Frame Number: 23
+Action taken: Up
+Observation: {'task_positions': array([1, 3, 5, 5, 3, 5], dtype=int32), 'ugv_positions': array([1, 2], dtype=int32), 'nb_traffic': array([0, 0, 0, 0], dtype=int32)}
+Reward: -41.0
+Frame Number: 24
+Action taken: Up
+Observation: {'task_positions': array([1, 3, 5, 5, 3, 5], dtype=int32), 'ugv_positions': array([1, 2], dtype=int32), 'nb_traffic': array([0, 0, 0, 0], dtype=int32)}
+Reward: -41.0
+Frame Number: 25
+Action taken: Up
+Observation: {'task_positions': array([1, 3, 5, 5, 3, 5], dtype=int32), 'ugv_positions': array([1, 2], dtype=int32), 'nb_traffic': array([0, 0, 0, 0], dtype=int32)}
+Reward: -41.0
+Frame Number: 26
+Action taken: Up
+Observation: {'task_positions': array([1, 3, 5, 5, 3, 5], dtype=int32), 'ugv_positions': array([1, 2], dtype=int32), 'nb_traffic': array([0, 0, 0, 0], dtype=int32)}
+Reward: -41.0
+Frame Number: 27
+Action taken: Up
+Observation: {'task_positions': array([1, 3, 5, 5, 3, 5], dtype=int32), 'ugv_positions': array([1, 2], dtype=int32), 'nb_traffic': array([0, 0, 0, 0], dtype=int32)}
+Reward: -41.0
+Frame Number: 28
+Action taken: Up
+Observation: {'task_positions': array([1, 3, 5, 5, 3, 5], dtype=int32), 'ugv_positions': array([1, 2], dtype=int32), 'nb_traffic': array([0, 0, 0, 0], dtype=int32)}
+Reward: -41.0
+Frame Number: 29
+Action taken: Up
+Observation: {'task_positions': array([1, 3, 5, 5, 3, 5], dtype=int32), 'ugv_positions': array([1, 2], dtype=int32), 'nb_traffic': array([0, 0, 0, 0], dtype=int32)}
+Reward: -41.0
+Frame Number: 30
+Action taken: Up
+Observation: {'task_positions': array([1, 3, 5, 5, 3, 5], dtype=int32), 'ugv_positions': array([1, 2], dtype=int32), 'nb_traffic': array([0, 0, 0, 0], dtype=int32)}
+Reward: -41.0
+Frame Number: 31
+Action taken: Up
+Observation: {'task_positions': array([1, 3, 5, 5, 3, 5], dtype=int32), 'ugv_positions': array([1, 2], dtype=int32), 'nb_traffic': array([0, 0, 0, 0], dtype=int32)}
+Reward: -41.0
+Frame Number: 32
+Action taken: Up
+Observation: {'task_positions': array([1, 3, 5, 5, 3, 5], dtype=int32), 'ugv_positions': array([1, 2], dtype=int32), 'nb_traffic': array([0, 0, 0, 0], dtype=int32)}
+Reward: -41.0
+Frame Number: 33
+Action taken: Up
+Observation: {'task_positions': array([1, 3, 5, 5, 3, 5], dtype=int32), 'ugv_positions': array([1, 2], dtype=int32), 'nb_traffic': array([0, 0, 0, 0], dtype=int32)}
+Reward: -41.0
+Frame Number: 34
+Action taken: Up
+Observation: {'task_positions': array([1, 3, 5, 5, 3, 5], dtype=int32), 'ugv_positions': array([1, 2], dtype=int32), 'nb_traffic': array([0, 0, 0, 0], dtype=int32)}
+Reward: -41.0
+Frame Number: 35
+Action taken: Up
+Observation: {'task_positions': array([1, 3, 5, 5, 3, 5], dtype=int32), 'ugv_positions': array([1, 2], dtype=int32), 'nb_traffic': array([0, 0, 0, 0], dtype=int32)}
+Reward: -41.0
+Frame Number: 36
+Action taken: Up
+Observation: {'task_positions': array([1, 3, 5, 5, 3, 5], dtype=int32), 'ugv_positions': array([1, 2], dtype=int32), 'nb_traffic': array([0, 0, 0, 0], dtype=int32)}
+Reward: -41.0
+Frame Number: 37
+Action taken: Up
+Observation: {'task_positions': array([1, 3, 5, 5, 3, 5], dtype=int32), 'ugv_positions': array([1, 2], dtype=int32), 'nb_traffic': array([0, 0, 0, 0], dtype=int32)}
+Reward: -41.0
+Frame Number: 38
+Action taken: Up
+Observation: {'task_positions': array([1, 3, 5, 5, 3, 5], dtype=int32), 'ugv_positions': array([1, 2], dtype=int32), 'nb_traffic': array([0, 0, 0, 0], dtype=int32)}
+Reward: -41.0
+Frame Number: 39
+Action taken: Up
+Observation: {'task_positions': array([1, 3, 5, 5, 3, 5], dtype=int32), 'ugv_positions': array([1, 2], dtype=int32), 'nb_traffic': array([0, 0, 0, 0], dtype=int32)}

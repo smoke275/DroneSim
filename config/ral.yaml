@@ -12,8 +12,9 @@ world:
   num_uavs_per_bs: 2
   num_ugvs: 1
 
-  bms: False
-  max_timesteps: 10
+  bms: false
+  traffic: false
+  max_timesteps: 1000
 
 ugv:
   range: 100000000
@@ -24,16 +25,9 @@ uav:
   speed: 3
   swapping_time: 2
 
-# world:
-#   maze: data/test_maze.csv
-#   num_evs: 1
-#   num_tasks: 2
-#   num_uavs_per_bs: 2
-#   num_base_stations: 4
+traffic:
+  std_dev: 1
+  reset_dur: 5
+  prob: 0.3
+  num_centroids: 2
 
-# ev:
-#   range: 3000
-
-# uav:
-#   range: 2000
-#   speed: 3

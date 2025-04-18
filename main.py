@@ -2,7 +2,13 @@ import time
 from console import startup
 
 if __name__ == '__main__':
-    config_file = "config/ral.yaml"
-    policy_name = "fbd7c745"
+    # policy_name = "7a52c0b8" # No Osc, nearest task
+    # policy_name = "e1d9a053" # No Osc, direction to nearest task
+    # policy_name = "cdad2483" # Osc, nearest task
+    # policy_name = "feed2726" # Osc, direction to nearest task
 
-    startup(config_file, policy_name)
+    policy_name = "8446b493" 
+
+    config_file = f"runs/sarsa/{policy_name}/config.yaml"
+
+    startup(config_file)

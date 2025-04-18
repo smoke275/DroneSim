@@ -3,6 +3,7 @@ import pickle
 import os
 import random
 from agents.agent import Agent
+import networkx as nx
 
 class SARSAAgent(Agent):
     """
@@ -14,12 +15,16 @@ class SARSAAgent(Agent):
     It uses the environment's reward function.
     """
     def __init__(self, env, gamma=0.99, alpha=0.1, epsilon=0.2, epsilon_decay=0.995,
-                 model_dir="runs/sarsa", policy_name=None, *args, **kwargs):
+                 policy_path=None, *args, **kwargs):
         super().__init__(env, *args, **kwargs)
         self.gamma = gamma
         self.alpha = alpha
         self.epsilon = epsilon
         self.epsilon_decay = epsilon_decay
+
+        self.G = None
+        _, info = self.env.reset()
+        self.G = info['graph']
 
         # Initialize action list from the environment's action space
         if hasattr(env.action_space, 'n'):
@@ -33,28 +38,22 @@ class SARSAAgent(Agent):
         # Initialize Q-table as a dictionary: state -> np.array of Q-values per action.
         self.Q = {}
 
-        self.model_dir = model_dir
-        if not os.path.exists(self.model_dir):
-            os.makedirs(self.model_dir)
-        if not os.path.exists(f"{self.model_dir}/policies"):
-            os.makedirs(f"{self.model_dir}/policies")
-        self.policy_name = policy_name
-        if self.policy_name is not None:
-            with open(f"{self.model_dir}/policies/policy_{self.policy_name}.pkl", 'rb') as f:
+        if policy_path is not None:
+            with open(policy_path, 'rb') as f:
                 self.Q = pickle.load(f)
-            print(f"Policy loaded from {self.policy_name}")
+            print(f"Policy loaded from {policy_path}")
 
     def _observation_to_state(self, observation):
-        # Nearest task Only
-        ugv = tuple(map(int, observation['ugv_positions']))
-        task_flat = observation['task_positions']
-        task_coords = [(int(task_flat[i]), int(task_flat[i+1])) for i in range(0, len(task_flat), 2)]
-        # Find nearest task
-        if task_coords:
-            nearest_task = min(task_coords, key=lambda t: abs(ugv[0]-t[0]) + abs(ugv[1]-t[1]))
-        else:
-            nearest_task = (-1, -1)  # dummy if no tasks
-        return (ugv, nearest_task)
+        # # Nearest task Only
+        # ugv = tuple(map(int, observation['ugv_positions']))
+        # task_flat = observation['task_positions']
+        # task_coords = [(int(task_flat[i]), int(task_flat[i+1])) for i in range(0, len(task_flat), 2)]
+        # # Find nearest task
+        # if task_coords:
+        #     nearest_task = min(task_coords, key=lambda t: abs(ugv[0]-t[0]) + abs(ugv[1]-t[1]))
+        # else:
+        #     nearest_task = (-1, -1)  # dummy if no tasks
+        # return (ugv, nearest_task)
 
         # # Distance to the nearest task
         # ugv = tuple(map(int, observation['ugv_positions']))
@@ -70,7 +69,6 @@ class SARSAAgent(Agent):
         # ugv = tuple(map(int, observation['ugv_positions']))
         # task_flat = observation['task_positions']
         # task_coords = [(int(task_flat[i]), int(task_flat[i+1])) for i in range(0, len(task_flat), 2)]
-
         # def direction_to(ugv, task):
         #     dy = task[0] - ugv[0]
         #     dx = task[1] - ugv[1]
@@ -80,28 +78,61 @@ class SARSAAgent(Agent):
         #         return "E" if dx > 0 else "W"
         #     else:
         #         return "STAY"
-
         # if task_coords:
         #     nearest_task = min(task_coords, key=lambda t: abs(ugv[0]-t[0]) + abs(ugv[1]-t[1]))
         #     direction = direction_to(ugv, nearest_task)
         # else:
         #     direction = "STAY"
-
         # return (ugv, direction)
 
+        # # Graph Nearest task Only
+        # ugv = tuple(map(int, observation['ugv_positions']))
+        # task_flat = observation['task_positions']
+        # task_coords = [(int(task_flat[i]), int(task_flat[i+1])) for i in range(0, len(task_flat), 2)]
+        # # Find nearest task
+        # if task_coords:
+        #     nearest_task = min(task_coords, key=lambda t: nx.shortest_path_length(self.G, source=ugv, target=t))
+        # else:
+        #     nearest_task = (-1, -1)  # dummy if no tasks
+        # return (ugv, nearest_task)
 
-
-    def choose_action(self, state):
-        """
-        Epsilon-greedy action selection.
-        If the state is not in the Q-table, initialize its Q-values to zeros.
-        """
-        if state not in self.Q:
-            self.Q[state] = np.zeros(len(self.action_list))
-        if random.random() < self.epsilon:
-            return random.choice(self.action_list)
+        # Graph Nearest task Only
+        ugv = tuple(map(int, observation['ugv_positions']))
+        task_flat = observation['task_positions']
+        task_coords = [(int(task_flat[i]), int(task_flat[i+1])) for i in range(0, len(task_flat), 2)]
+        def direction_to(ugv, task):
+            # 8 directions
+            dy = task[0] - ugv[0]
+            dx = task[1] - ugv[1]
+            if dy == 1 and dx == 0:
+                return "S"
+            elif dy == -1 and dx == 0:
+                return "N"
+            elif dy == 0 and dx == 1:
+                return "E"
+            elif dy == 0 and dx == -1:
+                return "W"
+            elif dy == 1 and dx == 1:
+                return "SE"
+            elif dy == 1 and dx == -1:
+                return "SW"
+            elif dy == -1 and dx == 1:
+                return "NE"
+            elif dy == -1 and dx == -1:
+                return "NW"
+            else:
+                return "STAY"
+            
+        # Find nearest task
+        if task_coords:
+            nearest_task = min(task_coords, key=lambda t: nx.shortest_path_length(self.G, source=ugv, target=t))
+            direction = direction_to(ugv, nearest_task)
         else:
-            return int(np.argmax(self.Q[state]))
+            nearest_task = (-1, -1)  # dummy if no tasks
+            direction = "STAY"
+        return (ugv, direction)
+        
+
 
     def predict(self, observation):
         """
@@ -112,12 +143,23 @@ class SARSAAgent(Agent):
         if state not in self.Q:
             self.Q[state] = np.zeros(len(self.action_list))
         return [int(np.argmax(self.Q[state]))]
+    
+    def choose_action(self, state):
+        """
+        Epsilon-greedy action selection.
+        If the state is not in the Q-table, initialize its Q-values to zeros.
+        """
+        if random.random() < self.epsilon:
+            return random.choice(self.action_list)
+        else:
+            return int(np.argmax(self.Q[state]))
 
-    def learn(self, num_episodes=1000, max_steps_per_episode=100):
+    def learn(self, num_episodes=1000, max_steps_per_episode=100, policy_path=None, log_path=None):
         """
         Run SARSA learning over multiple episodes. Each episode starts with an env.reset()
         and runs until done or a max number of steps is reached.
         """
+        results = []
         for episode in range(num_episodes):
             obs, info = self.env.reset()
             state = self._observation_to_state(obs)
@@ -127,7 +169,6 @@ class SARSAAgent(Agent):
             total_reward = 0.0
 
             for step in range(max_steps_per_episode):
-                # Environment step expects an action wrapped in a list (like in DPAgent)
                 next_obs, reward, done, trunc, info = self.env.step([action])
                 next_state = self._observation_to_state(next_obs)
                 if next_state not in self.Q:
@@ -148,9 +189,19 @@ class SARSAAgent(Agent):
 
             self.epsilon *= self.epsilon_decay
             print(f"Episode {episode+1}/{num_episodes}  Total Reward: {total_reward:.2f}  Epsilon: {self.epsilon:.4f}")
+            results.append((total_reward, self.epsilon))
 
-        # Save the learned policy (Q-table)
-        save_file_name = f"policy_{os.urandom(4).hex()}.pkl"
-        with open(f'{self.model_dir}/policies/{save_file_name}', 'wb') as f:
+            if episode%100 == 0:
+                with open(policy_path, 'wb') as f:
+                    pickle.dump(self.Q, f)
+
+        if log_path is not None:
+            with open(log_path, 'a') as f:
+                f.write("Episode, Total Reward, Epsilon\n")
+                i=0
+                for total_reward, epsilon in results:
+                    f.write(f"{i+1},{total_reward:.2f}, {epsilon:.4f}\n")
+                    i += 1
+        with open(policy_path, 'wb') as f:
             pickle.dump(self.Q, f)
-        print(f"Policy saved to {self.model_dir}/policies/{save_file_name}")
+        print(f"Policy saved to {policy_path}")

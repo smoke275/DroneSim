@@ -14,10 +14,6 @@ from gymnasium import spaces
 from envs.vehicles.UGV import UGV
 # from agents.UAV import UAVAgent
 
-tk.Tk.state = lambda self, s=None: self.wm_state('normal' if s == 'zoomed' else s)
-
-np.random.seed(47)
-
 def generate_df_maze(rows=20, cols=20, lp=80):
     # Create a Pyamaze maze
     m = maze(rows, cols)
@@ -46,6 +42,7 @@ def generate_df_maze(rows=20, cols=20, lp=80):
             .astype(int)
         )
     return df
+
 
 class LMDEnv(gym.Env):
     def __init__(self, config, render_mode="human"):
@@ -98,12 +95,15 @@ class LMDEnv(gym.Env):
         # Simulation vars
         self.bms = config['world']['bms']
         self.max_timesteps = config['world']['max_timesteps']
+        self.traffic_b = config['world']['traffic']
 
-        '''CREATING STATE VARIABLES'''
-        # Creating Agents
-        self.ugv_states = []
-        # Creating Task state variables
-        self.task_list = []
+        # Traffic vars
+        self.traffic_std_dev = config['traffic']['std_dev']  # Standard deviation for Gaussian distribution
+        self.traffic_reset_dur = config['traffic']['reset_dur'] 
+        self.traffic_prob = config['traffic']['prob']
+        self.traffic_num_centroids = config['traffic']['num_centroids']
+
+        # Misc vars
         self.action_response = [None]*self.num_patrols
         self.prev_task_distances = [float('inf')]*self.num_patrols
         # NEW: Initialize position history for oscillation detection.
@@ -116,6 +116,13 @@ class LMDEnv(gym.Env):
         self.total_ev_distance = 0.0
         self.num_tasks_completed = 0
         self.current_timestep = 0
+
+        '''State vars'''
+        self.ugv_states = []
+        self.task_list = []
+        self.traffic_centeroids = []
+        self.red_cells = []
+        self.yellow_cells = []
         self.info = {
             "maze": self.df_maze,
             "graph": self.G,
@@ -127,7 +134,9 @@ class LMDEnv(gym.Env):
             "R_P": [],
             "ev_distance_traveled": self.total_ev_distance,
             "num_tasks_completed": self.num_tasks_completed,
-            "active_tasks": []
+            "active_tasks": [],
+            "red_cells": [],
+            "yellow_cells": [],
         }
 
         '''SETUP YOUR OBSERVATION SPACE, ACTION SPACE, ENVIRONMENT-SPECIFIC VARIABLES'''
@@ -137,15 +146,23 @@ class LMDEnv(gym.Env):
         task_space = spaces.MultiDiscrete(
             np.array([self.max_row+1, self.max_col+1] * self.num_tasks)
         )
-
         ugv_pos_space = spaces.MultiDiscrete(
             np.array([self.max_row+1, self.max_col+1] * self.num_patrols)
         )
-        
-        self.observation_space = spaces.Dict({
-            'task_positions': task_space,
-            'ugv_positions': ugv_pos_space,
-        })
+        nb_traffic_space = spaces.MultiDiscrete(
+            np.array([3,3,3,3]*self.num_patrols)
+        )
+        if self.traffic_b:        
+            self.observation_space = spaces.Dict({
+                'task_positions': task_space,
+                'ugv_positions': ugv_pos_space,
+                'nb_traffic': nb_traffic_space
+            })
+        else:
+            self.observation_space = spaces.Dict({
+                'task_positions': task_space,
+                'ugv_positions': ugv_pos_space,
+            })
         
         self.reset()
 
@@ -166,10 +183,11 @@ class LMDEnv(gym.Env):
 
     def reset(self, seed=None, options=None):
         # Reset the environment to a starting condition.
-        self.fill_task_list()
+        self.fill_task_list(seed=seed)
+        if self.traffic_b:
+            self.fill_traffic_centroids(seed=seed)
         self.ugv_states = [UGV(i, self.warehouse_pos, self.max_ugv_range) for i in range(self.num_patrols)]
         self.action_response = [None]*self.num_patrols
-        # Initialize previous task distances and position history.
         self.prev_task_distances = [100]*self.num_patrols
         self.prev_positions = [[] for _ in range(self.num_patrols)]
         self.oscillation_counter = [0 for _ in range(self.num_patrols)]
@@ -182,12 +200,31 @@ class LMDEnv(gym.Env):
         self.update_info()
         return initial_obs, self.info
     
-    def fill_task_list(self):
+    def fill_task_list(self, seed=None):
         # Fill the task list with random positions.
         new_tasks_count = self.num_tasks - len(self.task_list)
-        new_tasks_df = self.df_maze[~((self.df_maze['row']==self.warehouse_pos[1])&(self.df_maze['col']==self.warehouse_pos[0]))].sample(new_tasks_count)
+        new_tasks_df = self.df_maze[~((self.df_maze['row']==self.warehouse_pos[1])&(self.df_maze['col']==self.warehouse_pos[0]))].sample(new_tasks_count, random_state=seed)
         new_tasks = [tuple(row) for row in new_tasks_df[['row', 'col']].values.tolist()]
         self.task_list.extend(new_tasks)
+    
+    def fill_traffic_centroids(self, seed=None):
+        # randomly select two cells from the maze
+        if random.random() < self.traffic_prob:
+            self.traffic_centeroids = self.df_maze.sample(self.traffic_num_centroids, random_state=seed)[['row', 'col']]
+            self.red_cells = []
+            self.yellow_cells = []         
+            # Calculate traffic levels for all cells
+            for _, row in self.df_maze.iterrows():
+                pos = (row['row'], row['col'])
+                traffic = self._get_cell_traffic(pos)
+                if traffic == 2:
+                    self.red_cells.append(pos)
+                elif traffic == 1:
+                    self.yellow_cells.append(pos)
+        else:
+            self.traffic_centeroids = []
+            self.red_cells = []
+            self.yellow_cells = []  
 
     def step(self, action):
         # Apply the chosen action.
@@ -199,6 +236,9 @@ class LMDEnv(gym.Env):
         self.update_info()
         done = self._check_termination_condition()
         self.fill_task_list()
+        if self.traffic_b:
+            if self.current_timestep%self.traffic_reset_dur == 0:
+                self.fill_traffic_centroids()
         self.action_response = [None]*self.num_patrols
 
         return obs, reward, done, False, self.info
@@ -207,15 +247,104 @@ class LMDEnv(gym.Env):
         # (Optional) Custom display.
         pass
 
+    def _get_cell_traffic(self, position):
+        """
+        Get the traffic density at the given UGV's position using the traffic_centeroids as Gaussian centers.
+        Returns a list of four discrete traffic levels (0, 1, 2) corresponding to [N, E, S, W].
+        """
+        # Convert the DataFrame to a list of (row, col) tuples.
+        centroids = [(row['row'], row['col']) for _, row in self.traffic_centeroids.iterrows()]
+        
+        total_contrib = 0.0
+        for (cx, cy) in centroids:
+            dist_sq = (position[0] - cx)**2 + (position[1] - cy)**2
+            contrib = math.exp(-dist_sq / (2.0 * (self.std_dev**2)))
+            total_contrib += contrib
+        
+        # Find the traffic level based on the total contribution.
+        if total_contrib < 0.33:
+            level = 0
+        elif total_contrib < 0.66:
+            level = 1
+        else:
+            level = 2
+        
+        return level
+
+    def _get_nb_traffic(self, position):
+        """
+        Get the traffic density in the North, East, South, and West directions
+        from the given UGV's position using the traffic_centeroids as Gaussian centers.
+        Returns a list of four discrete traffic levels (0, 1, 2) corresponding to [N, E, S, W].
+        """
+        # Define neighbor cell positions relative to current position.
+        neighbor_positions = {
+            'N': (position[0] - 1, position[1]),
+            'E': (position[0], position[1] + 1),
+            'S': (position[0] + 1, position[1]),
+            'W': (position[0], position[1] - 1)
+        }
+        
+        # If no traffic centroids have been defined, return zero traffic in all directions.
+        if (not isinstance(self.traffic_centeroids, pd.DataFrame)) or self.traffic_centeroids.empty:
+            return [0, 0, 0, 0]
+        
+        # Convert the DataFrame to a list of (row, col) tuples.
+        centroids = [(row['row'], row['col']) for _, row in self.traffic_centeroids.iterrows()]
+        
+        traffic_levels = []
+        for direction in ['N', 'E', 'S', 'W']:
+            nb_pos = neighbor_positions[direction]
+            # If the neighbor position is outside the maze boundaries, treat it as having zero traffic.
+            if nb_pos[0] < 1 or nb_pos[0] > self.max_row or nb_pos[1] < 1 or nb_pos[1] > self.max_col:
+                traffic_levels.append(0)
+                continue
+            
+            total_contrib = 0.0
+            # Compute the Gaussian contribution from each centroid for the neighbor cell.
+            for (cx, cy) in centroids:
+                dist_sq = (nb_pos[0] - cx)**2 + (nb_pos[1] - cy)**2
+                contrib = math.exp(-dist_sq / (2.0 * (self.std_dev**2)))
+                total_contrib += contrib
+            
+            # Average the contribution over all centroids.
+            avg_contrib = total_contrib / len(centroids)
+            
+            # Convert the continuous value into a discrete level.
+            if total_contrib < 0.33:
+                level = 0
+            elif total_contrib < 0.66:
+                level = 1
+            else:
+                level = 2
+            
+            traffic_levels.append(level)
+        
+        return traffic_levels
+
+
     def _get_observation(self):
-        # Convert task positions into a flat integer array.
         task_positions_flat = np.array(self.task_list, dtype=np.int32).flatten()
-        # Convert UGV positions similarly.
         ugv_positions_flat = np.array([ugv.position for ugv in self.ugv_states], dtype=np.int32).flatten()
-        return {
+
+        if self.traffic_b:
+            nb_traffic = []
+            for ugv in self.ugv_states:
+                traffic = self._get_nb_traffic(ugv.position)
+                nb_traffic.extend(traffic)
+            nb_traffic_flat = np.array(nb_traffic, dtype=np.int32).flatten()
+
+            return {
+                'task_positions': task_positions_flat,
+                'ugv_positions': ugv_positions_flat,
+                'nb_traffic': nb_traffic_flat,
+            }
+        else:
+            return {
             'task_positions': task_positions_flat,
             'ugv_positions': ugv_positions_flat,
-        }
+            }
+            
     
     def _get_info(self):
         return self.info
@@ -226,6 +355,8 @@ class LMDEnv(gym.Env):
         self.info["R_P"] = [ugv.current_range_percent for ugv in self.ugv_states]
         self.info["active_tasks"] = self.task_list
         self.info["num_tasks_completed"] = self.num_tasks_completed
+        self.info['red_cells'] = self.red_cells
+        self.info['yellow_cells'] = self.yellow_cells
 
         self.total_ev_distance = 0.0
         for ugv in self.ugv_states:
@@ -286,21 +417,22 @@ class LMDEnv(gym.Env):
         for i, ugv in enumerate(self.ugv_states):
             if self.task_list:
                 distances = [abs(ugv.position[0] - task[0]) + abs(ugv.position[1] - task[1]) for task in self.task_list]
+                # distances = [nx.shortest_path_length(self.G, source=ugv.position, target=task) for task in self.task_list]
                 current_min_distance = min(distances)
                 if current_min_distance < self.prev_task_distances[i]:
                     reward += bonus_factor * (self.prev_task_distances[i] - current_min_distance)
-                if current_min_distance == 0:
-                    self.prev_task_distances[i] = 100  # Reset if task is completed.
-                else:
-                    self.prev_task_distances[i] = current_min_distance
+                    if current_min_distance == 0:
+                        self.prev_task_distances[i] = 100  # Reset if task is completed.
+                    else:
+                        self.prev_task_distances[i] = current_min_distance
 
-        # --- Oscillation Penalty ---
-        # Penalize if a UGV oscillates between two positions.
-        oscillation_penalty = 0.0
-        osc_penalty_value = 10.0  # Penalty per oscillatory instance.
-        for i, ugv in enumerate(self.ugv_states):
-            oscillation_penalty += self.oscillation_counter[i] * osc_penalty_value
-        reward -= oscillation_penalty
+        # # --- Oscillation Penalty ---
+        # # Penalize if a UGV oscillates between two positions.
+        # oscillation_penalty = 0.0
+        # osc_penalty_value = 10.0  # Penalty per oscillatory instance.
+        # for i, ugv in enumerate(self.ugv_states):
+        #     oscillation_penalty += self.oscillation_counter[i] * osc_penalty_value
+        # reward -= oscillation_penalty
 
         return reward
 

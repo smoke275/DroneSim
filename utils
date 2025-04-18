@@ -1,0 +1,28 @@
+def generate_df_maze(rows=20, cols=20, lp=80):
+    # Create a Pyamaze maze
+    m = maze(rows, cols)
+    m.CreateMaze(loopPercent=lp)  # No loops to match a grid-like maze
+
+    # List to store cell data
+    maze_data = []
+    for y in range(1, rows + 1):
+        for x in range(1, cols + 1):
+            cell = (x, y)
+            cell_walls = m.maze_map[cell]  # Get wall info for each cell
+
+            E = 1 if cell_walls['E'] else 0
+            W = 1 if cell_walls['W'] else 0
+            N = 1 if cell_walls['N'] else 0
+            S = 1 if cell_walls['S'] else 0
+
+            maze_data.append([f"({x},{y})", E, W, N, S])
+
+    df = pd.DataFrame(maze_data, columns=["  cell  ", "E", "W", "N", "S"])
+    if '  cell  ' in df.columns:
+        df[['row', 'col']] = (
+            df['  cell  '].astype(str)
+            .str.replace(r'[()]', '', regex=True)
+            .str.split(',', expand=True)
+            .astype(int)
+        )
+    return df

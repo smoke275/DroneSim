@@ -67,7 +67,7 @@ drone_offsets = [(random.uniform(-10, 10), random.uniform(-10, 10)) for _ in ran
 
 class Window(QMainWindow):
 
-    def __init__(self, config_file, policy_name):
+    def __init__(self, config_file):
         super().__init__()
 
         self.title = "Simulation"
@@ -76,21 +76,6 @@ class Window(QMainWindow):
         self.main_stack = []
         self.permanent_elements = []
 
-        # Load config
-        with open(config_file, "r") as file:
-            config = yaml.safe_load(file)
-        self.config = config
-
-        # Check if the inference log directory exists, if not create it
-        if not os.path.exists(f"runs/sarsa/inference/{policy_name}"):
-            os.makedirs(f"runs/sarsa/inference/{policy_name}")
-
-        self.log_file = f"runs/sarsa/inference/{policy_name}/log.txt"
-        
-        with open(self.log_file, 'w') as f:
-            f.write("Inference Log\n")
-            f.write("=============\n")
-        
         # Load and scale down the truck image
         truck_image = QtGui.QPixmap('data/truck.png')
         self.scaled_truck_image = truck_image.scaled(40, 40, Qt.KeepAspectRatio)
@@ -98,13 +83,22 @@ class Window(QMainWindow):
         # Load and scale down the drone image
         drone_image = QtGui.QPixmap('data/transparent_drone.png')
         self.scaled_drone_image = drone_image.scaled(50, 50, Qt.KeepAspectRatio)  # Scale to 30x30 pixels
-        
-        # If no external world is provided, create one
-        self.env = gym.make("LMDEnv-v0", config=self.config, render_mode="human")
-        # Load the Q-table from a pickle file
 
-         # Initialize the DP agent
-        self.agent = SARSAAgent(self.env, policy_name=policy_name)
+        # Load config
+        with open(config_file, "r") as file:
+            self.config = yaml.safe_load(file)
+
+        policy_dir = os.path.dirname(config_file)
+        policy_name = self.config["policy_name"]
+        policy_path = self.config["policy_path"]
+
+        self.log_file = f"{policy_dir}/inference_log.txt"
+        with open(self.log_file, 'w') as f:
+            f.write("Inference Log\n")
+            f.write("=============\n")
+        
+        self.env = gym.make("LMDEnv-v0", config=self.config, render_mode="human")
+        self.agent = SARSAAgent(self.env, policy_path=policy_path)
         
         self.InitWindow()
 
@@ -247,6 +241,7 @@ class Window(QMainWindow):
             # print("Simulation completed.")
             # print(f"Tasks completed: {num_tasks_completed}")
             # print(f"EV distance traveled: {ev_distance_traveled}")
+            self.env.close()
             self.close()
         if e.key() == Qt.Key_Return:
             self.tmp = 1
@@ -369,13 +364,13 @@ class Window(QMainWindow):
             Qt.blue
         ])
 
-        # Draw base stations using self.draw
-        for x,y in base_stations:
-            size = 20
-            self.permanent_elements.append([OPERATION.filled_polygon,
-                        [x - size / 2, x + size / 2, x + size / 2, x - size / 2],
-                        [y - size / 2, y - size / 2, y + size / 2, y + size / 2],
-                        1, get_color(7)])
+        # # Draw base stations using self.draw
+        # for x,y in base_stations:
+        #     size = 20
+        #     self.permanent_elements.append([OPERATION.filled_polygon,
+        #                 [x - size / 2, x + size / 2, x + size / 2, x - size / 2],
+        #                 [y - size / 2, y - size / 2, y + size / 2, y + size / 2],
+        #                 1, get_color(7)])
 
     def draw_state(self, world_state, T=120):
         """
@@ -390,19 +385,11 @@ class Window(QMainWindow):
             self.previous_positions = [(self.warehouse_x, self.warehouse_y) for _ in range(num_patrols)]    
 
         patrol_positions = world_state["patrol_positions"]  # cell coords
-        # patrol_colors = world_state["patrol_colors"]
-        # patrol_paths = world_state["patrol_paths"]          # each path in cell coords
         scaled_truck_image = self.scaled_truck_image
         R_P = world_state["R_P"]                            # battery fraction
         active_tasks = world_state["active_tasks"]          # list of cell coords for tasks
-        # drone_positions = world_state['drone_positions']
-        # drone_status = world_state['drone_status']
-        # doff = drone_offsets[:8]
-
-        # Convert numeric color IDs to actual QColor via get_color (if needed)
-        # If patrol_colors are already valid PyQt colors, you can skip this.
-        # patrol_colors = [get_color(i) for i in patrol_colors]
-        
+        red_cells = world_state["red_cells"]                # list of cell coords for red cells
+        yellow_cells = world_state["yellow_cells"]          # list of cell coords for yellow cells
         for t in range(T):
             # 1) Draw current tasks as filled circles in canvas coords
             task_size = 5
@@ -420,46 +407,33 @@ class Window(QMainWindow):
                         OPERATION.filled_circle, 
                         cx, cy, task_size, 1, get_color(0)
                     ])
+            # 2) Paint red cells as with faint red color
+            for idx, cell in enumerate(red_cells):
+                cx, cy = cell_to_canvas(cell[0], cell[1], self.cell_size)
+                self.draw([
+                    OPERATION.filled_polygon,
+                    [cx - self.cell_size/2, cx + self.cell_size/2, cx + self.cell_size/2, cx - self.cell_size/2],
+                    [cy - self.cell_size/2, cy - self.cell_size/2, cy + self.cell_size/2, cy + self.cell_size/2],
+                    1,
+                    QColor(255, 0, 0, 50)  # Red with 50 alpha (transparency)
+                ])
+            # 3) Paint yellow cells as with faint yellow color
+            for idx, cell in enumerate(yellow_cells):
+                cx, cy = cell_to_canvas(cell[0], cell[1], self.cell_size)
+                self.draw([
+                    OPERATION.filled_polygon,
+                    [cx - self.cell_size/2, cx + self.cell_size/2, cx + self.cell_size/2, cx - self.cell_size/2],
+                    [cy - self.cell_size/2, cy - self.cell_size/2, cy + self.cell_size/2, cy + self.cell_size/2],
+                    1,
+                    QColor(255, 255, 0, 50)  # Yellow with 50 alpha (transparency)
+                ])
 
-            # # 2) Draw dotted-line paths for each EV, converting path from cell coords to canvas coords
-            # converted_paths = []
-            # for i in range(num_patrols):
-            #     cell_path = patrol_paths[i]  # list of (row, col)
-            #     if len(cell_path) == 0:
-            #         cell_path.append(patrol_positions[i])
-            #     if not cell_path:
-            #         converted_paths.append([])
-            #         continue
-                
-                
-            #     # Convert entire path to canvas
-            #     canvas_path = []
-            #     for (r, c) in cell_path:
-            #         px, py = cell_to_canvas(r, c, self.cell_size)
-            #         canvas_path.append((px, py))
-                
-            #     converted_paths.append(canvas_path)
-                
-            #     # Now draw the dotted lines in canvas coords
-            #     x1,y1 = self.previous_positions[i]
-            #     x2, y2 = canvas_path[0]
-            #     self.draw([OPERATION.dotted_line, x1, y1, x2, y2, 1, patrol_colors[i]])
-            #     for j in range(len(canvas_path) - 1):
-            #         x1, y1 = canvas_path[j]
-            #         x2, y2 = canvas_path[j + 1]
-            #         self.draw([OPERATION.dotted_line, x1, y1, x2, y2, 1, patrol_colors[i]])
-
-            # 3) Draw trucks, rotated based on direction of travel
+            # 4) Draw trucks, rotated based on direction of travel
             for i in range(num_patrols):
-                # print("Patrol", i)
-                # Convert EV's position to canvas coords
                 cell_x, cell_y = patrol_positions[i]
                 truck_x, truck_y = cell_to_canvas(cell_x, cell_y, self.cell_size)
                 dest_truck_pos = np.array([truck_x, truck_y])
                 last_truck_pos = np.array(self.previous_positions[i])
-                # print("Dest position", dest_truck_pos)
-                # print("Last position", last_truck_pos)
-                # Compute the direction vector from last position to destination
                 direction_vector = dest_truck_pos - last_truck_pos
 
                 # Compute the distance to the destination
@@ -472,7 +446,7 @@ class Window(QMainWindow):
                     # Normalize the direction vector and move 'vel' units along it
                     direction_unit_vector = direction_vector / distance
                     next_truck_pos = last_truck_pos + direction_unit_vector * (velocity)
-                next_truck_pos = tuple(next_truck_pos)
+                next_truck_poscdad2483 = tuple(next_truck_pos)
                 # print(i, next_truck_pos)
                 act_truck_x, act_truck_y = next_truck_pos
                 self.previous_positions[i] = next_truck_pos
@@ -545,8 +519,6 @@ class Window(QMainWindow):
              - repaint 
              - small delay
         """
-        # model = PPO.load("/home/shinobi-owl/PhD/battery/DroneSim/models/8ipq56jq/lmd_model_840000_steps.zip")
-        # Draw the maze walls and warehouse once
         observation, info = self.env.reset(seed=47)
         df_maze = info['maze']
 
@@ -558,7 +530,9 @@ class Window(QMainWindow):
         # # Initialize the world (assign tasks, positions, etc.)
         self.previous_positions = []
 
+        log_f = open(self.log_file, 'a')
         print("Starting Simulation")
+        log_f.write("Starting Simulation\n")
         done = False
         frame_num = 0
         total_reward = 0.0
@@ -566,6 +540,7 @@ class Window(QMainWindow):
         while not done:
             self.tmp = 1
             print("Frame Number:", frame_num+1)
+            log_f.write(f"Frame Number: {frame_num+1}\n")
             action = self.agent.predict(observation)
             # Step the simulation
             observation, reward, done, _, world_state = self.env.step(action)
@@ -574,6 +549,9 @@ class Window(QMainWindow):
             print("Action taken:", acts[action[0]])
             print("Observation:", observation)
             print("Reward:", reward)
+            log_f.write(f"Action taken: {acts[action[0]]}\n")
+            log_f.write(f"Observation: {observation}\n")
+            log_f.write(f"Reward: {reward}\n")
 
             # Render it
             self.draw_state(world_state, 120)
@@ -586,12 +564,12 @@ class Window(QMainWindow):
         print(f"Final frame: {frame_num}")
         print(f"Tasks completed: {num_tasks_completed}")
         print(f"EV distance traveled: {ev_distance_traveled}")
-        with open(self.log_file, 'a') as f:
-            f.write(f"Final frame: {frame_num}\n")
-            f.write(f"Tasks completed: {num_tasks_completed}\n")
-            f.write(f"EV distance traveled: {ev_distance_traveled}\n")
-            f.write("=============\n")
+        log_f.write(f"Final frame: {frame_num}\n")
+        log_f.write(f"Tasks completed: {num_tasks_completed}\n")
+        log_f.write(f"EV distance traveled: {ev_distance_traveled}\n")
+        log_f.write("=============\n")
 
+        log_f.close()
         self.env.close()
         self.close()
         
@@ -621,13 +599,13 @@ def get_color(v):
     else:
         return Qt.darkGray
 
-def startup(config_file, policy_name):
+def startup(config_file):
     """
     Entry point that creates the Window, starts the PyQt event loop,
     and runs the simulation in a separate thread.
     """
     App = QApplication(sys.argv)
-    window = Window(config_file, policy_name)
+    window = Window(config_file)
     x = threading.Thread(target=window.run, args=())
     x.start()
     sys.exit(App.exec())

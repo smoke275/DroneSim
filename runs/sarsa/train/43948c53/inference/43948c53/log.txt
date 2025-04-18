@@ -1,0 +1,39 @@
+Inference Log
+=============
+Starting Simulation
+Frame Number: 1
+Action taken: Up
+Observation: {'task_positions': array([1, 4], dtype=int32), 'ugv_positions': array([1, 2], dtype=int32), 'nb_traffic': array([0, 0, 0, 0], dtype=int32)}
+Reward: 191.0
+Frame Number: 2
+Action taken: Up
+Observation: {'task_positions': array([1, 4], dtype=int32), 'ugv_positions': array([1, 2], dtype=int32), 'nb_traffic': array([0, 0, 0, 0], dtype=int32)}
+Reward: -41.0
+Frame Number: 3
+Action taken: Up
+Observation: {'task_positions': array([1, 4], dtype=int32), 'ugv_positions': array([1, 2], dtype=int32), 'nb_traffic': array([0, 0, 0, 0], dtype=int32)}
+Reward: -41.0
+Frame Number: 4
+Action taken: Up
+Observation: {'task_positions': array([1, 4], dtype=int32), 'ugv_positions': array([1, 2], dtype=int32), 'nb_traffic': array([0, 0, 0, 0], dtype=int32)}
+Reward: -41.0
+Frame Number: 5
+Action taken: Up
+Observation: {'task_positions': array([1, 4], dtype=int32), 'ugv_positions': array([1, 2], dtype=int32), 'nb_traffic': array([0, 0, 0, 0], dtype=int32)}
+Reward: -41.0
+Frame Number: 6
+Action taken: Up
+Observation: {'task_positions': array([1, 4], dtype=int32), 'ugv_positions': array([1, 2], dtype=int32), 'nb_traffic': array([0, 0, 0, 0], dtype=int32)}
+Reward: -41.0
+Frame Number: 7
+Action taken: Up
+Observation: {'task_positions': array([1, 4], dtype=int32), 'ugv_positions': array([1, 2], dtype=int32), 'nb_traffic': array([0, 0, 0, 0], dtype=int32)}
+Reward: -41.0
+Frame Number: 8
+Action taken: Up
+Observation: {'task_positions': array([1, 4], dtype=int32), 'ugv_positions': array([1, 2], dtype=int32), 'nb_traffic': array([0, 0, 0, 0], dtype=int32)}
+Reward: -41.0
+Frame Number: 9
+Action taken: Up
+Observation: {'task_positions': array([1, 4], dtype=int32), 'ugv_positions': array([1, 2], dtype=int32), 'nb_traffic': array([0, 0, 0, 0], dtype=int32)}
+Reward: -41.0
