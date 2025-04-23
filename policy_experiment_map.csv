@@ -1,3 +1,4 @@
 Policy Name,Experiment Description
 003d0595,Graph nearest node in the state No osc reward
 8446b493,Graph nearest direction in the state No osc reward
+0ef6cb77,Graph nearest node battery level converted to cell range in state

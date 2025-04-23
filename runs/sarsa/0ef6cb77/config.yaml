@@ -1,5 +1,5 @@
-policy_name: 358629ec
-policy_path: runs/sarsa/358629ec/policy.pkl
+policy_name: 0ef6cb77
+policy_path: runs/sarsa/0ef6cb77/policy.pkl
 traffic:
   num_centroids: 2
   prob: 0.3
@@ -10,8 +10,8 @@ uav:
   speed: 3
   swapping_time: 2
 ugv:
-  num_primitives: 4
-  range: 100000000
+  num_primitives: 5
+  range: 500
 world:
   bms: false
   cell_size: 50

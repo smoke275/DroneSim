@@ -1,5 +1,5 @@
 class UGV:
-    def __init__(self, ugv_id, base_position, max_range):
+    def __init__(self, ugv_id, base_position, max_range, G):
         super().__init__()
         self.agent_id = ugv_id
         self.position = base_position  # e.g., (row, col) or (x, y)
@@ -12,9 +12,8 @@ class UGV:
         self.task_timer = 0            # time spent on the current task
         self.active_task = None        # current task being executed
         self.distance_traveled = 0.0  # distance traveled by the UGV
-        self.move_approved = None  # flag to check if step is approved
+        self.G = G
 
-        self.tmp_position = None
         self.prev_position = None
 
 
@@ -28,8 +27,8 @@ class UGV:
         4: Stay
         Returns True if move was successful, False if out of range
         """
-        # if action !=4 and self.current_range < distance:
-        #     return False
+        if action !=4 and self.current_range < distance:
+            return 0
         moves = {
             0: (-1, 0),  # Up
             1: (0, 1),   # Right
@@ -38,26 +37,23 @@ class UGV:
             4: (0, 0)    # Stay
         }
             
-        dx, dy = moves[action]
+        dy, dx = moves[action]
         self.prev_position = self.position
-        self.tmp_position = (self.position[0] + dx, self.position[1] + dy)
-        return True
-
-    def update_move(self, distance):
-        if self.move_approved:
-            d = abs(self.tmp_position[0] - self.position[0]) + abs(self.tmp_position[1] - self.position[1])
-            self.current_range -= d*distance
-            self.distance_traveled += d*distance
+        tmp_position = (self.position[0] + dy, self.position[1] + dx)
+        if tmp_position in self.G.nodes and (tmp_position, self.position) in self.G.edges:
+            self.position = tmp_position
+            self.distance_traveled += distance
+            self.current_range -= distance
             self.current_range_percent = self.current_range / self.max_range
-            self.position = self.tmp_position
-        self.move_approved = None
-        self.tmp_position = None
+            return 1
+        return 0
 
     def recharge(self):
         """
         Recharge the agent to its maximum range.
         """
         self.current_range = self.max_range
+        self.current_range_percent = 1.0
 
     def assign_task(self, task):
         """

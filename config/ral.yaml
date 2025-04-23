@@ -17,8 +17,8 @@ world:
   max_timesteps: 1000
 
 ugv:
-  range: 100000000
-  num_primitives: 4
+  range: 1500
+  num_primitives: 5
 
 uav:
   range: 3000

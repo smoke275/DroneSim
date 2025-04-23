@@ -28,9 +28,10 @@ if __name__ == "__main__":
 
     env = gym.make('LMDEnv-v0', config=env_config)
 
-    dp_agent = SARSAAgent(env)
+    dp_agent = SARSAAgent(env, env_config)
 
-    dp_agent.learn(num_episodes=1000, max_steps_per_episode=1000, policy_path=env_config['policy_path'],
+    print(f"Policy Name: {policy_name}")
+    dp_agent.learn(num_episodes=1000, max_steps_per_episode=600, policy_path=env_config['policy_path'],
                    log_path=os.path.join(policy_dir, "train_log.txt"),)
     env.close()
 

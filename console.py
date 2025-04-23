@@ -98,7 +98,7 @@ class Window(QMainWindow):
             f.write("=============\n")
         
         self.env = gym.make("LMDEnv-v0", config=self.config, render_mode="human")
-        self.agent = SARSAAgent(self.env, policy_path=policy_path)
+        self.agent = SARSAAgent(self.env, config=self.config, policy_path=policy_path)
         
         self.InitWindow()
 
