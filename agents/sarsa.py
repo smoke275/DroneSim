@@ -30,6 +30,7 @@ class SARSAAgent(Agent):
         self.max_cell_range = int(self.max_range/self.cell_size)
         self.max_rows = config['world']['maze_size']
         self.max_cols = self.max_rows
+        self.max_load = config['ugv']['max_load']
 
         if hasattr(env.action_space, 'n'):
             self.action_list = list(range(env.action_space.n))
@@ -116,51 +117,20 @@ class SARSAAgent(Agent):
         # Graph Nearest task  and battery
         ugv = tuple(map(int, observation['ugv_positions']))
         task_flat = observation['task_positions']
-        task_coords = [(int(task_flat[i]), int(task_flat[i+1])) for i in range(0, len(task_flat), 2)]
+        task_coords = [(int(task_flat[i]), int(task_flat[i+1])) for i in range(0, len(task_flat), 2)] 
         if task_coords:
             nearest_task = min(task_coords, key=lambda t: nx.shortest_path_length(self.G, source=ugv, target=t))
         else:
             nearest_task = (-1, -1)  # dummy if no tasks
-
         batt_range = float(observation['battery_levels'][0])
         cell_range = int(batt_range/self.cell_size)
         ceil_range = self.max_cols+self.max_rows
         band_size = ceil_range/4
         band = min(int(cell_range // band_size), 4)
-        return (ugv, nearest_task, band)
-
-        # # Graph nearest task direction and battery
-        # ugv = tuple(map(int, observation['ugv_positions']))
-        # task_flat   = observation['task_positions']
-        # task_coords = [(int(task_flat[i]), int(task_flat[i+1]))
-        #                for i in range(0, len(task_flat), 2)]
-        # def direction_to(ugv, task):
-        #     dy = task[0] - ugv[0]; dx = task[1] - ugv[1]
-        #     if   dy==1  and dx==0:  return "S"
-        #     elif dy==-1 and dx==0:  return "N"
-        #     elif dy==0  and dx==1:  return "E"
-        #     elif dy==0  and dx==-1: return "W"
-        #     elif dy==1  and dx==1:  return "SE"
-        #     elif dy==1  and dx==-1: return "SW"
-        #     elif dy==-1 and dx==1:  return "NE"
-        #     elif dy==-1 and dx==-1: return "NW"
-        #     else:                    return "STAY"
-        # if task_coords:
-        #     nearest = min(task_coords,
-        #                   key=lambda t: nx.shortest_path_length(self.G, source=ugv, target=t))
-        #     direction = direction_to(ugv, nearest)
-        # else:
-        #     direction = "STAY"
-        # # --- Battery banding into 5 discrete levels ---
-        # # assume single‐agent, so take first entry
-        # batt_percent = float(observation['battery_levels'][0])
-        # # band_size = 100/4 = 25; band 0 when 0%, 1 for (0,25], …, 4 for (75,100]
-        # band = min(int(batt_percent // 25), 4)
-
-        # # Final state representation
-        # return (ugv, direction, band)
-        
-
+        ugv_load = int(observation['ugv_loads'][0])
+        load_band_size = self.max_load/5
+        load_band = min(int(ugv_load // load_band_size), 5)
+        return (ugv, nearest_task, band)#, load_band)
 
     def predict(self, observation):
         """

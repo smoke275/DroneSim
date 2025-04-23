@@ -91,11 +91,14 @@ class LMDEnv(gym.Env):
         self.num_patrols = config['world']['num_ugvs']
         self.num_uavs_bs = config["world"]["num_uavs_per_bs"]
         self.max_ugv_range = config['ugv']['range']
+        self.drain_rate = config['ugv']['drain_rate']
+        self.max_load = config['ugv']['max_load']
         
         # Simulation vars
         self.bms = config['world']['bms']
         self.max_timesteps = config['world']['max_timesteps']
         self.traffic_b = config['world']['traffic']
+        self.load_b = config['world']['load']
 
         # Traffic vars
         self.traffic_std_dev = config['traffic']['std_dev']  # Standard deviation for Gaussian distribution
@@ -114,6 +117,7 @@ class LMDEnv(gym.Env):
         '''State vars'''
         self.ugv_states = []
         self.task_list = []
+        self.task_loads = []
         self.traffic_centeroids = []
         self.traffic_heatmap = np.zeros((self.max_row, self.max_col), dtype=np.int32)
         self.info = {
@@ -150,18 +154,23 @@ class LMDEnv(gym.Env):
             shape=(self.num_patrols,),
             dtype=np.int32
         )
-        if self.traffic_b:        
-            self.observation_space = spaces.Dict({
-                'task_positions': task_space,
-                'ugv_positions': ugv_pos_space,
-                'nb_traffic': nb_traffic_space
-            })
-        else:
-            self.observation_space = spaces.Dict({
-                'task_positions': task_space,
-                'ugv_positions': ugv_pos_space,
-                'battery_levels': battery_space,
-            })
+        task_load_space = spaces.Box(
+            low=0,
+            high=self.max_load,
+            shape=(self.num_tasks,),
+            dtype=np.int32)
+        ugv_load_space = spaces.Box(
+            low=0,
+            high=self.max_load,
+            shape=(self.num_patrols,),
+            dtype=np.int32)
+        self.observation_space = spaces.Dict({
+            'task_positions': task_space,
+            'ugv_positions': ugv_pos_space,
+            'battery_levels': battery_space,
+            'task_loads': task_load_space,
+            'ugv_loads': ugv_load_space,
+        })
         
         self.reset()
 
@@ -182,10 +191,16 @@ class LMDEnv(gym.Env):
 
     def reset(self, seed=None, options=None):
         # Reset the environment to a starting condition.
-        self.fill_task_list(seed=seed)
+        if seed:
+            random.seed(seed)
+        self.task_list = []
+        self.task_loads = []
+        self.fill_task_list()
+        if not self.load_b:
+            self.task_loads = [0]*self.num_tasks
         if self.traffic_b:
             self.fill_traffic_centroids(seed=seed)
-        self.ugv_states = [UGV(i, self.warehouse_pos, self.max_ugv_range, self.G) for i in range(self.num_patrols)]
+        self.ugv_states = [UGV(ugv_id=i, base_position=self.warehouse_pos, max_range=self.max_ugv_range, max_load=self.max_load, drain_rate=self.drain_rate, G=self.G) for i in range(self.num_patrols)]
 
         self.action_response = [None]*self.num_patrols
         self.prev_task_distances = [100]*self.num_patrols
@@ -201,12 +216,14 @@ class LMDEnv(gym.Env):
         self.update_info()
         return initial_obs, self.info
     
-    def fill_task_list(self, seed=None):
+    def fill_task_list(self):
         # Fill the task list with random positions.
         new_tasks_count = self.num_tasks - len(self.task_list)
-        new_tasks_df = self.df_maze[~((self.df_maze['row']==self.warehouse_pos[1])&(self.df_maze['col']==self.warehouse_pos[0]))].sample(new_tasks_count, random_state=seed)
-        new_tasks = [tuple(row) for row in new_tasks_df[['row', 'col']].values.tolist()]
+        new_tasks = random.sample(list(self.G.nodes),min(new_tasks_count, len(self.G.nodes)))
         self.task_list.extend(new_tasks)
+        if self.load_b:
+            new_task_loads = [random.randint(0,self.max_load) for _ in range(new_tasks_count)]
+            self.task_loads.extend(new_task_loads)
     
     def fill_traffic_centroids(self, seed=None):
         # randomly select two cells from the maze
@@ -333,25 +350,29 @@ class LMDEnv(gym.Env):
         task_positions_flat = np.array(self.task_list, dtype=np.int32).flatten()
         ugv_positions_flat = np.array([ugv.position for ugv in self.ugv_states], dtype=np.int32).flatten()
         battery_flat = np.array([ugv.current_range for ugv in self.ugv_states], dtype=np.int32).flatten()
+        task_loads_flat = np.array(self.task_loads, dtype=np.int32).flatten()
+        ugv_loads_flat = np.array([ugv.load for ugv in self.ugv_states], dtype=np.int32).flatten()
 
-        if self.traffic_b:
-            nb_traffic = []
-            for ugv in self.ugv_states:
-                traffic = self._get_nb_traffic(ugv.position)
-                nb_traffic.extend(traffic)
-            nb_traffic_flat = np.array(nb_traffic, dtype=np.int32).flatten()
+        # if self.traffic_b:
+        #     nb_traffic = []
+        #     for ugv in self.ugv_states:
+        #         traffic = self._get_nb_traffic(ugv.position)
+        #         nb_traffic.extend(traffic)
+        #     nb_traffic_flat = np.array(nb_traffic, dtype=np.int32).flatten()
 
-            return {
-                'task_positions': task_positions_flat,
-                'ugv_positions': ugv_positions_flat,
-                'nb_traffic': nb_traffic_flat,
-            }
-        else:
-            return {
-            'task_positions': task_positions_flat,
-            'ugv_positions': ugv_positions_flat,
-            'battery_levels': battery_flat,
-            }
+        #     return {
+        #         'task_positions': task_positions_flat,
+        #         'ugv_positions': ugv_positions_flat,
+        #         'nb_traffic': nb_traffic_flat,
+        #     }
+        # else:
+        return {
+        'task_positions': task_positions_flat,
+        'ugv_positions': ugv_positions_flat,
+        'battery_levels': battery_flat,
+        'task_loads': task_loads_flat,
+        'ugv_loads': ugv_loads_flat,
+        }
             
     
     def _get_info(self):
@@ -397,14 +418,17 @@ class LMDEnv(gym.Env):
         
         # Task completion: reward for completing a task.
         completed_tasks = set()
-        for task in self.task_list:
-            for ugv in self.ugv_states:
+        for t_i, task in enumerate(self.task_list):
+            for r_i, ugv in enumerate(self.ugv_states):
                 if task == ugv.position:
                     reward += 50.0
                     completed_tasks.add(task)
-                    self.num_tasks_completed += 1                       
-        for task in completed_tasks:
-            self.task_list.remove(task)
+                    self.num_tasks_completed += 1
+
+                    self.task_list.pop(t_i)
+                    if self.load_b:
+                        ugv.load = self.task_loads[t_i]
+                        self.task_loads.pop(t_i)
         
         # Small time step penalty.
         reward -= 1.0

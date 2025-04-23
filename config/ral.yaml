@@ -14,11 +14,14 @@ world:
 
   bms: false
   traffic: false
+  load: true
   max_timesteps: 1000
 
 ugv:
   range: 1500
+  drain_rate: 1
   num_primitives: 5
+  max_load: 100
 
 uav:
   range: 3000
@@ -30,4 +33,4 @@ traffic:
   reset_dur: 5
   prob: 0.3
   num_centroids: 2
-
+  
