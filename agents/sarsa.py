@@ -130,7 +130,8 @@ class SARSAAgent(Agent):
         ugv_load = int(observation['ugv_loads'][0])
         load_band_size = self.max_load/5
         load_band = min(int(ugv_load // load_band_size), 5)
-        return (ugv, nearest_task, band)#, load_band)
+        nb_traffic = tuple([int(i) for i in observation['nb_traffic']])
+        return (ugv, nearest_task, band, load_band, nb_traffic)
 
     def predict(self, observation):
         """

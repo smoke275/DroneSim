@@ -13,15 +13,16 @@ world:
   num_ugvs: 1
 
   bms: false
-  traffic: false
+  traffic: true
   load: true
   max_timesteps: 1000
 
 ugv:
-  range: 1500
+  range: 10000000
   drain_rate: 1
   num_primitives: 5
   max_load: 100
+  speed: 1
 
 uav:
   range: 3000

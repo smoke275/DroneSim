@@ -26,6 +26,7 @@ import gymnasium as gym
 import envs
 from agents.dp import DPAgent
 from agents.sarsa import SARSAAgent  
+from agents.dijkstra import DijkstraAgent
 
 WRITE_to_file = True
 SET_t = 5
@@ -98,7 +99,8 @@ class Window(QMainWindow):
             f.write("=============\n")
         
         self.env = gym.make("LMDEnv-v0", config=self.config, render_mode="human")
-        self.agent = SARSAAgent(self.env, config=self.config, policy_path=policy_path)
+        # self.agent = SARSAAgent(self.env, config=self.config, policy_path=policy_path)
+        self.agent = DijkstraAgent(self.env, config=self.config)
         
         self.InitWindow()
 
@@ -388,12 +390,12 @@ class Window(QMainWindow):
         scaled_truck_image = self.scaled_truck_image
         R_P = world_state["R_P"]                            # battery fraction
         active_tasks = world_state["active_tasks"]          # list of cell coords for tasks
-        red_cells = world_state["red_cells"]                # list of cell coords for red cells
-        yellow_cells = world_state["yellow_cells"]          # list of cell coords for yellow cells
+        red_roads = world_state["red_roads"]                # list of cell coords for red cells
+        yellow_roads = world_state["yellow_roads"]          # list of cell coords for yellow cells
         for t in range(T):
             # 1) Draw current tasks as filled circles in canvas coords
-            task_size = 5
-            for idx, task in enumerate(active_tasks):
+            task_size = 9
+            for idx, task in enumerate(self.previous_tasks):
                 if task is not None:
                     # Convert cell coords (task[0], task[1]) -> canvas coords
                     cx, cy = cell_to_canvas(task[0], task[1], self.cell_size)
@@ -407,25 +409,27 @@ class Window(QMainWindow):
                         OPERATION.filled_circle, 
                         cx, cy, task_size, 1, get_color(0)
                     ])
-            # 2) Paint red cells as with faint red color
-            for idx, cell in enumerate(red_cells):
-                cx, cy = cell_to_canvas(cell[0], cell[1], self.cell_size)
+
+            # 2) Draw red roads as lines connected the centers of the cells
+            for road in red_roads:
+                start_x, start_y = cell_to_canvas(road[0][0], road[0][1], self.cell_size)
+                end_x, end_y = cell_to_canvas(road[1][0], road[1][1], self.cell_size)
                 self.draw([
-                    OPERATION.filled_polygon,
-                    [cx - self.cell_size/2, cx + self.cell_size/2, cx + self.cell_size/2, cx - self.cell_size/2],
-                    [cy - self.cell_size/2, cy - self.cell_size/2, cy + self.cell_size/2, cy + self.cell_size/2],
-                    1,
-                    QColor(255, 0, 0, 50)  # Red with 50 alpha (transparency)
+                    OPERATION.line,
+                    start_x, start_y,
+                    end_x, end_y,
+                    5, Qt.red
                 ])
-            # 3) Paint yellow cells as with faint yellow color
-            for idx, cell in enumerate(yellow_cells):
-                cx, cy = cell_to_canvas(cell[0], cell[1], self.cell_size)
+
+            # 3) Draw yellow roads as lines connected the centers of the cells
+            for road in yellow_roads:
+                start_x, start_y = cell_to_canvas(road[0][0], road[0][1], self.cell_size)
+                end_x, end_y = cell_to_canvas(road[1][0], road[1][1], self.cell_size)
                 self.draw([
-                    OPERATION.filled_polygon,
-                    [cx - self.cell_size/2, cx + self.cell_size/2, cx + self.cell_size/2, cx - self.cell_size/2],
-                    [cy - self.cell_size/2, cy - self.cell_size/2, cy + self.cell_size/2, cy + self.cell_size/2],
-                    1,
-                    QColor(255, 255, 0, 50)  # Yellow with 50 alpha (transparency)
+                    OPERATION.line,
+                    start_x, start_y,
+                    end_x, end_y,
+                    5, Qt.yellow
                 ])
 
             # 4) Draw trucks, rotated based on direction of travel
@@ -446,7 +450,7 @@ class Window(QMainWindow):
                     # Normalize the direction vector and move 'vel' units along it
                     direction_unit_vector = direction_vector / distance
                     next_truck_pos = last_truck_pos + direction_unit_vector * (velocity)
-                next_truck_poscdad2483 = tuple(next_truck_pos)
+                next_truck_pos = tuple(next_truck_pos)
                 # print(i, next_truck_pos)
                 act_truck_x, act_truck_y = next_truck_pos
                 self.previous_positions[i] = next_truck_pos
@@ -506,6 +510,7 @@ class Window(QMainWindow):
             self.execute()
             time.sleep(1 / T)
 
+        self.previous_tasks = active_tasks
 
     def run(self):
         """
@@ -529,6 +534,7 @@ class Window(QMainWindow):
 
         # # Initialize the world (assign tasks, positions, etc.)
         self.previous_positions = []
+        self.previous_tasks = info['active_tasks']
 
         log_f = open(self.log_file, 'a')
         print("Starting Simulation")

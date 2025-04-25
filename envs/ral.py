@@ -93,6 +93,7 @@ class LMDEnv(gym.Env):
         self.max_ugv_range = config['ugv']['range']
         self.drain_rate = config['ugv']['drain_rate']
         self.max_load = config['ugv']['max_load']
+        self.ugv_speed = config['ugv']['speed']
         
         # Simulation vars
         self.bms = config['world']['bms']
@@ -105,21 +106,22 @@ class LMDEnv(gym.Env):
         self.traffic_reset_dur = config['traffic']['reset_dur'] 
         self.traffic_prob = config['traffic']['prob']
         self.traffic_num_centroids = config['traffic']['num_centroids']
-        self.red_cells = []
-        self.yellow_cells = []
 
         '''METRICS DEFINITIONS'''
         # NEW: Track total distance traveled by EVs and drones.
         self.total_ev_distance = 0.0
         self.num_tasks_completed = 0
         self.current_timestep = 0
+        self.time_elapsed = 0.0
+        self.total_enegy_consumed = 0.0
 
         '''State vars'''
         self.ugv_states = []
         self.task_list = []
         self.task_loads = []
         self.traffic_centeroids = []
-        self.traffic_heatmap = np.zeros((self.max_row, self.max_col), dtype=np.int32)
+        self.red_roads = []
+        self.yellow_roads = []
         self.info = {
             "maze": self.df_maze,
             "graph": self.G,
@@ -127,12 +129,14 @@ class LMDEnv(gym.Env):
             "num_patrols": self.num_patrols,
             "patrol_positions": [],
             "patrol_colors": [],
-            "patrol_paths": [],
             "R_P": [],
             "ev_distance_traveled": self.total_ev_distance,
             "num_tasks_completed": self.num_tasks_completed,
+            "time_elapsed":self.time_elapsed,
+            "total_energy_consumed": self.total_enegy_consumed,
             "active_tasks": [],
-            "traffic_heatmap": self.traffic_heatmap,
+            "red_roads": [],
+            "yellow_roads": [],
         }
 
         '''SETUP YOUR OBSERVATION SPACE, ACTION SPACE, ENVIRONMENT-SPECIFIC VARIABLES'''
@@ -164,12 +168,14 @@ class LMDEnv(gym.Env):
             high=self.max_load,
             shape=(self.num_patrols,),
             dtype=np.int32)
+        
         self.observation_space = spaces.Dict({
             'task_positions': task_space,
             'ugv_positions': ugv_pos_space,
             'battery_levels': battery_space,
             'task_loads': task_load_space,
             'ugv_loads': ugv_load_space,
+            'nb_traffic': nb_traffic_space
         })
         
         self.reset()
@@ -180,13 +186,13 @@ class LMDEnv(gym.Env):
             r, c = int(row['row']), int(row['col'])
             G.add_node((r, c))
             if row['E'] == 1:
-                G.add_edge((r, c), (r, c+1))
+                G.add_edge((r, c), (r, c+1), traffic=0)
             if row['W'] == 1:
-                G.add_edge((r, c), (r, c - 1))
+                G.add_edge((r, c), (r, c - 1), traffic=0)
             if row['N'] == 1:
-                G.add_edge((r, c), (r - 1, c))
+                G.add_edge((r, c), (r - 1, c), traffic=0)
             if row['S'] == 1:
-                G.add_edge((r, c), (r + 1,c))
+                G.add_edge((r, c), (r + 1,c), traffic=0)
         return G
 
     def reset(self, seed=None, options=None):
@@ -195,22 +201,30 @@ class LMDEnv(gym.Env):
             random.seed(seed)
         self.task_list = []
         self.task_loads = []
+        self.red_roads = []
+        self.yellow_roads = []
+        self.traffic_centeroids = []
+        for u, v in self.G.edges():
+            self.G[u][v]['traffic'] = 0
         self.fill_task_list()
         if not self.load_b:
             self.task_loads = [0]*self.num_tasks
         if self.traffic_b:
-            self.fill_traffic_centroids(seed=seed)
-        self.ugv_states = [UGV(ugv_id=i, base_position=self.warehouse_pos, max_range=self.max_ugv_range, max_load=self.max_load, drain_rate=self.drain_rate, G=self.G) for i in range(self.num_patrols)]
+            self.fill_traffic_centroids()
+        self.ugv_states = [UGV(ugv_id=i, base_position=self.warehouse_pos, cell_dist=self.cell_size, max_range=self.max_ugv_range, max_load=self.max_load, drain_rate=self.drain_rate, speed=self.ugv_speed, G=self.G) for i in range(self.num_patrols)]
 
         self.action_response = [None]*self.num_patrols
         self.prev_task_distances = [100]*self.num_patrols
         self.last_miles = [0]*self.num_patrols
         self.prev_positions = [[] for _ in range(self.num_patrols)]
         # self.oscillation_counter = [0 for _ in range(self.num_patrols)]
+        self.last_move_time = 0
         
         self.total_ev_distance = 0.0
         self.num_tasks_completed = 0
         self.current_timestep = 0
+        self.time_elapsed = 0.0
+        self.total_enegy_consumed = 0.0
             
         initial_obs = self._get_observation()
         self.update_info()
@@ -225,30 +239,43 @@ class LMDEnv(gym.Env):
             new_task_loads = [random.randint(0,self.max_load) for _ in range(new_tasks_count)]
             self.task_loads.extend(new_task_loads)
     
-    def fill_traffic_centroids(self, seed=None):
-        # randomly select two cells from the maze
+    def fill_traffic_centroids(self):
         if random.random() < self.traffic_prob:
-            self.traffic_centeroids = random.sample(list(self.G.nodes), 2, seed=seed)
-            # Create a heatmap based on Gaussian distributions around the centroids
-            self.traffic_heatmap = np.zeros((self.max_row, self.max_col))
+            self.traffic_centeroids = random.sample(list(self.G.nodes), self.traffic_num_centroids)
+            # Convert traffic centroids to numpy array for easier computation
+            centroid_array = np.array(self.traffic_centeroids)
+            # Initialize lists for colored roads
+            self.red_roads = []
+            self.yellow_roads = []
 
-            for x in range(1, self.max_row + 1):
-                for y in range(1, self.max_col + 1):
-                    total_intensity = 0
-                    for centroid in self.traffic_centeroids:
-                        dist_sq = (x - centroid[0])**2 + (y - centroid[1])**2
-                        intensity = math.exp(-dist_sq / (2 * self.traffic_std_dev**2))
-                        total_intensity += intensity
-                        
-                    self.traffic_heatmap[x-1][y-1] = total_intensity
-                    
-                    # Classify cells based on intensity
-                    if total_intensity > 0.66:
-                        self.red_cells.append((x, y))
-                    elif total_intensity > 0.33:
-                        self.yellow_cells.append((x, y))
+            # Update traffic for each edge in the graph
+            for u, v in self.G.edges():
+                # Calculate midpoint of edge
+                midpoint = np.array([(u[0] + v[0])/2, (u[1] + v[1])/2])
+                
+                # Calculate total Gaussian contribution from all centroids
+                total_contrib = 0
+                for centroid in centroid_array:
+                    dist_sq = np.sum((midpoint - centroid)**2)
+                    contrib = np.exp(-dist_sq / (2.0 * self.traffic_std_dev**2))
+                    total_contrib += contrib
+                
+                # Normalize and set traffic level
+                if total_contrib < 0.33:
+                    self.G[u][v]['traffic'] = 0
+                elif total_contrib < 0.66:
+                    self.G[u][v]['traffic'] = 1
+                    self.yellow_roads.append((u, v))
+                else:
+                    self.G[u][v]['traffic'] = 2
+                    self.red_roads.append((u, v))
+            
         else:
             self.traffic_centeroids = []
+            self.red_roads = []
+            self.yellow_roads = []
+            for u, v in self.G.edges():
+                self.G[u][v]['traffic'] = 0
 
     def step(self, action):
         self._apply_action(action)
@@ -257,6 +284,7 @@ class LMDEnv(gym.Env):
         self.update_info()
         done = self._check_termination_condition()
         self.current_timestep += 1
+        self.time_elapsed += self.last_move_time
 
         self.fill_task_list()
         if self.traffic_b:
@@ -266,34 +294,6 @@ class LMDEnv(gym.Env):
 
         return obs, reward, done, False, self.info
 
-    def render(self, mode='human'):
-        # (Optional) Custom display.
-        pass
-
-    def _get_cell_traffic(self, position):
-        """
-        Get the traffic density at the given UGV's position using the traffic_centeroids as Gaussian centers.
-        Returns a list of four discrete traffic levels (0, 1, 2) corresponding to [N, E, S, W].
-        """
-        # Convert the DataFrame to a list of (row, col) tuples.
-        centroids = [(row['row'], row['col']) for _, row in self.traffic_centeroids.iterrows()]
-        
-        total_contrib = 0.0
-        for (cx, cy) in centroids:
-            dist_sq = (position[0] - cx)**2 + (position[1] - cy)**2
-            contrib = math.exp(-dist_sq / (2.0 * (self.std_dev**2)))
-            total_contrib += contrib
-        
-        # Find the traffic level based on the total contribution.
-        if total_contrib < 0.33:
-            level = 0
-        elif total_contrib < 0.66:
-            level = 1
-        else:
-            level = 2
-        
-        return level
-
     def _get_nb_traffic(self, position):
         """
         Get the traffic density in the North, East, South, and West directions
@@ -301,48 +301,14 @@ class LMDEnv(gym.Env):
         Returns a list of four discrete traffic levels (0, 1, 2) corresponding to [N, E, S, W].
         """
         # Define neighbor cell positions relative to current position.
-        neighbor_positions = {
-            'N': (position[0] - 1, position[1]),
-            'E': (position[0], position[1] + 1),
-            'S': (position[0] + 1, position[1]),
-            'W': (position[0], position[1] - 1)
-        }
+        neighbor_positions = (
+            (position[0] - 1, position[1]),
+            (position[0], position[1] + 1),
+            (position[0] + 1, position[1]),
+            (position[0], position[1] - 1)
+        )
         
-        # If no traffic centroids have been defined, return zero traffic in all directions.
-        if (not isinstance(self.traffic_centeroids, pd.DataFrame)) or self.traffic_centeroids.empty:
-            return [0, 0, 0, 0]
-        
-        # Convert the DataFrame to a list of (row, col) tuples.
-        centroids = [(row['row'], row['col']) for _, row in self.traffic_centeroids.iterrows()]
-        
-        traffic_levels = []
-        for direction in ['N', 'E', 'S', 'W']:
-            nb_pos = neighbor_positions[direction]
-            # If the neighbor position is outside the maze boundaries, treat it as having zero traffic.
-            if nb_pos[0] < 1 or nb_pos[0] > self.max_row or nb_pos[1] < 1 or nb_pos[1] > self.max_col:
-                traffic_levels.append(0)
-                continue
-            
-            total_contrib = 0.0
-            # Compute the Gaussian contribution from each centroid for the neighbor cell.
-            for (cx, cy) in centroids:
-                dist_sq = (nb_pos[0] - cx)**2 + (nb_pos[1] - cy)**2
-                contrib = math.exp(-dist_sq / (2.0 * (self.std_dev**2)))
-                total_contrib += contrib
-            
-            # Average the contribution over all centroids.
-            avg_contrib = total_contrib / len(centroids)
-            
-            # Convert the continuous value into a discrete level.
-            if total_contrib < 0.33:
-                level = 0
-            elif total_contrib < 0.66:
-                level = 1
-            else:
-                level = 2
-            
-            traffic_levels.append(level)
-        
+        traffic_levels = [self.G.edges.get((position, neighbor), {}).get('traffic', 0) for neighbor in neighbor_positions]
         return traffic_levels
 
 
@@ -352,26 +318,19 @@ class LMDEnv(gym.Env):
         battery_flat = np.array([ugv.current_range for ugv in self.ugv_states], dtype=np.int32).flatten()
         task_loads_flat = np.array(self.task_loads, dtype=np.int32).flatten()
         ugv_loads_flat = np.array([ugv.load for ugv in self.ugv_states], dtype=np.int32).flatten()
+        nb_traffic = []
+        for ugv in self.ugv_states:
+            traffic = self._get_nb_traffic(ugv.position)
+            nb_traffic.extend(traffic)
+        nb_traffic_flat = np.array(nb_traffic, dtype=np.int32).flatten()
 
-        # if self.traffic_b:
-        #     nb_traffic = []
-        #     for ugv in self.ugv_states:
-        #         traffic = self._get_nb_traffic(ugv.position)
-        #         nb_traffic.extend(traffic)
-        #     nb_traffic_flat = np.array(nb_traffic, dtype=np.int32).flatten()
-
-        #     return {
-        #         'task_positions': task_positions_flat,
-        #         'ugv_positions': ugv_positions_flat,
-        #         'nb_traffic': nb_traffic_flat,
-        #     }
-        # else:
         return {
         'task_positions': task_positions_flat,
         'ugv_positions': ugv_positions_flat,
         'battery_levels': battery_flat,
         'task_loads': task_loads_flat,
         'ugv_loads': ugv_loads_flat,
+        'nb_traffic': nb_traffic_flat,
         }
             
     
@@ -383,22 +342,25 @@ class LMDEnv(gym.Env):
         self.info["patrol_colors"] = [ugv.agent_id for ugv in self.ugv_states]
         self.info["R_P"] = [ugv.current_range_percent for ugv in self.ugv_states]
         self.info["active_tasks"] = self.task_list
-        self.info["num_tasks_completed"] = self.num_tasks_completed
-        self.info['red_cells'] = self.red_cells
-        self.info['yellow_cells'] = self.yellow_cells
+        self.info['red_roads'] = self.red_roads
+        self.info['yellow_roads'] = self.yellow_roads
 
+        self.info["time_elapsed"] = self.time_elapsed
+        self.info["num_tasks_completed"] = self.num_tasks_completed
         self.total_ev_distance = 0.0
+        self.total_energy_consumed = 0.0
         for ugv in self.ugv_states:
             self.total_ev_distance += ugv.distance_traveled
-
+            self.total_energy_consumed += ugv.energy_consumed
         self.info["ev_distance_traveled"] = self.total_ev_distance
+        self.info["total_energy_consumed"] = self.total_energy_consumed
     
     def _apply_action(self, action):
         # Define how each agent’s action modifies the simulation.
         for i, act in enumerate(action):
             if act < self.action_space.nvec[i]:
                 ugv_i = self.ugv_states[i]
-                self.action_response[i] = ugv_i.move(act, self.cell_size)
+                self.action_response[i], self.last_move_time = ugv_i.move(act, self.G)
 
                 if ugv_i.position == self.warehouse_pos:
                     ugv_i.recharge()
@@ -431,7 +393,7 @@ class LMDEnv(gym.Env):
                         self.task_loads.pop(t_i)
         
         # Small time step penalty.
-        reward -= 1.0
+        reward -= self.last_move_time/self.cell_size
 
         # Penalize invalid moves.
         for ar in self.action_response:
@@ -439,7 +401,7 @@ class LMDEnv(gym.Env):
                 reward -= 40.0
 
         # --- Progress-Based Shaping Reward ---
-        bonus_factor = 3.0
+        bonus_factor = 5.0
         for i, ugv in enumerate(self.ugv_states):
             if self.task_list:
                 distances = [abs(ugv.position[0] - task[0]) + abs(ugv.position[1] - task[1]) for task in self.task_list]

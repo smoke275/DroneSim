@@ -1,5 +1,5 @@
 class UGV:
-    def __init__(self, ugv_id, base_position, max_range, max_load, drain_rate, G):
+    def __init__(self, ugv_id, base_position, cell_dist, max_range, max_load, drain_rate, speed, G):
         super().__init__()
         self.agent_id = ugv_id
         self.position = base_position  # e.g., (row, col) or (x, y)
@@ -15,13 +15,16 @@ class UGV:
         self.G = G
         self.max_load = max_load
         self.drain_rate= drain_rate
+        self.speed = speed
+        self.cell_dist = cell_dist
+        self.energy_consumed = 0.0
 
         self.load = 0
 
         self.prev_position = None
 
 
-    def move(self, action, distance=1):
+    def move(self, action, graph):
         """
         Move the agent based on action number:
         0: Up
@@ -32,9 +35,9 @@ class UGV:
         Returns True if move was successful, False if out of range
         """
         curr_drain_rate = self.drain_rate * (1 + self.load / self.max_load)
-        range_left = self.current_range - curr_drain_rate * distance
+        range_left = self.current_range - curr_drain_rate * self.cell_dist
         if action !=4 and range_left<=0:
-            return 0
+            return 0, self.cell_dist
         moves = {
             0: (-1, 0),  # Up
             1: (0, 1),   # Right
@@ -48,12 +51,18 @@ class UGV:
         tmp_position = (self.position[0] + dy, self.position[1] + dx)
         if tmp_position in self.G.nodes and (tmp_position, self.position) in self.G.edges:
             self.position = tmp_position
-            self.distance_traveled += distance
-
-            self.current_range = range_left
-            self.current_range_percent = self.current_range / self.max_range
-            return 1
-        return 0
+            if action != 4:
+                self.distance_traveled += self.cell_dist
+                self.energy_consumed += curr_drain_rate * self.cell_dist
+                traffic = graph.edges[(self.position, self.prev_position)]['traffic']
+                curr_speed = self.speed / (1 + traffic)  # Speed reduces with increasing traffic
+                move_time = self.cell_dist / curr_speed
+                self.current_range = range_left
+                self.current_range_percent = self.current_range / self.max_range
+            else:
+                move_time = self.cell_dist
+            return 1, move_time
+        return 0, self.cell_dist
 
     def recharge(self):
         """
