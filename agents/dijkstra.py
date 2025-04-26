@@ -13,36 +13,52 @@ class DijkstraAgent(Agent):
         self.G = None
         self.current_path = []
         _, info = self.env.reset()
-        self.G = info['graph']
+        self.G = info['graph'].copy()
+        self.warehouse_pos = info['warehouse_pos']
+        for node in self.G.nodes():
+            self.G.nodes[node]['cost2warehouse'] = nx.shortest_path_length(self.G, source=node, target=self.warehouse_pos)
         
     def predict(self, observation):
         """
-        Return the next action in the path to nearest task.
-        If no path exists, generates new path to nearest task.
+        Return the next action in the path to nearest task or to the warehouse if battery is low.
+        The agent checks that it has enough battery to go to a task and return to the warehouse.
         """
         ugv_pos = tuple(map(int, observation['ugv_positions']))
+        battery = int(observation['battery_levels'][0])  # Assuming single agent control
+
         task_positions = observation['task_positions']
-        
         # Convert task positions to list of tuples
         task_coords = []
         for i in range(0, len(task_positions), 2):
             task_coords.append((int(task_positions[i]), int(task_positions[i+1])))
-            
-        # If no current path or reached end of path, find new path
+
+        # If no current path or reached end of path, plan a new route.
         if not self.current_path:
+            valid_tasks = []
             if task_coords:
-                # Find nearest task using network distance
-                nearest_task = min(task_coords, 
-                                 key=lambda t: nx.shortest_path_length(self.G, 
-                                                                     source=ugv_pos, 
-                                                                     target=t))
-                # Get shortest path
+                for t in task_coords:
+                    try:
+                        cost_to_task = nx.shortest_path_length(self.G, source=ugv_pos, target=t)
+                        cost_to_warehouse = self.G.nodes[t]['cost2warehouse']
+                        total_cost = cost_to_task + cost_to_warehouse
+                        if battery >= total_cost:
+                            valid_tasks.append((t, cost_to_task))
+                    except nx.NetworkXNoPath:
+                        continue
+
+            if valid_tasks:
+                # Select the nearest valid task
+                nearest_task = min(valid_tasks, key=lambda x: x[1])[0]
                 self.current_path = nx.shortest_path(self.G, ugv_pos, nearest_task)[1:]
             else:
-                # No tasks available - stay in place
-                return [4]  # Action 4 is "stay"
-                
-        # If we have a path, determine next action to follow it
+                # Not enough battery for any task route; plan a route to the warehouse.
+                try:
+                    self.current_path = nx.shortest_path(self.G, ugv_pos, self.warehouse_pos)[1:]
+                except nx.NetworkXNoPath:
+                    # No valid move available.
+                    return [4]  # Action 4 is "stay"
+                    
+        # Follow the planned path, if any.
         if self.current_path:
             next_pos = self.current_path[0]
             self.current_path = self.current_path[1:]

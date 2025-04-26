@@ -26,73 +26,169 @@ Action taken: Right
 Observation: {'task_positions': array([1, 3, 5, 4, 1, 2], dtype=int32), 'ugv_positions': array([3, 3], dtype=int32), 'battery_levels': array([9999800], dtype=int32), 'task_loads': array([0, 0, 0], dtype=int32), 'ugv_loads': array([0], dtype=int32), 'nb_traffic': array([0, 0, 1, 0], dtype=int32)}
 Reward: 54.0
 Frame Number: 7
-Action taken: Down
-Observation: {'task_positions': array([1, 3, 5, 4, 1, 2], dtype=int32), 'ugv_positions': array([4, 3], dtype=int32), 'battery_levels': array([9999750], dtype=int32), 'task_loads': array([0, 0, 0], dtype=int32), 'ugv_loads': array([0], dtype=int32), 'nb_traffic': array([1, 1, 0, 0], dtype=int32)}
-Reward: 488.0
+Action taken: Right
+Observation: {'task_positions': array([1, 3, 5, 4, 1, 2], dtype=int32), 'ugv_positions': array([3, 4], dtype=int32), 'battery_levels': array([9999750], dtype=int32), 'task_loads': array([0, 0, 0], dtype=int32), 'ugv_loads': array([0], dtype=int32), 'nb_traffic': array([0, 0, 0, 0], dtype=int32)}
+Reward: 489.0
 Frame Number: 8
 Action taken: Right
-Observation: {'task_positions': array([1, 3, 5, 4, 1, 2], dtype=int32), 'ugv_positions': array([4, 4], dtype=int32), 'battery_levels': array([9999700], dtype=int32), 'task_loads': array([0, 0, 0], dtype=int32), 'ugv_loads': array([0], dtype=int32), 'nb_traffic': array([0, 0, 1, 1], dtype=int32)}
-Reward: 3.0
+Observation: {'task_positions': array([1, 3, 5, 4, 1, 2], dtype=int32), 'ugv_positions': array([3, 5], dtype=int32), 'battery_levels': array([9999700], dtype=int32), 'task_loads': array([0, 0, 0], dtype=int32), 'ugv_loads': array([0], dtype=int32), 'nb_traffic': array([0, 0, 0, 0], dtype=int32)}
+Reward: -1.0
 Frame Number: 9
 Action taken: Down
-Observation: {'task_positions': array([1, 3, 1, 2, 1, 3], dtype=int32), 'ugv_positions': array([5, 4], dtype=int32), 'battery_levels': array([9999650], dtype=int32), 'task_loads': array([0, 0, 0], dtype=int32), 'ugv_loads': array([0], dtype=int32), 'nb_traffic': array([1, 0, 0, 2], dtype=int32)}
-Reward: 53.0
+Observation: {'task_positions': array([1, 3, 5, 4, 1, 2], dtype=int32), 'ugv_positions': array([4, 5], dtype=int32), 'battery_levels': array([9999650], dtype=int32), 'task_loads': array([0, 0, 0], dtype=int32), 'ugv_loads': array([0], dtype=int32), 'nb_traffic': array([0, 0, 0, 0], dtype=int32)}
+Reward: -1.0
 Frame Number: 10
-Action taken: Up
-Observation: {'task_positions': array([1, 3, 1, 2, 1, 3], dtype=int32), 'ugv_positions': array([4, 4], dtype=int32), 'battery_levels': array([9999600], dtype=int32), 'task_loads': array([0, 0, 0], dtype=int32), 'ugv_loads': array([0], dtype=int32), 'nb_traffic': array([0, 0, 1, 1], dtype=int32)}
-Reward: 478.0
+Action taken: Down
+Observation: {'task_positions': array([1, 3, 5, 4, 1, 2], dtype=int32), 'ugv_positions': array([5, 5], dtype=int32), 'battery_levels': array([9999600], dtype=int32), 'task_loads': array([0, 0, 0], dtype=int32), 'ugv_loads': array([0], dtype=int32), 'nb_traffic': array([0, 0, 0, 0], dtype=int32)}
+Reward: 4.0
 Frame Number: 11
 Action taken: Left
-Observation: {'task_positions': array([1, 3, 1, 2, 1, 3], dtype=int32), 'ugv_positions': array([4, 3], dtype=int32), 'battery_levels': array([9999550], dtype=int32), 'task_loads': array([0, 0, 0], dtype=int32), 'ugv_loads': array([0], dtype=int32), 'nb_traffic': array([0, 0, 0, 0], dtype=int32)}
-Reward: 4.0
+Observation: {'task_positions': array([1, 3, 1, 2, 3, 5], dtype=int32), 'ugv_positions': array([5, 4], dtype=int32), 'battery_levels': array([9999550], dtype=int32), 'task_loads': array([0, 0, 0], dtype=int32), 'ugv_loads': array([0], dtype=int32), 'nb_traffic': array([0, 0, 0, 0], dtype=int32)}
+Reward: 54.0
 Frame Number: 12
-Action taken: Up
-Observation: {'task_positions': array([1, 3, 1, 2, 1, 3], dtype=int32), 'ugv_positions': array([3, 3], dtype=int32), 'battery_levels': array([9999500], dtype=int32), 'task_loads': array([0, 0, 0], dtype=int32), 'ugv_loads': array([0], dtype=int32), 'nb_traffic': array([0, 0, 0, 0], dtype=int32)}
-Reward: 4.0
+Action taken: Right
+Observation: {'task_positions': array([1, 3, 1, 2, 3, 5], dtype=int32), 'ugv_positions': array([5, 5], dtype=int32), 'battery_levels': array([9999500], dtype=int32), 'task_loads': array([0, 0, 0], dtype=int32), 'ugv_loads': array([0], dtype=int32), 'nb_traffic': array([0, 0, 0, 0], dtype=int32)}
+Reward: 489.0
 Frame Number: 13
-Action taken: Left
-Observation: {'task_positions': array([1, 3, 1, 2, 1, 3], dtype=int32), 'ugv_positions': array([3, 2], dtype=int32), 'battery_levels': array([9999450], dtype=int32), 'task_loads': array([0, 0, 0], dtype=int32), 'ugv_loads': array([0], dtype=int32), 'nb_traffic': array([0, 0, 0, 0], dtype=int32)}
-Reward: -1.0
+Action taken: Up
+Observation: {'task_positions': array([1, 3, 1, 2, 3, 5], dtype=int32), 'ugv_positions': array([4, 5], dtype=int32), 'battery_levels': array([9999450], dtype=int32), 'task_loads': array([0, 0, 0], dtype=int32), 'ugv_loads': array([0], dtype=int32), 'nb_traffic': array([0, 0, 0, 0], dtype=int32)}
+Reward: 4.0
 Frame Number: 14
 Action taken: Up
-Observation: {'task_positions': array([1, 3, 1, 2, 1, 3], dtype=int32), 'ugv_positions': array([2, 2], dtype=int32), 'battery_levels': array([10000000], dtype=int32), 'task_loads': array([0, 0, 0], dtype=int32), 'ugv_loads': array([0], dtype=int32), 'nb_traffic': array([0, 0, 0, 0], dtype=int32)}
-Reward: 4.0
+Observation: {'task_positions': array([1, 3, 1, 2, 1, 1], dtype=int32), 'ugv_positions': array([3, 5], dtype=int32), 'battery_levels': array([9999400], dtype=int32), 'task_loads': array([0, 0, 0], dtype=int32), 'ugv_loads': array([0], dtype=int32), 'nb_traffic': array([0, 0, 0, 0], dtype=int32)}
+Reward: 54.0
 Frame Number: 15
 Action taken: Up
-Observation: {'task_positions': array([1, 3, 1, 3, 2, 2], dtype=int32), 'ugv_positions': array([1, 2], dtype=int32), 'battery_levels': array([9999950], dtype=int32), 'task_loads': array([0, 0, 0], dtype=int32), 'ugv_loads': array([0], dtype=int32), 'nb_traffic': array([0, 0, 0, 0], dtype=int32)}
-Reward: 54.0
+Observation: {'task_positions': array([1, 3, 1, 2, 1, 1], dtype=int32), 'ugv_positions': array([2, 5], dtype=int32), 'battery_levels': array([9999350], dtype=int32), 'task_loads': array([0, 0, 0], dtype=int32), 'ugv_loads': array([0], dtype=int32), 'nb_traffic': array([0, 0, 0, 0], dtype=int32)}
+Reward: 484.0
 Frame Number: 16
-Action taken: Down
-Observation: {'task_positions': array([1, 3, 1, 3, 4, 4], dtype=int32), 'ugv_positions': array([2, 2], dtype=int32), 'battery_levels': array([10000000], dtype=int32), 'task_loads': array([0, 0, 0], dtype=int32), 'ugv_loads': array([0], dtype=int32), 'nb_traffic': array([0, 0, 0, 0], dtype=int32)}
-Reward: 549.0
-Frame Number: 17
-Action taken: Right
-Observation: {'task_positions': array([1, 3, 1, 3, 4, 4], dtype=int32), 'ugv_positions': array([2, 3], dtype=int32), 'battery_levels': array([9999950], dtype=int32), 'task_loads': array([0, 0, 0], dtype=int32), 'ugv_loads': array([0], dtype=int32), 'nb_traffic': array([0, 2, 0, 0], dtype=int32)}
-Reward: 494.0
-Frame Number: 18
 Action taken: Up
-Observation: {'task_positions': array([1, 3, 4, 4, 1, 1], dtype=int32), 'ugv_positions': array([1, 3], dtype=int32), 'battery_levels': array([9999900], dtype=int32), 'task_loads': array([0, 0, 0], dtype=int32), 'ugv_loads': array([0], dtype=int32), 'nb_traffic': array([0, 0, 0, 0], dtype=int32)}
-Reward: 54.0
-Frame Number: 19
-Action taken: Stay
-Observation: {'task_positions': array([4, 4, 1, 1, 3, 3], dtype=int32), 'ugv_positions': array([1, 3], dtype=int32), 'battery_levels': array([9999900], dtype=int32), 'task_loads': array([0, 0, 0], dtype=int32), 'ugv_loads': array([0], dtype=int32), 'nb_traffic': array([0, 0, 0, 0], dtype=int32)}
-Reward: 509.0
-Frame Number: 20
-Action taken: Down
-Observation: {'task_positions': array([4, 4, 1, 1, 3, 3], dtype=int32), 'ugv_positions': array([2, 3], dtype=int32), 'battery_levels': array([9999850], dtype=int32), 'task_loads': array([0, 0, 0], dtype=int32), 'ugv_loads': array([0], dtype=int32), 'nb_traffic': array([0, 2, 0, 0], dtype=int32)}
-Reward: 494.0
-Frame Number: 21
+Observation: {'task_positions': array([1, 3, 1, 2, 1, 1], dtype=int32), 'ugv_positions': array([1, 5], dtype=int32), 'battery_levels': array([9999300], dtype=int32), 'task_loads': array([0, 0, 0], dtype=int32), 'ugv_loads': array([0], dtype=int32), 'nb_traffic': array([0, 0, 0, 0], dtype=int32)}
+Reward: 4.0
+Frame Number: 17
 Action taken: Left
-Observation: {'task_positions': array([4, 4, 1, 1, 3, 3], dtype=int32), 'ugv_positions': array([2, 2], dtype=int32), 'battery_levels': array([10000000], dtype=int32), 'task_loads': array([0, 0, 0], dtype=int32), 'ugv_loads': array([0], dtype=int32), 'nb_traffic': array([0, 0, 0, 0], dtype=int32)}
+Observation: {'task_positions': array([1, 3, 1, 2, 1, 1], dtype=int32), 'ugv_positions': array([1, 4], dtype=int32), 'battery_levels': array([9999250], dtype=int32), 'task_loads': array([0, 0, 0], dtype=int32), 'ugv_loads': array([0], dtype=int32), 'nb_traffic': array([0, 0, 0, 0], dtype=int32)}
+Reward: 4.0
+Frame Number: 18
+Action taken: Down
+Observation: {'task_positions': array([1, 3, 1, 2, 1, 1], dtype=int32), 'ugv_positions': array([2, 4], dtype=int32), 'battery_levels': array([9999200], dtype=int32), 'task_loads': array([0, 0, 0], dtype=int32), 'ugv_loads': array([0], dtype=int32), 'nb_traffic': array([0, 0, 0, 0], dtype=int32)}
 Reward: -1.0
+Frame Number: 19
+Action taken: Left
+Observation: {'task_positions': array([1, 3, 1, 2, 1, 1], dtype=int32), 'ugv_positions': array([2, 3], dtype=int32), 'battery_levels': array([9999150], dtype=int32), 'task_loads': array([0, 0, 0], dtype=int32), 'ugv_loads': array([0], dtype=int32), 'nb_traffic': array([0, 0, 0, 0], dtype=int32)}
+Reward: -1.0
+Frame Number: 20
+Action taken: Up
+Observation: {'task_positions': array([1, 2, 1, 1, 1, 1], dtype=int32), 'ugv_positions': array([1, 3], dtype=int32), 'battery_levels': array([9999100], dtype=int32), 'task_loads': array([0, 0, 0], dtype=int32), 'ugv_loads': array([0], dtype=int32), 'nb_traffic': array([0, 0, 0, 0], dtype=int32)}
+Reward: 54.0
+Frame Number: 21
+Action taken: Down
+Observation: {'task_positions': array([1, 2, 1, 1, 1, 1], dtype=int32), 'ugv_positions': array([2, 3], dtype=int32), 'battery_levels': array([9999050], dtype=int32), 'task_loads': array([0, 0, 0], dtype=int32), 'ugv_loads': array([0], dtype=int32), 'nb_traffic': array([0, 2, 0, 0], dtype=int32)}
+Reward: 489.0
 Frame Number: 22
 Action taken: Up
-Observation: {'task_positions': array([4, 4, 1, 1, 3, 3], dtype=int32), 'ugv_positions': array([1, 2], dtype=int32), 'battery_levels': array([9999950], dtype=int32), 'task_loads': array([0, 0, 0], dtype=int32), 'ugv_loads': array([0], dtype=int32), 'nb_traffic': array([0, 0, 0, 0], dtype=int32)}
-Reward: -1.0
+Observation: {'task_positions': array([1, 2, 1, 1, 1, 1], dtype=int32), 'ugv_positions': array([1, 3], dtype=int32), 'battery_levels': array([9999000], dtype=int32), 'task_loads': array([0, 0, 0], dtype=int32), 'ugv_loads': array([0], dtype=int32), 'nb_traffic': array([0, 0, 0, 0], dtype=int32)}
+Reward: 4.0
 Frame Number: 23
-Action taken: Left
-Observation: {'task_positions': array([4, 4, 3, 3, 5, 2], dtype=int32), 'ugv_positions': array([1, 1], dtype=int32), 'battery_levels': array([9999900], dtype=int32), 'task_loads': array([0, 0, 0], dtype=int32), 'ugv_loads': array([0], dtype=int32), 'nb_traffic': array([0, 0, 0, 0], dtype=int32)}
-Reward: 54.0
+Action taken: Down
+Observation: {'task_positions': array([1, 2, 1, 1, 1, 1], dtype=int32), 'ugv_positions': array([2, 3], dtype=int32), 'battery_levels': array([9998950], dtype=int32), 'task_loads': array([0, 0, 0], dtype=int32), 'ugv_loads': array([0], dtype=int32), 'nb_traffic': array([0, 2, 0, 0], dtype=int32)}
+Reward: -1.0
 Frame Number: 24
+Action taken: Up
+Observation: {'task_positions': array([1, 2, 1, 1, 1, 1], dtype=int32), 'ugv_positions': array([1, 3], dtype=int32), 'battery_levels': array([9998900], dtype=int32), 'task_loads': array([0, 0, 0], dtype=int32), 'ugv_loads': array([0], dtype=int32), 'nb_traffic': array([0, 0, 0, 0], dtype=int32)}
+Reward: -1.0
+Frame Number: 25
+Action taken: Down
+Observation: {'task_positions': array([1, 2, 1, 1, 1, 1], dtype=int32), 'ugv_positions': array([2, 3], dtype=int32), 'battery_levels': array([9998850], dtype=int32), 'task_loads': array([0, 0, 0], dtype=int32), 'ugv_loads': array([0], dtype=int32), 'nb_traffic': array([0, 2, 0, 0], dtype=int32)}
+Reward: -1.0
+Frame Number: 26
+Action taken: Up
+Observation: {'task_positions': array([1, 2, 1, 1, 1, 1], dtype=int32), 'ugv_positions': array([1, 3], dtype=int32), 'battery_levels': array([9998800], dtype=int32), 'task_loads': array([0, 0, 0], dtype=int32), 'ugv_loads': array([0], dtype=int32), 'nb_traffic': array([0, 0, 0, 0], dtype=int32)}
+Reward: -1.0
+Frame Number: 27
+Action taken: Down
+Observation: {'task_positions': array([1, 2, 1, 1, 1, 1], dtype=int32), 'ugv_positions': array([2, 3], dtype=int32), 'battery_levels': array([9998750], dtype=int32), 'task_loads': array([0, 0, 0], dtype=int32), 'ugv_loads': array([0], dtype=int32), 'nb_traffic': array([0, 0, 0, 0], dtype=int32)}
+Reward: -1.0
+Frame Number: 28
+Action taken: Left
+Observation: {'task_positions': array([1, 2, 1, 1, 1, 1], dtype=int32), 'ugv_positions': array([2, 2], dtype=int32), 'battery_levels': array([10000000], dtype=int32), 'task_loads': array([0, 0, 0], dtype=int32), 'ugv_loads': array([0], dtype=int32), 'nb_traffic': array([0, 0, 0, 0], dtype=int32)}
+Reward: -1.0
+Frame Number: 29
+Action taken: Up
+Observation: {'task_positions': array([1, 1, 1, 1, 3, 3], dtype=int32), 'ugv_positions': array([1, 2], dtype=int32), 'battery_levels': array([9999950], dtype=int32), 'task_loads': array([0, 0, 0], dtype=int32), 'ugv_loads': array([0], dtype=int32), 'nb_traffic': array([0, 0, 0, 0], dtype=int32)}
+Reward: 54.0
+Frame Number: 30
+Action taken: Left
+Observation: {'task_positions': array([1, 1, 3, 3, 5, 4], dtype=int32), 'ugv_positions': array([1, 1], dtype=int32), 'battery_levels': array([9999900], dtype=int32), 'task_loads': array([0, 0, 0], dtype=int32), 'ugv_loads': array([0], dtype=int32), 'nb_traffic': array([0, 0, 0, 0], dtype=int32)}
+Reward: 549.0
+Frame Number: 31
+Action taken: Up
+Observation: {'task_positions': array([3, 3, 5, 4, 5, 2], dtype=int32), 'ugv_positions': array([1, 1], dtype=int32), 'battery_levels': array([9999900], dtype=int32), 'task_loads': array([0, 0, 0], dtype=int32), 'ugv_loads': array([0], dtype=int32), 'nb_traffic': array([0, 0, 0, 0], dtype=int32)}
+Reward: 509.0
+Frame Number: 32
 Action taken: Right
-Observation: {'task_positions': array([4, 4, 3, 3, 5, 2], dtype=int32), 'ugv_positions': array([1, 2], dtype=int32), 'battery_levels': array([9999850], dtype=int32), 'task_loads': array([0, 0, 0], dtype=int32), 'ugv_loads': array([0], dtype=int32), 'nb_traffic': array([0, 0, 0, 0], dtype=int32)}
+Observation: {'task_positions': array([3, 3, 5, 4, 5, 2], dtype=int32), 'ugv_positions': array([1, 2], dtype=int32), 'battery_levels': array([9999850], dtype=int32), 'task_loads': array([0, 0, 0], dtype=int32), 'ugv_loads': array([0], dtype=int32), 'nb_traffic': array([0, 0, 0, 0], dtype=int32)}
+Reward: 484.0
+Frame Number: 33
+Action taken: Down
+Observation: {'task_positions': array([3, 3, 5, 4, 5, 2], dtype=int32), 'ugv_positions': array([2, 2], dtype=int32), 'battery_levels': array([10000000], dtype=int32), 'task_loads': array([0, 0, 0], dtype=int32), 'ugv_loads': array([0], dtype=int32), 'nb_traffic': array([0, 0, 0, 0], dtype=int32)}
+Reward: 4.0
+Frame Number: 34
+Action taken: Down
+Observation: {'task_positions': array([3, 3, 5, 4, 5, 2], dtype=int32), 'ugv_positions': array([3, 2], dtype=int32), 'battery_levels': array([9999950], dtype=int32), 'task_loads': array([0, 0, 0], dtype=int32), 'ugv_loads': array([0], dtype=int32), 'nb_traffic': array([0, 0, 0, 0], dtype=int32)}
+Reward: 4.0
+Frame Number: 35
+Action taken: Right
+Observation: {'task_positions': array([5, 4, 5, 2, 4, 3], dtype=int32), 'ugv_positions': array([3, 3], dtype=int32), 'battery_levels': array([9999900], dtype=int32), 'task_loads': array([0, 0, 0], dtype=int32), 'ugv_loads': array([0], dtype=int32), 'nb_traffic': array([0, 0, 0, 0], dtype=int32)}
+Reward: 54.0
+Frame Number: 36
+Action taken: Down
+Observation: {'task_positions': array([5, 4, 5, 2, 2, 4], dtype=int32), 'ugv_positions': array([4, 3], dtype=int32), 'battery_levels': array([9999850], dtype=int32), 'task_loads': array([0, 0, 0], dtype=int32), 'ugv_loads': array([0], dtype=int32), 'nb_traffic': array([0, 0, 0, 0], dtype=int32)}
+Reward: 549.0
+Frame Number: 37
+Action taken: Right
+Observation: {'task_positions': array([5, 4, 5, 2, 2, 4], dtype=int32), 'ugv_positions': array([4, 4], dtype=int32), 'battery_levels': array([9999800], dtype=int32), 'task_loads': array([0, 0, 0], dtype=int32), 'ugv_loads': array([0], dtype=int32), 'nb_traffic': array([0, 0, 0, 0], dtype=int32)}
+Reward: 494.0
+Frame Number: 38
+Action taken: Down
+Observation: {'task_positions': array([5, 2, 2, 4, 5, 2], dtype=int32), 'ugv_positions': array([5, 4], dtype=int32), 'battery_levels': array([9999750], dtype=int32), 'task_loads': array([0, 0, 0], dtype=int32), 'ugv_loads': array([0], dtype=int32), 'nb_traffic': array([0, 0, 0, 0], dtype=int32)}
+Reward: 54.0
+Frame Number: 39
+Action taken: Left
+Observation: {'task_positions': array([5, 2, 2, 4, 5, 2], dtype=int32), 'ugv_positions': array([5, 3], dtype=int32), 'battery_levels': array([9999700], dtype=int32), 'task_loads': array([0, 0, 0], dtype=int32), 'ugv_loads': array([0], dtype=int32), 'nb_traffic': array([0, 0, 0, 0], dtype=int32)}
+Reward: 494.0
+Frame Number: 40
+Action taken: Left
+Observation: {'task_positions': array([2, 4, 5, 2, 1, 2], dtype=int32), 'ugv_positions': array([5, 2], dtype=int32), 'battery_levels': array([9999650], dtype=int32), 'task_loads': array([0, 0, 0], dtype=int32), 'ugv_loads': array([0], dtype=int32), 'nb_traffic': array([0, 0, 0, 0], dtype=int32)}
+Reward: 54.0
+Frame Number: 41
+Action taken: Up
+Observation: {'task_positions': array([2, 4, 5, 2, 1, 2], dtype=int32), 'ugv_positions': array([4, 2], dtype=int32), 'battery_levels': array([9999600], dtype=int32), 'task_loads': array([0, 0, 0], dtype=int32), 'ugv_loads': array([0], dtype=int32), 'nb_traffic': array([0, 0, 0, 0], dtype=int32)}
+Reward: 494.0
+Frame Number: 42
+Action taken: Down
+Observation: {'task_positions': array([2, 4, 1, 2, 5, 5], dtype=int32), 'ugv_positions': array([5, 2], dtype=int32), 'battery_levels': array([9999550], dtype=int32), 'task_loads': array([0, 0, 0], dtype=int32), 'ugv_loads': array([0], dtype=int32), 'nb_traffic': array([0, 0, 0, 0], dtype=int32)}
+Reward: 54.0
+Frame Number: 43
+Action taken: Right
+Observation: {'task_positions': array([2, 4, 1, 2, 5, 5], dtype=int32), 'ugv_positions': array([5, 3], dtype=int32), 'battery_levels': array([9999500], dtype=int32), 'task_loads': array([0, 0, 0], dtype=int32), 'ugv_loads': array([0], dtype=int32), 'nb_traffic': array([0, 0, 0, 0], dtype=int32)}
+Reward: 489.0
+Frame Number: 44
+Action taken: Right
+Observation: {'task_positions': array([2, 4, 1, 2, 5, 5], dtype=int32), 'ugv_positions': array([5, 4], dtype=int32), 'battery_levels': array([9999450], dtype=int32), 'task_loads': array([0, 0, 0], dtype=int32), 'ugv_loads': array([0], dtype=int32), 'nb_traffic': array([0, 0, 0, 0], dtype=int32)}
+Reward: 4.0
+Frame Number: 45
+Action taken: Right
+Observation: {'task_positions': array([2, 4, 1, 2, 5, 5], dtype=int32), 'ugv_positions': array([5, 5], dtype=int32), 'battery_levels': array([9999400], dtype=int32), 'task_loads': array([0, 0, 0], dtype=int32), 'ugv_loads': array([0], dtype=int32), 'nb_traffic': array([0, 0, 0, 0], dtype=int32)}
+Reward: 54.0
+Frame Number: 46
+Action taken: Up
+Observation: {'task_positions': array([2, 4, 1, 2, 5, 5], dtype=int32), 'ugv_positions': array([4, 5], dtype=int32), 'battery_levels': array([9999350], dtype=int32), 'task_loads': array([0, 0, 0], dtype=int32), 'ugv_loads': array([0], dtype=int32), 'nb_traffic': array([0, 0, 0, 0], dtype=int32)}
+Reward: 494.0
+Frame Number: 47
+Action taken: Down
+Observation: {'task_positions': array([2, 4, 1, 2, 3, 3], dtype=int32), 'ugv_positions': array([5, 5], dtype=int32), 'battery_levels': array([9999300], dtype=int32), 'task_loads': array([0, 0, 0], dtype=int32), 'ugv_loads': array([0], dtype=int32), 'nb_traffic': array([0, 0, 0, 0], dtype=int32)}
+Reward: 54.0
+Frame Number: 48
+Action taken: Left
+Observation: {'task_positions': array([2, 4, 1, 2, 3, 3], dtype=int32), 'ugv_positions': array([5, 4], dtype=int32), 'battery_levels': array([9999250], dtype=int32), 'task_loads': array([0, 0, 0], dtype=int32), 'ugv_loads': array([0], dtype=int32), 'nb_traffic': array([0, 0, 0, 0], dtype=int32)}
