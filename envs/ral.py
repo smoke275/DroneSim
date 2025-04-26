@@ -215,10 +215,10 @@ class LMDEnv(gym.Env):
 
         self.action_response = [None]*self.num_patrols
         self.prev_task_distances = [100]*self.num_patrols
-        self.last_miles = [0]*self.num_patrols
-        self.prev_positions = [[] for _ in range(self.num_patrols)]
-        # self.oscillation_counter = [0 for _ in range(self.num_patrols)]
         self.last_move_time = 0
+        self.latest_completed_tasks = []
+        # self.prev_positions = [[] for _ in range(self.num_patrols)]
+        # self.oscillation_counter = [0 for _ in range(self.num_patrols)]
         
         self.total_ev_distance = 0.0
         self.num_tasks_completed = 0
@@ -279,18 +279,16 @@ class LMDEnv(gym.Env):
 
     def step(self, action):
         self._apply_action(action)
-        obs = self._get_observation()
         reward = self._get_reward()
+        obs = self._get_observation()
         self.update_info()
         done = self._check_termination_condition()
         self.current_timestep += 1
         self.time_elapsed += self.last_move_time
 
-        self.fill_task_list()
         if self.traffic_b:
             if self.current_timestep%self.traffic_reset_dur == 0:
                 self.fill_traffic_centroids()
-        self.action_response = [None]*self.num_patrols
 
         return obs, reward, done, False, self.info
 
@@ -313,6 +311,13 @@ class LMDEnv(gym.Env):
 
 
     def _get_observation(self):
+        for t_i in self.latest_completed_tasks:
+            self.task_list.pop(t_i)
+            if self.load_b:
+                self.task_loads.pop(t_i)
+        self.latest_completed_tasks = []
+        self.fill_task_list()
+
         task_positions_flat = np.array(self.task_list, dtype=np.int32).flatten()
         ugv_positions_flat = np.array([ugv.position for ugv in self.ugv_states], dtype=np.int32).flatten()
         battery_flat = np.array([ugv.current_range for ugv in self.ugv_states], dtype=np.int32).flatten()
@@ -379,26 +384,24 @@ class LMDEnv(gym.Env):
         reward = 0.0
         
         # Task completion: reward for completing a task.
-        completed_tasks = set()
-        for t_i, task in enumerate(self.task_list):
-            for r_i, ugv in enumerate(self.ugv_states):
-                if task == ugv.position:
-                    reward += 50.0
-                    completed_tasks.add(task)
-                    self.num_tasks_completed += 1
-
-                    self.task_list.pop(t_i)
-                    if self.load_b:
-                        ugv.load = self.task_loads[t_i]
-                        self.task_loads.pop(t_i)
+        for ugv in self.ugv_states:
+            if ugv.position in self.task_list:
+                t_i = self.task_list.index(ugv.position)
+                reward += 50.0
+                self.num_tasks_completed += 1
+                self.latest_completed_tasks.append(t_i)
+                if self.load_b:
+                    ugv.load = self.task_loads[t_i]
         
         # Small time step penalty.
         reward -= self.last_move_time/self.cell_size
+        self.last_move_time = 0.0
 
         # Penalize invalid moves.
         for ar in self.action_response:
             if ar == 0:
                 reward -= 40.0
+        self.action_response = [None]*self.num_patrols
 
         # --- Progress-Based Shaping Reward ---
         bonus_factor = 5.0

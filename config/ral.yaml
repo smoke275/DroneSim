@@ -14,7 +14,7 @@ world:
 
   bms: false
   traffic: true
-  load: true
+  load: false
   max_timesteps: 1000
 
 ugv:
