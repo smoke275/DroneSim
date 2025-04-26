@@ -19,6 +19,7 @@ def run_simulation(config_file):
     policy_dir = os.path.dirname(config_file)
     policy_name = config["policy_name"]
     policy_path = config["policy_path"]
+    algo = config['algo']
 
     # Setup logging
     log_file = f"{policy_dir}/server_log.txt"
@@ -28,8 +29,10 @@ def run_simulation(config_file):
 
     # Initialize environment and agent
     env = gym.make("LMDEnv-v0", config=config)
-    # agent = SARSAAgent(env, config=config, policy_path=policy_path)
-    agent = DijkstraAgent(env, config=config)
+    if algo[0] == 's':
+        agent = SARSAAgent(env, config=config, policy_path=policy_path)
+    else:
+        agent = DijkstraAgent(env, config=config)
 
     # Run simulation
     observation, info = env.reset(seed=47)

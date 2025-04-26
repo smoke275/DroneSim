@@ -1,5 +1,6 @@
 policy_name: 0d318b44
 policy_path: runs/sarsa/0d318b44/policy.pkl
+algo: sarsa
 traffic:
   num_centroids: 2
   prob: 0.3

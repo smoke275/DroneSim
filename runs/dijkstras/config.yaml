@@ -1,5 +1,6 @@
 policy_name: NA
 policy_path: NA
+algo: dijkstra
 traffic:
   std_dev: 1
   reset_dur: 5

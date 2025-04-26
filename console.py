@@ -92,6 +92,7 @@ class Window(QMainWindow):
         policy_dir = os.path.dirname(config_file)
         policy_name = self.config["policy_name"]
         policy_path = self.config["policy_path"]
+        algo = self.config['algo']
 
         self.log_file = f"{policy_dir}/inference_log.txt"
         with open(self.log_file, 'w') as f:
@@ -99,8 +100,10 @@ class Window(QMainWindow):
             f.write("=============\n")
         
         self.env = gym.make("LMDEnv-v0", config=self.config, render_mode="human")
-        # self.agent = SARSAAgent(self.env, config=self.config, policy_path=policy_path)
-        self.agent = DijkstraAgent(self.env, config=self.config)
+        if algo[0] == 's':
+            self.agent = SARSAAgent(self.env, config=self.config, policy_path=policy_path)
+        else:
+            self.agent = DijkstraAgent(self.env, config=self.config)
         
         self.InitWindow()
 
