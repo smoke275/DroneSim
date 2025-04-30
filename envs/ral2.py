@@ -214,7 +214,7 @@ class LMDEnv(gym.Env):
             'battery_levels': battery_space,
             'task_loads': task_load_space,
             'ugv_loads': ugv_load_space,
-            'nb_traffic': nb_traffic_space
+            'nb_traffic': nb_traffic_space,
         })
         # self.observation_space = spaces.Dict({
         #     'ugv_position': ugv_pos_space,  # Include only the first UGV's position

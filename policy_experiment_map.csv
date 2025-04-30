@@ -4,4 +4,7 @@ Policy Name,Algorithm,Experiment Description
 0ef6cb77,sarsa,Graph nearest node battery level converted to cell range in state
 19dafa86,sarsa,All previous steps with ugv load in state,
 0d318b44,sarsa,No load Yes Trafffic graph nearest task location
-dbaaa61c,sarsa,No load Yes Trafffic graph nearest task location max time
+dbaaa61c,sarsa,No load Yes Trafffic graph nearest task location max time no stay
+724c906b,sarsa,No load Yes Trafffic graph nearest dir location max time no stay
+458afa3c,sarsa,No load Yes Trafffic graph nearest mod dir location max time no stay
+9548a1e3,sarsa,No load Yes Trafffic graph nearest mod2 dir location max time no stay

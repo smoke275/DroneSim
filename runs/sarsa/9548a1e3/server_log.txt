@@ -1,0 +1,336 @@
+Server Simulation Log
+===================
+Starting Simulation
+Frame Number: 1
+Action taken: [Up]
+Reward: -1.0
+Terminated: False, Truncated: False
+Frame Number: 2
+Action taken: [Down]
+Reward: -1.0
+Terminated: False, Truncated: False
+Frame Number: 3
+Action taken: [Up]
+Reward: -1.0
+Terminated: False, Truncated: False
+Frame Number: 4
+Action taken: [Down]
+Reward: -1.0
+Terminated: False, Truncated: False
+Frame Number: 5
+Action taken: [Up]
+Reward: -1.0
+Terminated: False, Truncated: False
+Frame Number: 6
+Action taken: [Down]
+Reward: -1.0
+Terminated: False, Truncated: False
+Frame Number: 7
+Action taken: [Right]
+Reward: 49.0
+Terminated: False, Truncated: False
+Frame Number: 8
+Action taken: [Left]
+Reward: -1.0
+Terminated: False, Truncated: False
+Frame Number: 9
+Action taken: [Right]
+Reward: -1.0
+Terminated: False, Truncated: False
+Frame Number: 10
+Action taken: [Left]
+Reward: -1.0
+Terminated: False, Truncated: False
+Frame Number: 11
+Action taken: [Right]
+Reward: -1.0
+Terminated: False, Truncated: False
+Frame Number: 12
+Action taken: [Up]
+Reward: -2.0
+Terminated: False, Truncated: False
+Frame Number: 13
+Action taken: [Down]
+Reward: -2.0
+Terminated: False, Truncated: False
+Frame Number: 14
+Action taken: [Up]
+Reward: -2.0
+Terminated: False, Truncated: False
+Frame Number: 15
+Action taken: [Down]
+Reward: -2.0
+Terminated: False, Truncated: False
+Frame Number: 16
+Action taken: [Up]
+Reward: -2.0
+Terminated: False, Truncated: False
+Frame Number: 17
+Action taken: [Down]
+Reward: -2.0
+Terminated: False, Truncated: False
+Frame Number: 18
+Action taken: [Up]
+Reward: -2.0
+Terminated: False, Truncated: False
+Frame Number: 19
+Action taken: [Down]
+Reward: -2.0
+Terminated: False, Truncated: False
+Frame Number: 20
+Action taken: [Up]
+Reward: -2.0
+Terminated: False, Truncated: False
+Frame Number: 21
+Action taken: [Down]
+Reward: -1.0
+Terminated: False, Truncated: False
+Frame Number: 22
+Action taken: [Left]
+Reward: -1.0
+Terminated: False, Truncated: False
+Frame Number: 23
+Action taken: [Left]
+Reward: 49.0
+Terminated: False, Truncated: False
+Frame Number: 24
+Action taken: [Right]
+Reward: -1.0
+Terminated: False, Truncated: False
+Frame Number: 25
+Action taken: [Left]
+Reward: 49.0
+Terminated: False, Truncated: False
+Frame Number: 26
+Action taken: [Right]
+Reward: -1.0
+Terminated: False, Truncated: False
+Frame Number: 27
+Action taken: [Up]
+Reward: 49.0
+Terminated: False, Truncated: False
+Frame Number: 28
+Action taken: [Down]
+Reward: -1.0
+Terminated: False, Truncated: False
+Frame Number: 29
+Action taken: [Right]
+Reward: -1.0
+Terminated: False, Truncated: False
+Frame Number: 30
+Action taken: [Right]
+Reward: -1.0
+Terminated: False, Truncated: False
+Frame Number: 31
+Action taken: [Up]
+Reward: -1.0
+Terminated: False, Truncated: False
+Frame Number: 32
+Action taken: [Right]
+Reward: -1.0
+Terminated: False, Truncated: False
+Frame Number: 33
+Action taken: [Down]
+Reward: 49.0
+Terminated: False, Truncated: False
+Frame Number: 34
+Action taken: [Down]
+Reward: -1.0
+Terminated: False, Truncated: False
+Frame Number: 35
+Action taken: [Down]
+Reward: 49.0
+Terminated: False, Truncated: False
+Frame Number: 36
+Action taken: [Up]
+Reward: -1.0
+Terminated: False, Truncated: False
+Frame Number: 37
+Action taken: [Up]
+Reward: -1.0
+Terminated: False, Truncated: False
+Frame Number: 38
+Action taken: [Up]
+Reward: -1.0
+Terminated: False, Truncated: False
+Frame Number: 39
+Action taken: [Left]
+Reward: -1.0
+Terminated: False, Truncated: False
+Frame Number: 40
+Action taken: [Down]
+Reward: -1.0
+Terminated: False, Truncated: False
+Frame Number: 41
+Action taken: [Left]
+Reward: 49.0
+Terminated: False, Truncated: False
+Frame Number: 42
+Action taken: [Left]
+Reward: 49.0
+Terminated: False, Truncated: False
+Frame Number: 43
+Action taken: [Down]
+Reward: 49.0
+Terminated: False, Truncated: False
+Frame Number: 44
+Action taken: [Up]
+Reward: -1.0
+Terminated: False, Truncated: False
+Frame Number: 45
+Action taken: [Left]
+Reward: -1.0
+Terminated: False, Truncated: False
+Frame Number: 46
+Action taken: [Down]
+Reward: 49.0
+Terminated: False, Truncated: False
+Frame Number: 47
+Action taken: [Up]
+Reward: -1.0
+Terminated: False, Truncated: False
+Frame Number: 48
+Action taken: [Right]
+Reward: -1.0
+Terminated: False, Truncated: False
+Frame Number: 49
+Action taken: [Down]
+Reward: -1.0
+Terminated: False, Truncated: False
+Frame Number: 50
+Action taken: [Right]
+Reward: -1.0
+Terminated: False, Truncated: False
+Frame Number: 51
+Action taken: [Left]
+Reward: -2.0
+Terminated: False, Truncated: False
+Frame Number: 52
+Action taken: [Up]
+Reward: -2.0
+Terminated: False, Truncated: False
+Frame Number: 53
+Action taken: [Up]
+Reward: -1.0
+Terminated: False, Truncated: False
+Frame Number: 54
+Action taken: [Down]
+Reward: -1.0
+Terminated: False, Truncated: False
+Frame Number: 55
+Action taken: [Up]
+Reward: -1.0
+Terminated: False, Truncated: False
+Frame Number: 56
+Action taken: [Down]
+Reward: -1.0
+Terminated: False, Truncated: False
+Frame Number: 57
+Action taken: [Down]
+Reward: -1.0
+Terminated: False, Truncated: False
+Frame Number: 58
+Action taken: [Right]
+Reward: -1.0
+Terminated: False, Truncated: False
+Frame Number: 59
+Action taken: [Left]
+Reward: -1.0
+Terminated: False, Truncated: False
+Frame Number: 60
+Action taken: [Right]
+Reward: -1.0
+Terminated: False, Truncated: False
+Frame Number: 61
+Action taken: [Left]
+Reward: -3.0
+Terminated: False, Truncated: False
+Frame Number: 62
+Action taken: [Right]
+Reward: -3.0
+Terminated: False, Truncated: False
+Frame Number: 63
+Action taken: [Left]
+Reward: -3.0
+Terminated: False, Truncated: False
+Frame Number: 64
+Action taken: [Right]
+Reward: -3.0
+Terminated: False, Truncated: False
+Frame Number: 65
+Action taken: [Left]
+Reward: -3.0
+Terminated: False, Truncated: False
+Frame Number: 66
+Action taken: [Right]
+Reward: -1.0
+Terminated: False, Truncated: False
+Frame Number: 67
+Action taken: [Left]
+Reward: -1.0
+Terminated: False, Truncated: False
+Frame Number: 68
+Action taken: [Right]
+Reward: -1.0
+Terminated: False, Truncated: False
+Frame Number: 69
+Action taken: [Left]
+Reward: -1.0
+Terminated: False, Truncated: False
+Frame Number: 70
+Action taken: [Right]
+Reward: -1.0
+Terminated: False, Truncated: False
+Frame Number: 71
+Action taken: [Left]
+Reward: -1.0
+Terminated: False, Truncated: False
+Frame Number: 72
+Action taken: [Right]
+Reward: -1.0
+Terminated: False, Truncated: False
+Frame Number: 73
+Action taken: [Left]
+Reward: -1.0
+Terminated: False, Truncated: False
+Frame Number: 74
+Action taken: [Right]
+Reward: -1.0
+Terminated: False, Truncated: False
+Frame Number: 75
+Action taken: [Left]
+Reward: -1.0
+Terminated: False, Truncated: False
+Frame Number: 76
+Action taken: [Right]
+Reward: -1.0
+Terminated: False, Truncated: False
+Frame Number: 77
+Action taken: [Left]
+Reward: -1.0
+Terminated: False, Truncated: False
+Frame Number: 78
+Action taken: [Right]
+Reward: -1.0
+Terminated: False, Truncated: False
+Frame Number: 79
+Action taken: [Left]
+Reward: -1.0
+Terminated: False, Truncated: False
+Frame Number: 80
+Action taken: [Right]
+Reward: -1.0
+Terminated: False, Truncated: False
+Frame Number: 81
+Action taken: [Left]
+Reward: -1.0
+Terminated: False, Truncated: True
+
+Simulation completed
+Final frame: 81
+Total reward: 398.0
+Tasks completed: 10
+EV distance traveled: 4050.0
+Total time taken: 5100.0
+Total energy consumed: 4050.0
+===================
