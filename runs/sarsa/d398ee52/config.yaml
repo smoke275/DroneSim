@@ -1,11 +1,11 @@
-policy_name: NA
-policy_path: NA
-algo: dijkstra
+algo: sarsa
+policy_name: d398ee52
+policy_path: runs/sarsa/d398ee52/policy.pkl
 traffic:
-  std_dev: 1
-  reset_dur: 5
-  prob: 0.3
   num_centroids: 2
+  prob: 0.3
+  reset_dur: 5
+  std_dev: 1
 uav:
   range: 3000
   speed: 3
@@ -14,7 +14,7 @@ ugv:
   drain_rate: 1
   max_load: 100
   num_primitives: 5
-  range: 1000
+  range: 100000000
   speed: 1
 world:
   bms: false

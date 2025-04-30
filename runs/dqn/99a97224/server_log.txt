@@ -1,0 +1,36 @@
+Server Simulation Log
+===================
+Starting Simulation
+Frame Number: 1
+Action taken: [Stay]
+Reward: 9.0
+Terminated: False, Truncated: False
+Frame Number: 2
+Action taken: [Stay]
+Reward: -41.0
+Terminated: False, Truncated: False
+Frame Number: 3
+Action taken: [Stay]
+Reward: -41.0
+Terminated: False, Truncated: False
+Frame Number: 4
+Action taken: [Stay]
+Reward: -41.0
+Terminated: False, Truncated: False
+Frame Number: 5
+Action taken: [Stay]
+Reward: -41.0
+Terminated: False, Truncated: False
+Frame Number: 6
+Action taken: [Stay]
+Reward: -41.0
+Terminated: False, Truncated: True
+
+Simulation completed
+Final frame: 6
+Total reward: -196.0
+Tasks completed: 1
+EV distance traveled: 0.0
+Total time taken: 300.0
+Total energy consumed: 0.0
+===================

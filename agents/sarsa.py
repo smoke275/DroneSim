@@ -141,7 +141,7 @@ class SARSAAgent(Agent):
         state = self._observation_to_state(observation)
         if state not in self.Q:
             self.Q[state] = np.zeros(len(self.action_list))
-        return [int(np.argmax(self.Q[state]))]
+        return int(np.argmax(self.Q[state]))
     
     def choose_action(self, state):
         """
@@ -168,7 +168,7 @@ class SARSAAgent(Agent):
             total_reward = 0.0
 
             for step in range(max_steps_per_episode):
-                next_obs, reward, done, trunc, info = self.env.step([action])
+                next_obs, reward, done, trunc, info = self.env.step(action)
                 next_state = self._observation_to_state(next_obs)
                 if next_state not in self.Q:
                     self.Q[next_state] = np.zeros(len(self.action_list))

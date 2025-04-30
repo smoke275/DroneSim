@@ -15,10 +15,10 @@ world:
   bms: false
   traffic: true
   load: false
-  max_timesteps: 1000
+  max_time: 50000
 
 ugv:
-  range: 10000000
+  range: 100000000
   drain_rate: 1
   num_primitives: 5
   max_load: 100

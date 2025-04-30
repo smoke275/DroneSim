@@ -127,7 +127,6 @@ class LMDEnv(gym.Env):
             "graph": self.G,
             "base_stations": self.base_stations,
             "num_patrols": self.num_patrols,
-            "warehouse_pos": self.warehouse_pos,
             "patrol_positions": [],
             "patrol_colors": [],
             "R_P": [],
@@ -396,6 +395,7 @@ class LMDEnv(gym.Env):
         
         # Small time step penalty.
         reward -= self.last_move_time/self.cell_size
+        self.last_move_time = 0.0
 
         # Penalize invalid moves.
         for ar in self.action_response:

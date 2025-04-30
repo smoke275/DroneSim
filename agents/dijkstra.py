@@ -56,7 +56,7 @@ class DijkstraAgent(Agent):
                     self.current_path = nx.shortest_path(self.G, ugv_pos, self.warehouse_pos)[1:]
                 except nx.NetworkXNoPath:
                     # No valid move available.
-                    return [4]  # Action 4 is "stay"
+                    return 4  # Action 4 is "stay"
                     
         # Follow the planned path, if any.
         if self.current_path:
@@ -68,15 +68,15 @@ class DijkstraAgent(Agent):
             dx = next_pos[1] - ugv_pos[1]
             
             if dy == -1 and dx == 0:    # Up
-                return [0]
+                return 0
             elif dy == 0 and dx == 1:    # Right
-                return [1]
+                return 1
             elif dy == 1 and dx == 0:    # Down
-                return [2]
+                return 2
             elif dy == 0 and dx == -1:   # Left
-                return [3]
+                return 3
         
-        return [4]  # Stay in place if no valid move found
+        return 4  # Stay in place if no valid move found
         
     def learn(self):
         """

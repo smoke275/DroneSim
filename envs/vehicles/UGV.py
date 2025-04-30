@@ -34,6 +34,7 @@ class UGV:
         4: Stay
         Returns True if move was successful, False if out of range
         """
+        action = int(action)
         curr_drain_rate = self.drain_rate * (1 + self.load / self.max_load)
         range_left = self.current_range - curr_drain_rate * self.cell_dist
         if action !=4 and range_left<=0:

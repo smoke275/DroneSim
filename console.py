@@ -27,6 +27,7 @@ import envs
 from agents.dp import DPAgent
 from agents.sarsa import SARSAAgent  
 from agents.dijkstra import DijkstraAgent
+from agents.dqn import DQNAgent
 
 WRITE_to_file = True
 SET_t = 5
@@ -100,8 +101,10 @@ class Window(QMainWindow):
             f.write("=============\n")
         
         self.env = gym.make("LMDEnv-v0", config=self.config, render_mode="human")
-        if algo[0] == 's':
+        if algo == 'sarsa':
             self.agent = SARSAAgent(self.env, config=self.config, policy_path=policy_path)
+        elif algo == 'dqn':
+            self.agent = DQNAgent(self.env, config=self.config, policy_path=policy_path)
         else:
             self.agent = DijkstraAgent(self.env, config=self.config)
         

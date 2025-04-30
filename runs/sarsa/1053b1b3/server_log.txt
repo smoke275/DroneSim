@@ -1,0 +1,80 @@
+Server Simulation Log
+===================
+Starting Simulation
+Frame Number: 1
+Action taken: [Left]
+Reward: 49.0
+Terminated: False, Truncated: False
+Frame Number: 2
+Action taken: [Right]
+Reward: -1.0
+Terminated: False, Truncated: False
+Frame Number: 3
+Action taken: [Down]
+Reward: -1.0
+Terminated: False, Truncated: False
+Frame Number: 4
+Action taken: [Down]
+Reward: 49.0
+Terminated: False, Truncated: False
+Frame Number: 5
+Action taken: [Up]
+Reward: -1.0
+Terminated: False, Truncated: False
+Frame Number: 6
+Action taken: [Up]
+Reward: -1.0
+Terminated: False, Truncated: False
+Frame Number: 7
+Action taken: [Right]
+Reward: -1.0
+Terminated: False, Truncated: False
+Frame Number: 8
+Action taken: [Up]
+Reward: 49.0
+Terminated: False, Truncated: False
+Frame Number: 9
+Action taken: [Down]
+Reward: -1.0
+Terminated: False, Truncated: False
+Frame Number: 10
+Action taken: [Right]
+Reward: 49.0
+Terminated: False, Truncated: False
+Frame Number: 11
+Action taken: [Left]
+Reward: -1.0
+Terminated: False, Truncated: False
+Frame Number: 12
+Action taken: [Left]
+Reward: -1.0
+Terminated: False, Truncated: False
+Frame Number: 13
+Action taken: [Down]
+Reward: -1.0
+Terminated: False, Truncated: False
+Frame Number: 14
+Action taken: [Right]
+Reward: 49.0
+Terminated: False, Truncated: False
+Frame Number: 15
+Action taken: [Right]
+Reward: -1.0
+Terminated: False, Truncated: False
+Frame Number: 16
+Action taken: [Right]
+Reward: -1.0
+Terminated: False, Truncated: False
+Frame Number: 17
+Action taken: [Down]
+Reward: -1.0
+Terminated: False, Truncated: True
+
+Simulation completed
+Final frame: 17
+Total reward: 233.0
+Tasks completed: 5
+EV distance traveled: 850.0
+Total time taken: 850.0
+Total energy consumed: 850.0
+===================

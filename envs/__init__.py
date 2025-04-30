@@ -1,5 +1,5 @@
 from gymnasium.envs.registration import register
-from envs.ral import LMDEnv
+from envs.ral2 import LMDEnv
 
 register(
     id='LMDEnv-v0',
