@@ -986,10 +986,12 @@ class LMDEnv(gym.Env):
             # else: # No tasks left or UGV just completed one, distance memory is already inf
 
 
-        # --- Energy Consumption Penalty (Optional) ---
-        # energy_penalty_factor = 0.01 # Adjust as needed
-        # energy_consumed_this_step = self.last_move_time * self.drain_rate # Approximate energy
-        # reward -= energy_penalty_factor * energy_consumed_this_step
+        # # --- Energy Consumption Penalty (Optional) ---
+        # energy_penalty_factor = 1.0 # Adjust as needed
+        # for i, ugv in enumerate(self.ugv_states):
+        #     if ugv.load > 0:
+        #         # Penalize for carrying load
+        #         reward -= energy_penalty_factor * (1+ ugv.load/ugv.max_load)
 
         # --- Out of Battery Penalty (Handled in Termination) ---
         # A large penalty can be given via termination condition or here if preferred.

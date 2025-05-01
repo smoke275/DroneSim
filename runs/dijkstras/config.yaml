@@ -14,7 +14,7 @@ ugv:
   drain_rate: 1
   max_load: 100
   num_primitives: 5
-  range: 1000
+  range: 100000000
   speed: 1
 world:
   bms: false
@@ -28,5 +28,5 @@ world:
   num_tasks: 3
   num_uavs_per_bs: 2
   num_ugvs: 1
-  traffic: false
+  traffic: true
   warehouse: center
