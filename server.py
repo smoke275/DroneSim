@@ -40,7 +40,7 @@ def run_simulation(config_file, render_mode='human'): # Default to 'human' for v
         agent = DijkstraAgent(env, config=config)
 
     # Run simulation
-    observation, info = env.reset()
+    observation, info = env.reset(seed=42)
     if render_mode == 'human':
         env.render()
     acts = ["Up", "Right", "Down", "Left", "Stay"]

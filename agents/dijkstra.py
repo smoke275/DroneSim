@@ -26,25 +26,19 @@ class DijkstraAgent(Agent):
         ugv_pos = tuple(map(int, observation['ugv_positions']))
         battery = int(observation['battery_levels'][0])  # Assuming single agent control
 
-        task_positions = observation['task_positions']
+        task_positions = observation['active_task_positions']
         # Convert task positions to list of tuples
-        task_coords = []
-        for i in range(0, len(task_positions), 2):
-            task_coords.append((int(task_positions[i]), int(task_positions[i+1])))
+        task_coords = tuple(task_positions.tolist()) if task_positions is not None else []
 
         # If no current path or reached end of path, plan a new route.
         if not self.current_path:
             valid_tasks = []
             if task_coords:
-                for t in task_coords:
-                    try:
-                        cost_to_task = nx.shortest_path_length(self.G, source=ugv_pos, target=t)
-                        cost_to_warehouse = self.G.nodes[t]['cost2warehouse']
-                        total_cost = cost_to_task + cost_to_warehouse
-                        if battery >= total_cost:
-                            valid_tasks.append((t, cost_to_task))
-                    except nx.NetworkXNoPath:
-                        continue
+                cost_to_task = nx.shortest_path_length(self.G, source=ugv_pos, target=task_coords)
+                cost_to_warehouse = self.G.nodes[task_coords]['cost2warehouse']
+                total_cost = cost_to_task + cost_to_warehouse
+                if battery >= total_cost:
+                    valid_tasks.append((task_coords, cost_to_task))
 
             if valid_tasks:
                 # Select the nearest valid task

@@ -159,6 +159,7 @@ class LMDEnv(gym.Env):
         self.ugv_states = []
         self.task_list = []
         self.task_loads = []
+        self.active_tasks = []
         self.traffic_centeroids = []
         self.red_roads = []
         self.yellow_roads = []
@@ -184,8 +185,8 @@ class LMDEnv(gym.Env):
         self.action_space = spaces.Discrete(config["ugv"]["num_primitives"]-1)
         
         # Fix the observation space definition:
-        task_space = spaces.MultiDiscrete(
-            np.array([self.max_row+1, self.max_col+1] * self.num_tasks)
+        active_task_space = spaces.MultiDiscrete(
+            np.array([self.max_row+1, self.max_col+1])
         )
         ugv_pos_space = spaces.MultiDiscrete(
             np.array([self.max_row+1, self.max_col+1])
@@ -198,21 +199,15 @@ class LMDEnv(gym.Env):
             high=self.max_ugv_range,
             dtype=np.int32
         )
-        task_load_space = spaces.Box(
-            low=0,
-            high=self.max_load,
-            shape=(self.num_tasks,),
-            dtype=np.int32)
         ugv_load_space = spaces.Box(
             low=0,
             high=self.max_load,
             dtype=np.int32)
         
         self.observation_space = spaces.Dict({
-            'task_positions': task_space,
+            'active_task_positions': active_task_space,
             'ugv_positions': ugv_pos_space,
             'battery_levels': battery_space,
-            'task_loads': task_load_space,
             'ugv_loads': ugv_load_space,
             'nb_traffic': nb_traffic_space,
         })
@@ -614,27 +609,27 @@ class LMDEnv(gym.Env):
             random.seed(seed)
             np.random.seed(seed) # Also seed numpy for consistent sampling if used
 
-        self.task_list = []
-        self.task_loads = []
-        self.red_roads = []
-        self.yellow_roads = []
-        self.traffic_centeroids = []
-        self.escape_pressed = False # Reset escape key flag
-        for u, v in self.G.edges():
-            self.G[u][v]['traffic'] = 0 # Reset traffic on graph edges
-        self.fill_task_list()
-        if not self.load_b:
-            self.task_loads = [0]*self.num_tasks
-        if self.traffic_b:
-            self.fill_traffic_centroids() # Generate initial traffic if enabled
-
-        # Initialize UGV states - pass physical cell_size
-        self.ugv_states = [UGV(ugv_id=i, base_position=self.warehouse_pos, cell_dist=self.cell_size, max_range=self.max_ugv_range, max_load=self.max_load, drain_rate=self.drain_rate, speed=self.ugv_speed, G=self.G) for i in range(self.num_patrols)]
-
         self.action_response = [None]*self.num_patrols
         self.prev_task_distances = [100]*self.num_patrols # Use infinity for initial distance
         self.last_move_time = 0
         self.latest_completed_tasks = []
+        self.escape_pressed = False # Reset escape key flag
+
+        self.ugv_states = [UGV(ugv_id=i, base_position=self.warehouse_pos, cell_dist=self.cell_size, max_range=self.max_ugv_range, max_load=self.max_load, drain_rate=self.drain_rate, speed=self.ugv_speed, G=self.G) for i in range(self.num_patrols)]
+        self.task_list = []
+        self.task_loads = []
+        self.active_tasks = []
+        if not self.load_b:
+            self.task_loads = [0]*self.num_tasks
+        self.fill_task_list()
+        self.red_roads = []
+        self.yellow_roads = []
+        self.traffic_centeroids = []
+        for u, v in self.G.edges():
+            self.G[u][v]['traffic'] = 0 # Reset traffic on graph edges
+        if self.traffic_b:
+            self.fill_traffic_centroids() # Generate initial traffic if enabled
+        # Initialize UGV states - pass physical cell_size
 
         # Reset metrics
         self.total_ev_distance = 0.0
@@ -661,6 +656,14 @@ class LMDEnv(gym.Env):
         if self.load_b:
             new_task_loads = [random.randint(0,self.max_load) for _ in range(new_tasks_count)]
             self.task_loads.extend(new_task_loads)
+        if new_tasks_count > 0:
+            self.active_tasks = []
+            for i in range(self.num_patrols):
+                ugv_pos = self.ugv_states[i].position
+                active_task_i = min(self.task_list, key=lambda x: nx.shortest_path_length(self.G, ugv_pos, x))
+                self.active_tasks.append(active_task_i)
+                self.prev_task_distances[i] = nx.shortest_path_length(self.G, ugv_pos, active_task_i)
+
 
     def fill_traffic_centroids(self):
         # Reset previous roads and weights
@@ -711,6 +714,14 @@ class LMDEnv(gym.Env):
         # Apply action, calculate reward, get next observation
         self._apply_action(action)
         reward = self._get_reward()
+        indices_to_remove = sorted(self.latest_completed_tasks, reverse=True)
+        for t_i in indices_to_remove:
+            if 0 <= t_i < len(self.task_list): # Check index validity
+                self.task_list.pop(t_i)
+                if self.load_b and 0 <= t_i < len(self.task_loads):
+                    self.task_loads.pop(t_i)
+        self.latest_completed_tasks = [] # Clear the list for the next step
+        self.fill_task_list()
         obs = self._get_observation() # Gets observation *after* action/reward
         done = self._check_termination_condition() # Check termination based on new state
 
@@ -759,47 +770,23 @@ class LMDEnv(gym.Env):
 
 
     def _get_observation(self):
-        # Remove completed tasks *before* filling new ones
-        # Sort indices in reverse to avoid index errors during pop
-        indices_to_remove = sorted(self.latest_completed_tasks, reverse=True)
-        for t_i in indices_to_remove:
-            if 0 <= t_i < len(self.task_list): # Check index validity
-                self.task_list.pop(t_i)
-                if self.load_b and 0 <= t_i < len(self.task_loads):
-                    self.task_loads.pop(t_i)
-        self.latest_completed_tasks = [] # Clear the list for the next step
-
-        # Fill task list if needed
-        self.fill_task_list()
-
-        # --- Pad observation arrays to fixed size ---
-        max_tasks = self.num_tasks # Use the config value for fixed size
-        max_ugvs = self.num_patrols
-
         # Task Positions
-        current_tasks = np.array(self.task_list, dtype=np.int32)
-        num_current_tasks = len(current_tasks)
-        # Pad with a value indicating no task, e.g., (0, 0) or (-1, -1) if (0,0) is valid
-        pad_value_pos = 0
-        task_positions_padded = np.full((max_tasks, 2), pad_value_pos, dtype=np.int32)
-        if num_current_tasks > 0:
-            task_positions_padded[:num_current_tasks] = current_tasks
-        task_positions_flat = task_positions_padded.flatten()
+        current_tasks = np.array(self.active_tasks, dtype=np.int32)
+        active_task_positions_flat = current_tasks.flatten()
 
         # UGV Positions
         ugv_positions_flat = np.array([ugv.position for ugv in self.ugv_states], dtype=np.int32).flatten()
-        # Assuming num_patrols is fixed, no padding needed unless it can change
 
         # Battery Levels
         battery_flat = np.array([ugv.current_range for ugv in self.ugv_states], dtype=np.int32).flatten()
 
-        # Task Loads
-        current_task_loads = np.array(self.task_loads, dtype=np.int32)
-        pad_value_load = 0
-        task_loads_padded = np.full((max_tasks,), pad_value_load, dtype=np.int32)
-        if num_current_tasks > 0:
-             task_loads_padded[:num_current_tasks] = current_task_loads
-        task_loads_flat = task_loads_padded.flatten()
+        # # Task Loads
+        # current_task_loads = np.array(self.task_loads, dtype=np.int32)
+        # pad_value_load = 0
+        # task_loads_padded = np.full((max_tasks,), pad_value_load, dtype=np.int32)
+        # if num_current_tasks > 0:
+        #      task_loads_padded[:num_current_tasks] = current_task_loads
+        # task_loads_flat = task_loads_padded.flatten()
 
 
         # UGV Loads
@@ -815,20 +802,12 @@ class LMDEnv(gym.Env):
 
         # Ensure observation matches the defined space structure
         obs_dict = {
-            'task_positions': task_positions_flat,
+            'active_task_positions': active_task_positions_flat,
             'ugv_positions': ugv_positions_flat,
             'battery_levels': battery_flat,
-            'task_loads': task_loads_flat,
             'ugv_loads': ugv_loads_flat,
             'nb_traffic': nb_traffic_flat,
         }
-
-        # # Choose observation for DQN or PPO
-        # obs_dict = {
-        #     'ugv_position': ugv_positions_flat[:2],  # Include only the first UGV's position
-        #     'nearest_task_position': task_positions_flat[:2],  # Include only the first task's position
-        # }
-
 
         return obs_dict
 
@@ -928,9 +907,6 @@ class LMDEnv(gym.Env):
                             if t_i < len(self.task_loads): # Check index validity
                                 ugv.load = self.task_loads[t_i]
 
-                        # Reset distance tracking for this UGV as it completed its goal (implicitly)
-                        self.prev_task_distances[i] = 100
-
                 except ValueError:
                     # This can happen if the task was already completed by another agent
                     # in the same step and marked in completed_task_indices_this_step,
@@ -954,37 +930,12 @@ class LMDEnv(gym.Env):
         # Reward for moving closer to the nearest task
         bonus_factor = 5.0 # Adjust shaping reward magnitude
         for i, ugv in enumerate(self.ugv_states):
-            # Only calculate if tasks exist and UGV didn't just complete one
-            if self.task_list and self.prev_task_distances[i] != 100:
-                # Use Manhattan distance for simplicity, or shortest_path_length if needed
-                # Note: shortest_path considers walls and traffic weights if 'weight' is used
-                try:
-                    distances = [nx.shortest_path_length(self.G, source=ugv.position, target=task) for task in self.task_list]
-                    # distances = [abs(ugv.position[0] - task[0]) + abs(ugv.position[1] - task[1]) for task in self.task_list]
-                except nx.NetworkXNoPath:
-                    # Handle cases where a task might become unreachable (e.g., due to dynamic obstacles not yet implemented)
-                    distances = [] # Or assign a very large distance
-
-                if distances: # Ensure distances list is not empty
-                    current_min_distance = min(distances)
-
-                    # Reward if moving closer (and not already at distance 0)
-                    if current_min_distance < self.prev_task_distances[i] and current_min_distance > 0:
-                        # Reward proportional to distance reduction
-                        reward += bonus_factor * (self.prev_task_distances[i] - current_min_distance)
-                        self.prev_task_distances[i] = current_min_distance
-                    # Optional: Penalty for moving away
-                    # elif current_min_distance > self.prev_task_distances[i]:
-                    #     reward -= 0.1 * (current_min_distance - self.prev_task_distances[i])
-                    #     self.prev_task_distances[i] = current_min_distance
-                    else:
-                        # Update distance if it hasn't changed or increased
-                         self.prev_task_distances[i] = current_min_distance
-
-                else: # No reachable tasks left, reset distance memory
-                     self.prev_task_distances[i] = 100
-            # else: # No tasks left or UGV just completed one, distance memory is already inf
-
+            current_distance = nx.shortest_path_length(self.G, ugv.position, self.active_tasks[i])
+            # Reward if moving closer (and not already at distance 0)
+            if current_distance < self.prev_task_distances[i] and current_distance > 0:
+                # Reward proportional to distance reduction
+                reward += bonus_factor * (self.prev_task_distances[i] - current_distance)
+                self.prev_task_distances[i] = current_distance
 
         # # --- Energy Consumption Penalty (Optional) ---
         # energy_penalty_factor = 1.0 # Adjust as needed
