@@ -22,9 +22,6 @@ class SARSAAgent(Agent):
         self.epsilon = epsilon
         self.epsilon_decay = epsilon_decay
 
-        self.G = None
-        _, info = self.env.reset()
-        self.G = info['graph']
         self.cell_size = config['world']['cell_size']
         self.max_range = config['ugv']['range']
         self.max_cell_range = int(self.max_range/self.cell_size)

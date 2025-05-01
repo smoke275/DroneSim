@@ -32,15 +32,15 @@ def run_simulation(config_file, render_mode='human'): # Default to 'human' for v
     # Initialize environment and agent
     # Pass the desired render_mode to the environment
     env = gym.make("LMDEnv-v0", config=config, render_mode=render_mode)
+    # Run simulation
+    observation, info = env.reset(seed=42)
     if algo == 'sarsa':
         agent = SARSAAgent(env, config=config, policy_path=policy_path)
     elif algo == 'dqn':
         agent = DQNAgent(env, config=config, policy_path=policy_path)
     else:
-        agent = DijkstraAgent(env, config=config)
+        agent = DijkstraAgent(env, info)
 
-    # Run simulation
-    observation, info = env.reset(seed=42)
     if render_mode == 'human':
         env.render()
     acts = ["Up", "Right", "Down", "Left", "Stay"]

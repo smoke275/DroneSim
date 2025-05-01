@@ -8,11 +8,9 @@ class DijkstraAgent(Agent):
     Does not learn - simply uses Dijkstra's algorithm for pathfinding.
     """
     
-    def __init__(self, env, *args, **kwargs):
+    def __init__(self, env, info, *args, **kwargs):
         super().__init__(env, *args, **kwargs)
-        self.G = None
         self.current_path = []
-        _, info = self.env.reset()
         self.G = info['graph'].copy()
         self.warehouse_pos = info['warehouse_pos']
         for node in self.G.nodes():

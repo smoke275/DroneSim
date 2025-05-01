@@ -4,7 +4,8 @@ import networkx as nx
 from sklearn.cluster import KMeans
 import random
 from pyamaze import maze
-# import tkinter as tk
+import tkinter as tk
+tk.Tk.state = lambda self, s=None: self.wm_state('normal' if s == 'zoomed' else s)
 import math
 import pygame # Added pygame
 import os # Added os for path joining
@@ -93,17 +94,10 @@ class LMDEnv(gym.Env):
         self.escape_pressed = False # Flag to track if escape was pressed
 
         '''LOADING THE CONFIGURATION VARIABLES'''
-        # Maze vars
-        # self.df_maze = generate_df_maze(
-        #     config["world"]["maze_size"],
-        #     config["world"]["maze_size"],
-        #     config["world"]["maze_loop_percentage"]
-        # )
-        self.df_maze = pd.read_csv(config["world"]["maze_file"])
-        self.max_row = self.df_maze['row'].max()
-        self.max_col = self.df_maze['col'].max()
+        self.max_row = config["world"]["maze_size"]
+        self.max_col = config["world"]["maze_size"]
+        self.maze_lp = config["world"]["maze_loop_percentage"]
         self.cell_size = config["world"]["cell_size"] # Physical cell size
-        self.G = self._build_graph()
 
         # Task vars
         self.num_tasks = config["world"]["num_tasks"]
@@ -120,12 +114,12 @@ class LMDEnv(gym.Env):
                 random.randint(1, self.max_col)
             )
 
-        # Base station vars
-        self.num_base_stations = config["world"]["num_base_stations"]
-        bs_df = self.df_maze.sample(self.num_base_stations, random_state=47)[['row', 'col']]
-        self.base_stations = []
-        for t in bs_df.values.tolist():
-            self.base_stations.append( (int(t[0]), int(t[1])) )
+        # # Base station vars
+        # self.num_base_stations = config["world"]["num_base_stations"]
+        # bs_df = self.df_maze.sample(self.num_base_stations, random_state=47)[['row', 'col']]
+        # self.base_stations = []
+        # for t in bs_df.values.tolist():
+        #     self.base_stations.append( (int(t[0]), int(t[1])) )
 
         # Agent vars
         self.num_patrols = config['world']['num_ugvs']
@@ -163,23 +157,7 @@ class LMDEnv(gym.Env):
         self.traffic_centeroids = []
         self.red_roads = []
         self.yellow_roads = []
-        self.info = {
-            "maze": self.df_maze,
-            "graph": self.G,
-            "base_stations": self.base_stations,
-            "num_patrols": self.num_patrols,
-            "warehouse_pos": self.warehouse_pos,
-            "patrol_positions": [],
-            "patrol_colors": [], # Will store pygame colors
-            "R_P": [],
-            "ev_distance_traveled": self.total_ev_distance,
-            "num_tasks_completed": self.num_tasks_completed,
-            "time_elapsed":self.time_elapsed,
-            "total_energy_consumed": self.total_energy_consumed, # Corrected typo
-            "active_tasks": [],
-            "red_roads": [],
-            "yellow_roads": [],
-        }
+        self.info = {}
 
         '''SETUP YOUR OBSERVATION SPACE, ACTION SPACE, ENVIRONMENT-SPECIFIC VARIABLES'''
         self.action_space = spaces.Discrete(config["ugv"]["num_primitives"]-1)
@@ -354,11 +332,11 @@ class LMDEnv(gym.Env):
 
             # --- Draw Traffic Roads ---
             road_thickness = max(1, int(self.cell_size_px * 0.15)) # Adjust thickness relative to cell size
-            for u, v in self.info['red_roads']:
+            for u, v in self.red_roads:
                 u_px_c, u_py_c = self._cell_to_pygame_center(u[0], u[1])
                 v_px_c, v_py_c = self._cell_to_pygame_center(v[0], v[1])
                 pygame.draw.line(self.screen, RED, (u_px_c, u_py_c), (v_px_c, v_py_c), road_thickness)
-            for u, v in self.info['yellow_roads']:
+            for u, v in self.yellow_roads:
                 u_px_c, u_py_c = self._cell_to_pygame_center(u[0], u[1])
                 v_px_c, v_py_c = self._cell_to_pygame_center(v[0], v[1])
                 pygame.draw.line(self.screen, YELLOW, (u_px_c, u_py_c), (v_px_c, v_py_c), road_thickness)
@@ -379,14 +357,14 @@ class LMDEnv(gym.Env):
 
             # --- Draw Tasks ---
             task_radius = int(self.cell_size_px * 0.25)
-            for task_r, task_c in self.info['active_tasks']:
+            for task_r, task_c in self.task_list:
                 task_px_c, task_py_c = self._cell_to_pygame_center(task_r, task_c)
                 pygame.draw.circle(self.screen, MAGENTA, (task_px_c, task_py_c), task_radius)
 
             # --- Draw UGVs and Battery ---
-            patrol_positions = self.info["patrol_positions"]
-            patrol_colors = self.info["patrol_colors"] # Pygame colors
-            R_P = self.info["R_P"] # Battery percentage
+            patrol_positions = [ugv.position for ugv in self.ugv_states]
+            patrol_colors = [ugv.agent_id for ugv in self.ugv_states] # Get assigned colors
+            R_P = [ugv.current_range_percent for ugv in self.ugv_states] # Battery percentage
 
             for i in range(self.num_patrols):
                 ugv_r, ugv_c = patrol_positions[i]
@@ -432,8 +410,8 @@ class LMDEnv(gym.Env):
                     f"Time: {self.time_elapsed:.2f}s",
                     f"Timestep: {self.current_timestep}",
                     f"Tasks Done: {self.num_tasks_completed}",
-                    f"Total Dist: {self.info['ev_distance_traveled']:.1f}m",
-                    f"Total Energy: {self.info['total_energy_consumed']:.1f}",
+                    f"Total Dist: {self.total_ev_distance:.1f}m",
+                    f"Total Energy: {self.total_energy_consumed:.1f}",
                 ]
                 for i, text in enumerate(texts):
                     text_surface = self.font.render(text, True, BLACK)
@@ -449,13 +427,13 @@ class LMDEnv(gym.Env):
             print(f"--- Timestep: {self.current_timestep} ---")
             print(f"  Time Elapsed: {self.time_elapsed:.2f}")
             print(f"  Tasks Completed: {self.num_tasks_completed}")
-            print(f"  Active Tasks: {self.info['active_tasks']}")
+            print(f"  Active Tasks: {self.task_list}")
             for i in range(self.num_patrols):
-                print(f"  UGV {i}: Pos={self.info['patrol_positions'][i]}, Batt={self.info['R_P'][i]*100:.1f}%")
-            print(f"  Total EV Distance: {self.info['ev_distance_traveled']:.2f}")
-            print(f"  Total Energy Consumed: {self.info['total_energy_consumed']:.2f}")
+                print(f"  UGV {i}: Pos={self.ugv_states[i].position}, Batt={self.ugv_states[i].current_range_percent*100:.1f}%")
+            print(f"  Total EV Distance: {self.total_ev_distance:.2f}")
+            print(f"  Total Energy Consumed: {self.total_energy_consumed:.2f}")
             if self.traffic_b:
-                 print(f"  Red Roads: {len(self.info['red_roads'])}, Yellow Roads: {len(self.info['yellow_roads'])}")
+                 print(f"  Red Roads: {len(self.red_roads)}, Yellow Roads: {len(self.yellow_roads)}")
             print("-" * (len(f"--- Timestep: {self.current_timestep} ---")))
 
 
@@ -536,11 +514,11 @@ class LMDEnv(gym.Env):
 
         # --- Draw Traffic Roads ---
         road_thickness = max(1, int(self.cell_size_px * 0.15))
-        for u, v in self.info['red_roads']:
+        for u, v in self.red_roads:
             u_px_c, u_py_c = self._cell_to_pygame_center(u[0], u[1])
             v_px_c, v_py_c = self._cell_to_pygame_center(v[0], v[1])
             pygame.draw.line(self.screen, RED, (u_px_c, u_py_c), (v_px_c, v_py_c), road_thickness)
-        for u, v in self.info['yellow_roads']:
+        for u, v in self.yellow_roads:
             u_px_c, u_py_c = self._cell_to_pygame_center(u[0], u[1])
             v_px_c, v_py_c = self._cell_to_pygame_center(v[0], v[1])
             pygame.draw.line(self.screen, YELLOW, (u_px_c, u_py_c), (v_px_c, v_py_c), road_thickness)
@@ -557,13 +535,13 @@ class LMDEnv(gym.Env):
         #     pygame.draw.circle(self.screen, BLACK, (bs_px_c, bs_py_c), bs_radius, 1)
         # --- Draw Tasks ---
         task_radius = int(self.cell_size_px * 0.25)
-        for task_r, task_c in self.info['active_tasks']:
+        for task_r, task_c in self.task_list:
             task_px_c, task_py_c = self._cell_to_pygame_center(task_r, task_c)
             pygame.draw.circle(self.screen, MAGENTA, (task_px_c, task_py_c), task_radius)
         # --- Draw UGVs and Battery ---
-        patrol_positions = self.info["patrol_positions"]
-        patrol_colors = self.info["patrol_colors"]
-        R_P = self.info["R_P"]
+        patrol_positions = [ugv.position for ugv in self.ugv_states]
+        patrol_colors = [ugv.agent_id for ugv in self.ugv_states] # Get assigned colors
+        R_P = [ugv.current_range_percent for ugv in self.ugv_states] # Battery percentage
         for i in range(self.num_patrols):
             ugv_r, ugv_c = patrol_positions[i]
             ugv_px_c, ugv_py_c = self._cell_to_pygame_center(ugv_r, ugv_c)
@@ -588,7 +566,7 @@ class LMDEnv(gym.Env):
         if self.font:
             info_y_start = maze_area_height + 5
             info_line_height = 20
-            texts = [f"Time: {self.time_elapsed:.2f}s", f"Timestep: {self.current_timestep}", f"Tasks Done: {self.num_tasks_completed}", f"Total Dist: {self.info['ev_distance_traveled']:.1f}m", f"Total Energy: {self.info['total_energy_consumed']:.1f}"]
+            texts = [f"Time: {self.time_elapsed:.2f}s", f"Timestep: {self.current_timestep}", f"Tasks Done: {self.num_tasks_completed}", f"Total Dist: {self.ev_distance_traveled:.1f}m", f"Total Energy: {self.total_energy_consumed:.1f}"]
             for i, text in enumerate(texts):
                 text_surface = self.font.render(text, True, BLACK)
                 self.screen.blit(text_surface, (5, info_y_start + i * info_line_height))
@@ -603,11 +581,16 @@ class LMDEnv(gym.Env):
 
     def reset(self, seed=None, options=None):
         super().reset(seed=seed) # Call parent reset for seeding RNG
-
-        # Reset the environment to a starting condition.
         if seed: # Seeding is handled by super().reset()
             random.seed(seed)
             np.random.seed(seed) # Also seed numpy for consistent sampling if used
+
+        self.df_maze = generate_df_maze(
+            self.max_row,
+            self.max_col,
+            self.maze_lp,
+        )
+        self.G = self._build_graph() # Rebuild graph with new maze
 
         self.action_response = [None]*self.num_patrols
         self.prev_task_distances = [100]*self.num_patrols # Use infinity for initial distance
@@ -817,30 +800,24 @@ class LMDEnv(gym.Env):
         return self.info
 
     def update_info(self):
-        # Update dynamic information for rendering or logging
-        self.info["patrol_positions"] = [ugv.position for ugv in self.ugv_states]
-        # Assign consistent colors for rendering
-        self.info["patrol_colors"] = [get_agent_color(ugv.agent_id) for ugv in self.ugv_states]
-        self.info["R_P"] = [ugv.current_range_percent for ugv in self.ugv_states]
-        self.info["active_tasks"] = self.task_list # Use the current task list
-        self.info['red_roads'] = self.red_roads
-        self.info['yellow_roads'] = self.yellow_roads
-
-        self.info["time_elapsed"] = self.time_elapsed
-        self.info["num_tasks_completed"] = self.num_tasks_completed
-
-        # Recalculate aggregate metrics based on current UGV states
-        current_total_ev_distance = 0.0
-        current_total_energy_consumed = 0.0
-        for ugv in self.ugv_states:
-            current_total_ev_distance += ugv.distance_traveled
-            current_total_energy_consumed += ugv.energy_consumed
-        # Update the info dict directly
-        self.total_ev_distance = current_total_ev_distance
-        self.total_energy_consumed = current_total_energy_consumed
-        self.info["ev_distance_traveled"] = self.total_ev_distance
-        self.info["total_energy_consumed"] = self.total_energy_consumed
-
+        self.total_ev_distance = sum([ugv.distance_traveled for ugv in self.ugv_states])
+        self.total_energy_consumed = sum([ugv.energy_consumed for ugv in self.ugv_states])
+        self.info = {
+            "maze": self.df_maze,
+            "graph": self.G,
+            "num_patrols": self.num_patrols,
+            "warehouse_pos": self.warehouse_pos,
+            # "patrol_positions": [ugv.position for ugv in self.ugv_states],
+            # "patrol_colors" = [get_agent_color(ugv.agent_id) for ugv in self.ugv_states],
+            # "R_P" = [ugv.current_range_percent for ugv in self.ugv_states],
+            # "active_tasks" : self.task_list,
+            # 'red_roads' : self.red_roads,
+            # 'yellow_roads' : self.yellow_roads,
+            "time_elapsed":self.time_elapsed,
+            "num_tasks_completed": self.num_tasks_completed,
+            "ev_distance_traveled": self.total_ev_distance,
+            "total_energy_consumed": self.total_energy_consumed,
+        }
 
     def _apply_action(self, action):
         # Define how each agent’s action modifies the simulation.
