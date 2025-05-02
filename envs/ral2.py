@@ -169,6 +169,9 @@ class LMDEnv(gym.Env):
         ugv_pos_space = spaces.MultiDiscrete(
             np.array([self.max_row+1, self.max_col+1])
         )
+        dir_wall_space = spaces.MultiDiscrete(
+            np.array([3,3,3,3])
+        )
         nb_traffic_space = spaces.MultiDiscrete(
             np.array([3,3,3,3])
         )
@@ -177,17 +180,15 @@ class LMDEnv(gym.Env):
             high=self.max_ugv_range,
             dtype=np.int32
         )
-        ugv_load_space = spaces.Box(
-            low=0,
-            high=self.max_load,
-            dtype=np.int32)
+        task_dir_space = spaces.Discrete(8)
         
         self.observation_space = spaces.Dict({
             'active_task_positions': active_task_space,
-            'ugv_positions': ugv_pos_space,
+            'wall_encoding': dir_wall_space,
             'battery_levels': battery_space,
-            'ugv_loads': ugv_load_space,
             'nb_traffic': nb_traffic_space,
+            'task_direction': task_dir_space,
+            'ugv_positions': ugv_pos_space,
         })
         # self.observation_space = spaces.Dict({
         #     'ugv_position': ugv_pos_space,  # Include only the first UGV's position
@@ -269,6 +270,21 @@ class LMDEnv(gym.Env):
                 G.add_edge((r, c), (r - 1, c), traffic=0)
             if row['S'] == 1:
                 G.add_edge((r, c), (r + 1,c), traffic=0)
+
+        directions = [(-1, 0), (0, 1), (1, 0), (0, -1)]
+        for node in G.nodes:
+            wall_distances = []
+            for dr, dc in directions:
+                steps = 0
+                current = node
+                while steps < 1:
+                    next_node = (current[0] + dr, current[1] + dc)
+                    if not G.has_edge(current, next_node):
+                        break
+                    steps += 1
+                    current = next_node
+                wall_distances.append(steps)
+            G.nodes[node]['wall_distance'] = wall_distances
         return G
     
     def render(self):
@@ -753,27 +769,30 @@ class LMDEnv(gym.Env):
 
 
     def _get_observation(self):
-        # Task Positions
-        current_tasks = np.array(self.active_tasks, dtype=np.int32)
-        active_task_positions_flat = current_tasks.flatten()
+        active_task_positions_flat = np.array(self.active_tasks, dtype=np.int32).flatten()
+
+        ugv_pos = self.ugv_states[0].position
+        task_pos = self.active_tasks[0]
+        task_dir_id = None
+        delta_row = task_pos[0] - ugv_pos[0]
+        delta_col = task_pos[1] - ugv_pos[1]
+        if delta_row == 0 and delta_col == 0:
+            task_dir_id = -1  # No movement, indeterminate direction
+        else:
+            # Convert grid differences to an angle with 0 degrees = North and increasing clockwise.
+            # Using math.atan2(delta_col, -delta_row) gives the desired angle.
+            angle = math.degrees(math.atan2(delta_col, -delta_row)) % 360
+            # Divide the circle into 8 sectors of 45° each.
+            task_dir_id = int(((angle + 22.5) % 360) // 45)
+
+        # Neighborhood Wall Encoding
+        wall_encoding = np.array(self.G.nodes[ugv_pos]['wall_distance'], dtype=np.int32).flatten()
 
         # UGV Positions
         ugv_positions_flat = np.array([ugv.position for ugv in self.ugv_states], dtype=np.int32).flatten()
 
         # Battery Levels
         battery_flat = np.array([ugv.current_range for ugv in self.ugv_states], dtype=np.int32).flatten()
-
-        # # Task Loads
-        # current_task_loads = np.array(self.task_loads, dtype=np.int32)
-        # pad_value_load = 0
-        # task_loads_padded = np.full((max_tasks,), pad_value_load, dtype=np.int32)
-        # if num_current_tasks > 0:
-        #      task_loads_padded[:num_current_tasks] = current_task_loads
-        # task_loads_flat = task_loads_padded.flatten()
-
-
-        # UGV Loads
-        ugv_loads_flat = np.array([ugv.load for ugv in self.ugv_states], dtype=np.int32).flatten()
 
         # Neighbor Traffic
         nb_traffic = []
@@ -786,10 +805,11 @@ class LMDEnv(gym.Env):
         # Ensure observation matches the defined space structure
         obs_dict = {
             'active_task_positions': active_task_positions_flat,
-            'ugv_positions': ugv_positions_flat,
+            'wall_encoding': wall_encoding,
             'battery_levels': battery_flat,
-            'ugv_loads': ugv_loads_flat,
             'nb_traffic': nb_traffic_flat,
+            'task_direction': task_dir_id,
+            'ugv_positions': ugv_positions_flat,
         }
 
         return obs_dict
