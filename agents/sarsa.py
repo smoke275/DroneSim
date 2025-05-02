@@ -101,7 +101,7 @@ class SARSAAgent(Agent):
 
         # return (ugv, task_coords, band, nb_traffic)
 
-        wall_encoding = tuple(observation['wall_encoding'].tolist())
+        wall_encoding = tuple(observation['wall_occupancy'].tolist())
         task_direction = int(observation['task_direction'])
         return (wall_encoding, task_direction)
 

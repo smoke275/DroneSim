@@ -1,0 +1,48 @@
+Server Simulation Log
+===================
+Starting Simulation
+Frame Number: 1
+Action taken: [Up]
+Reward: -41.0
+Terminated: False, Truncated: False
+Frame Number: 2
+Action taken: [Up]
+Reward: -41.0
+Terminated: False, Truncated: False
+Frame Number: 3
+Action taken: [Up]
+Reward: -41.0
+Terminated: False, Truncated: False
+Frame Number: 4
+Action taken: [Up]
+Reward: -41.0
+Terminated: False, Truncated: False
+Frame Number: 5
+Action taken: [Up]
+Reward: -41.0
+Terminated: False, Truncated: False
+Frame Number: 6
+Action taken: [Up]
+Reward: -41.0
+Terminated: False, Truncated: False
+Frame Number: 7
+Action taken: [Up]
+Reward: -41.0
+Terminated: False, Truncated: False
+Frame Number: 8
+Action taken: [Up]
+Reward: -41.0
+Terminated: False, Truncated: False
+Frame Number: 9
+Action taken: [Up]
+Reward: -41.0
+Terminated: False, Truncated: True
+
+Simulation completed
+Final frame: 9
+Total reward: -369.0
+Tasks completed: 0
+EV distance traveled: 0.0
+Total time taken: 450.0
+Total energy consumed: 0.0
+===================

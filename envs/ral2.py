@@ -172,6 +172,7 @@ class LMDEnv(gym.Env):
         dir_wall_space = spaces.MultiDiscrete(
             np.array([3,3,3,3])
         )
+        wall_occupancy_space = spaces.MultiDiscrete(np.array([2]*24))
         nb_traffic_space = spaces.MultiDiscrete(
             np.array([3,3,3,3])
         )
@@ -180,15 +181,16 @@ class LMDEnv(gym.Env):
             high=self.max_ugv_range,
             dtype=np.int32
         )
-        task_dir_space = spaces.Discrete(8)
+        task_dir_space = spaces.Discrete(9)
         
         self.observation_space = spaces.Dict({
-            'active_task_positions': active_task_space,
-            'wall_encoding': dir_wall_space,
-            'battery_levels': battery_space,
-            'nb_traffic': nb_traffic_space,
+            # 'active_task_positions': active_task_space,
+            # 'wall_encoding': dir_wall_space,
+            'wall_occupancy': wall_occupancy_space,
+            # 'battery_levels': battery_space,
+            # 'nb_traffic': nb_traffic_space,
             'task_direction': task_dir_space,
-            'ugv_positions': ugv_pos_space,
+            # 'ugv_positions': ugv_pos_space,
         })
         # self.observation_space = spaces.Dict({
         #     'ugv_position': ugv_pos_space,  # Include only the first UGV's position
@@ -271,20 +273,51 @@ class LMDEnv(gym.Env):
             if row['S'] == 1:
                 G.add_edge((r, c), (r + 1,c), traffic=0)
 
-        directions = [(-1, 0), (0, 1), (1, 0), (0, -1)]
-        for node in G.nodes:
-            wall_distances = []
-            for dr, dc in directions:
-                steps = 0
-                current = node
-                while steps < 1:
-                    next_node = (current[0] + dr, current[1] + dc)
-                    if not G.has_edge(current, next_node):
-                        break
-                    steps += 1
-                    current = next_node
-                wall_distances.append(steps)
-            G.nodes[node]['wall_distance'] = wall_distances
+        # directions = [(-1, 0), (0, 1), (1, 0), (0, -1)]
+        # for node in G.nodes:
+        #     wall_distances = []
+        #     for dr, dc in directions:
+        #         steps = 0
+        #         current = node
+        #         while steps < 1:
+        #             next_node = (current[0] + dr, current[1] + dc)
+        #             if not G.has_edge(current, next_node):
+        #                 break
+        #             steps += 1
+        #             current = next_node
+        #         wall_distances.append(steps)
+        #     G.nodes[node]['wall_distance'] = wall_distances
+
+        # Wall Occupancy Grid 
+        kernel_size = 3
+        for i in range(1,self.max_row+1):
+            for j in range(1,self.max_col+1):
+                occupancy_grid = [0]*kernel_size*(kernel_size+1)*2
+                m = len(occupancy_grid)
+                for k in range(m):
+                    if k<m//2:
+                        row_id = k//kernel_size
+                        col_id = k%kernel_size
+                        row_t_diff = row_id-2
+                        row_b_diff = row_id-1
+                        col_diff = col_id-1
+                        cell_t = (i+row_t_diff,j+col_diff)
+                        cell_b = (i+row_b_diff,j+col_diff)
+                        if G.has_edge(cell_t,cell_b):
+                            occupancy_grid[k] = 1
+                    else:
+                        k_ = k-m//2
+                        row_id = k_%kernel_size
+                        col_id = k_//kernel_size
+                        col_l_diff = col_id-2
+                        col_r_diff = col_id-1
+                        row_diff = row_id-1
+                        cell_l = (j+row_diff,i+col_l_diff)
+                        cell_r = (j+row_diff,i+col_r_diff)
+                        if G.has_edge(cell_l,cell_r):
+                            occupancy_grid[k] = 1
+                G.nodes[(i,j)]['occupancy_grid'] = occupancy_grid
+
         return G
     
     def render(self):
@@ -777,7 +810,7 @@ class LMDEnv(gym.Env):
         delta_row = task_pos[0] - ugv_pos[0]
         delta_col = task_pos[1] - ugv_pos[1]
         if delta_row == 0 and delta_col == 0:
-            task_dir_id = -1  # No movement, indeterminate direction
+            task_dir_id = 8  # No movement, indeterminate direction
         else:
             # Convert grid differences to an angle with 0 degrees = North and increasing clockwise.
             # Using math.atan2(delta_col, -delta_row) gives the desired angle.
@@ -786,7 +819,8 @@ class LMDEnv(gym.Env):
             task_dir_id = int(((angle + 22.5) % 360) // 45)
 
         # Neighborhood Wall Encoding
-        wall_encoding = np.array(self.G.nodes[ugv_pos]['wall_distance'], dtype=np.int32).flatten()
+        # wall_encoding = np.array(self.G.nodes[ugv_pos]['wall_distance'], dtype=np.int32).flatten()
+        wall_occupancy = np.array(self.G.nodes[ugv_pos]['occupancy_grid'], dtype=np.int32).flatten()
 
         # UGV Positions
         ugv_positions_flat = np.array([ugv.position for ugv in self.ugv_states], dtype=np.int32).flatten()
@@ -804,12 +838,13 @@ class LMDEnv(gym.Env):
 
         # Ensure observation matches the defined space structure
         obs_dict = {
-            'active_task_positions': active_task_positions_flat,
-            'wall_encoding': wall_encoding,
-            'battery_levels': battery_flat,
-            'nb_traffic': nb_traffic_flat,
+            # 'active_task_positions': active_task_positions_flat,
+            # 'wall_encoding': wall_encoding,
+            'wall_occupancy': wall_occupancy,
+            # 'battery_levels': battery_flat,
+            # 'nb_traffic': nb_traffic_flat,
             'task_direction': task_dir_id,
-            'ugv_positions': ugv_positions_flat,
+            # 'ugv_positions': ugv_positions_flat,
         }
 
         return obs_dict

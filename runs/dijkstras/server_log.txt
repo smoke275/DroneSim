@@ -64,29 +64,13 @@ Terminated: False, Truncated: False
 Frame Number: 16
 Action taken: [Up]
 Reward: 4.0
-Terminated: False, Truncated: False
-Frame Number: 17
-Action taken: [Up]
-Reward: 49.0
-Terminated: False, Truncated: False
-Frame Number: 18
-Action taken: [Up]
-Reward: 49.0
-Terminated: False, Truncated: False
-Frame Number: 19
-Action taken: [Down]
-Reward: 4.0
-Terminated: False, Truncated: False
-Frame Number: 20
-Action taken: [Down]
-Reward: 49.0
 Terminated: False, Truncated: True
 
 Simulation completed
-Final frame: 20
-Total reward: 440.0
-Tasks completed: 8
-EV distance traveled: 1000.0
-Total time taken: 1000.0
-Total energy consumed: 1000.0
+Final frame: 16
+Total reward: 289.0
+Tasks completed: 5
+EV distance traveled: 800.0
+Total time taken: 800.0
+Total energy consumed: 800.0
 ===================

@@ -9,6 +9,7 @@ import envs
 from agents.sarsa import SARSAAgent
 from agents.dijkstra import DijkstraAgent
 from agents.dqn import DQNAgent
+from agents.a2c import A2CAgent
 
 def run_simulation(config_file, render_mode='human'): # Default to 'human' for visualization
     """
@@ -38,6 +39,8 @@ def run_simulation(config_file, render_mode='human'): # Default to 'human' for v
         agent = SARSAAgent(env, config=config, policy_path=policy_path)
     elif algo == 'dqn':
         agent = DQNAgent(env, config=config, policy_path=policy_path)
+    elif algo == 'a2c':
+        agent = A2CAgent(env, config=config, policy_path=policy_path)
     else:
         agent = DijkstraAgent(env, info)
 

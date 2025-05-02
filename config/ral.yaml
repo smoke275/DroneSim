@@ -13,7 +13,7 @@ world:
   num_ugvs: 1
 
   bms: false
-  traffic: true
+  traffic: false
   load: false
   max_time: 50000
 
