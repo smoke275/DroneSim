@@ -616,12 +616,11 @@ class LMDEnv(gym.Env):
         self.escape_pressed = False # Reset escape key flag
 
         self.ugv_states = [UGV(ugv_id=i, base_position=self.warehouse_pos, cell_dist=self.cell_size, max_range=self.max_ugv_range, max_load=self.max_load, drain_rate=self.drain_rate, speed=self.ugv_speed, G=self.G) for i in range(self.num_patrols)]
-        self.task_list = []
-        self.task_loads = []
-        self.active_tasks = []
+        self.task_list = random.choices(list(self.G.nodes), k=5000)
+        self.task_loads = [0]*5000
+        self.active_tasks = [self.task_list[0]]
         if not self.load_b:
             self.task_loads = [0]*self.num_tasks
-        self.fill_task_list()
         self.red_roads = []
         self.yellow_roads = []
         self.traffic_centeroids = []
@@ -721,7 +720,7 @@ class LMDEnv(gym.Env):
                 if self.load_b and 0 <= t_i < len(self.task_loads):
                     self.task_loads.pop(t_i)
         self.latest_completed_tasks = [] # Clear the list for the next step
-        self.fill_task_list()
+        # self.fill_task_list()
         obs = self._get_observation() # Gets observation *after* action/reward
         done = self._check_termination_condition() # Check termination based on new state
 
@@ -822,7 +821,7 @@ class LMDEnv(gym.Env):
         # Assign consistent colors for rendering
         self.info["patrol_colors"] = [get_agent_color(ugv.agent_id) for ugv in self.ugv_states]
         self.info["R_P"] = [ugv.current_range_percent for ugv in self.ugv_states]
-        self.info["active_tasks"] = self.task_list # Use the current task list
+        self.info["active_tasks"] = self.active_tasks # Use the current task list
         self.info['red_roads'] = self.red_roads
         self.info['yellow_roads'] = self.yellow_roads
 
@@ -888,10 +887,10 @@ class LMDEnv(gym.Env):
         task_completion_reward = 50.0
         for i, ugv in enumerate(self.ugv_states):
             # Check if UGV is at a task location *that is currently active*
-            if ugv.position in self.task_list:
+            if ugv.position == self.task_list[0]:
                 try:
                     # Find the index of this task in the *current* task list
-                    t_i = self.task_list.index(ugv.position)
+                    t_i = 0
 
                     # Ensure this task hasn't already been marked for completion this step
                     # and wasn't completed in a *previous* step (handled by latest_completed_tasks check in obs)
@@ -901,6 +900,7 @@ class LMDEnv(gym.Env):
                         # Mark task for removal in the *next* observation update
                         self.latest_completed_tasks.append(t_i)
                         completed_task_indices_this_step.append(t_i)
+                        self.active_tasks[0] = self.task_list[1]
 
                         if self.load_b:
                             # Assign load only if load balancing is enabled
