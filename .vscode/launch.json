@@ -1,0 +1,46 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Python: Run Dijkstras gui",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder}/main.py",
+            "console": "integratedTerminal",
+            "args": [
+                // No arguments for Dijkstra's GUI
+            ]
+        },
+        {
+            "name": "Python: Run Dijkstras Print",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder}/main.py",
+            "console": "integratedTerminal",
+            "args": [
+                "-rm", "print"
+            ]
+        },
+        {
+            "name": "Python: Run SARSA GUI",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder}/main.py",
+            "console": "integratedTerminal",
+            "args": [
+                "-a", "sarsa",
+            ]
+        },
+        {
+            "name": "Python: Run SARSA print",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder}/main.py",
+            "console": "integratedTerminal",
+            "args": [
+                "-a", "sarsa",
+                "-rm", "print"
+            ]
+        }
+    ]
+}

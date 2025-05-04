@@ -1,5 +1,5 @@
 class UGV:
-    def __init__(self, ugv_id, base_position, cell_dist, max_range, max_load, drain_rate, speed, G):
+    def __init__(self, ugv_id, base_position, cell_dist, max_range, drain_rate, speed, G):
         super().__init__()
         self.agent_id = ugv_id
         self.position = base_position  # e.g., (row, col) or (x, y)
@@ -13,7 +13,6 @@ class UGV:
         self.active_task = None        # current task being executed
         self.distance_traveled = 0.0  # distance traveled by the UGV
         self.G = G
-        self.max_load = max_load
         self.drain_rate= drain_rate
         self.speed = speed
         self.cell_dist = cell_dist
@@ -35,7 +34,7 @@ class UGV:
         Returns True if move was successful, False if out of range
         """
         action = int(action)
-        curr_drain_rate = self.drain_rate * (1 + self.load / self.max_load)
+        curr_drain_rate = self.drain_rate
         range_left = self.current_range - curr_drain_rate * self.cell_dist
         if action !=4 and range_left<=0:
             return 0, self.cell_dist
