@@ -29,7 +29,7 @@ if __name__ == "__main__":
 
     env = gym.make('LMDEnv-v0', config=env_config)
 
-    dp_agent = SARSAAgent(env, env_config)
+    dp_agent = SARSAAgent(env, env_config, epsilon_decay=0.999)
 
     print(f"Policy Name: {policy_name}")
     dp_agent.learn(num_episodes=1000, max_steps_per_episode=1010, policy_path=env_config['policy_path'],

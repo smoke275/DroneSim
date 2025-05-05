@@ -2,7 +2,7 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "Python: Run Dijkstras gui",
+            "name": "Run Dijkstras gui",
             "type": "debugpy",
             "request": "launch",
             "program": "${workspaceFolder}/main.py",
@@ -12,7 +12,7 @@
             ]
         },
         {
-            "name": "Python: Run Dijkstras Print",
+            "name": "Run Dijkstras Print",
             "type": "debugpy",
             "request": "launch",
             "program": "${workspaceFolder}/main.py",
@@ -22,25 +22,101 @@
             ]
         },
         {
-            "name": "Python: Run SARSA GUI",
+            "name": "Run SARSA GUI",
             "type": "debugpy",
             "request": "launch",
             "program": "${workspaceFolder}/main.py",
             "console": "integratedTerminal",
             "args": [
                 "-a", "sarsa",
+                "-p", "d6882987",
             ]
         },
         {
-            "name": "Python: Run SARSA print",
+            "name": "Run SARSA print",
             "type": "debugpy",
             "request": "launch",
             "program": "${workspaceFolder}/main.py",
             "console": "integratedTerminal",
             "args": [
                 "-a", "sarsa",
-                "-rm", "print"
+                "-rm", "print",
+                "-p", "d6882987",
             ]
-        }
+        },
+        {
+            "name": "Run DQN GUI",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder}/main.py",
+            "console": "integratedTerminal",
+            "args": [
+                "-a", "dqn",
+                "-p", "ba6a4d47",
+            ]
+        },
+        {
+            "name": "Run DQN print",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder}/main.py",
+            "console": "integratedTerminal",
+            "args": [
+                "-a", "dqn",
+                "-rm", "print",
+                "-p", "ba6a4d47",
+            ]
+        },
+        {
+            "name": "Run A2C GUI",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder}/main.py",
+            "console": "integratedTerminal",
+            "args": [
+                "-a", "a2c",
+                "-p", "f408b86d",
+            ]
+        },
+        {
+            "name": "Run A2C print",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder}/main.py",
+            "console": "integratedTerminal",
+            "args": [
+                "-a", "a2c",
+                "-rm", "print",
+                "-p", "f408b86d",
+            ]
+        },
+        {
+            "name": "Train SARSA",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder}/sarsa_train.py",
+            "console": "integratedTerminal",
+        },
+        {
+            "name": "Train DQN",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder}/dqn_train.py",
+            "console": "integratedTerminal",
+        },
+        {
+            "name": "Train A2C",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder}/a2c_train.py",
+            "console": "integratedTerminal",
+        },
+        {
+            "name": "Clean Up",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder}/clean.py",
+            "console": "integratedTerminal",
+        },
     ]
 }

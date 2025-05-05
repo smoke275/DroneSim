@@ -22,7 +22,7 @@ class DijkstraAgent(Agent):
         The agent checks that it has enough battery to go to a task and return to the warehouse.
         """
         ugv_pos = tuple(map(int, observation['ugv_positions']))
-        battery = int(observation['battery_levels'][0])  # Assuming single agent control
+        battery = int(observation['battery_levels'])  # Assuming single agent control
 
         task_positions = observation['active_task_positions']
         # Convert task positions to list of tuples

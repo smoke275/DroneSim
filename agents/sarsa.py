@@ -27,7 +27,6 @@ class SARSAAgent(Agent):
         self.max_cell_range = int(self.max_range/self.cell_size)
         self.max_rows = config['world']['maze_size']
         self.max_cols = self.max_rows
-        self.max_load = config['ugv']['max_load']
 
         if hasattr(env.action_space, 'n'):
             self.action_list = list(range(env.action_space.n))
@@ -101,9 +100,10 @@ class SARSAAgent(Agent):
 
         # return (ugv, task_coords, band, nb_traffic)
 
-        wall_encoding = tuple(observation['wall_occupancy'].tolist())
+        wall_encoding = tuple(observation['wall_encoding'].tolist())
         task_direction = int(observation['task_direction'])
-        return (wall_encoding, task_direction)
+        step2dest = tuple(observation['steps2dest'].tolist())
+        return (wall_encoding, task_direction, step2dest)
 
     def predict(self, observation):
         """

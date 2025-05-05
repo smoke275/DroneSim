@@ -9,6 +9,7 @@ tk.Tk.state = lambda self, s=None: self.wm_state('normal' if s == 'zoomed' else 
 import math
 import pygame # Added pygame
 import os # Added os for path joining
+import time
 
 import gymnasium as gym
 from gymnasium import spaces
@@ -74,7 +75,7 @@ def get_agent_color(agent_id):
 
 
 class LMDEnv(gym.Env):
-    metadata = {'render_modes': ['human', 'print', 'rgb_array'], "render_fps": 1} # Adjusted FPS
+    metadata = {'render_modes': ['human', 'print', 'rgb_array'], "render_fps": 30} # Adjusted FPS
 
     def __init__(self, config, render_mode=None): # Default render_mode is None
         super(LMDEnv, self).__init__()
@@ -123,7 +124,6 @@ class LMDEnv(gym.Env):
         #     self.base_stations.append( (int(t[0]), int(t[1])) )
 
         # Agent vars
-        self.num_patrols = config['world']['num_ugvs']
         self.num_uavs_bs = config["world"]["num_uavs_per_bs"]
         self.max_ugv_range = config['ugv']['range']
         self.drain_rate = config['ugv']['drain_rate']
@@ -149,9 +149,9 @@ class LMDEnv(gym.Env):
         self.total_energy_consumed = 0.0 # Corrected typo
 
         '''State vars'''
-        self.ugv_states = []
+        self.ugv = None
         self.task_list = []
-        self.active_tasks = []
+        self.active_task = []
         self.traffic_centeroids = []
         self.red_roads = []
         self.yellow_roads = []
@@ -169,30 +169,31 @@ class LMDEnv(gym.Env):
         dir_wall_space = spaces.MultiDiscrete(
             np.array([3,3,3,3])
         )
-        wall_occupancy_space = spaces.MultiDiscrete(np.array([2]*24))
+        wall_occupancy_space = spaces.MultiDiscrete(np.array([2]*60))
+        task_dir_space = spaces.Discrete(9)
+        steps2dest_space = spaces.MultiDiscrete(np.array([6,6,6,6,6]))
+
         nb_traffic_space = spaces.MultiDiscrete(np.array([3,3,3,3]))
         battery_space = spaces.Box(
             low=0,
             high=self.max_ugv_range,
             dtype=np.int32
         )
-        task_dir_space = spaces.Discrete(9)
         
         self.observation_space = spaces.Dict({
-            'active_task_positions': active_task_space,
-            'ugv_positions': ugv_pos_space,
+            # 'active_task_positions': active_task_space,
+            # 'ugv_positions': ugv_pos_space,
             'wall_encoding': dir_wall_space,
             # 'wall_occupancy': wall_occupancy_space,
             'task_direction': task_dir_space,
-            'battery_levels': battery_space,
+            'steps2dest': steps2dest_space,
+            # 'battery_levels': battery_space,
             # 'nb_traffic': nb_traffic_space,
         })
         
         # Initialize rendering if mode is 'human'
         if self.render_mode == "human":
             self._initialize_render()
-
-        self.reset() # Call reset after initializing potential render dependencies
 
     def _initialize_render(self):
         """Initializes pygame, screen, clock, fonts, and loads assets."""
@@ -268,7 +269,7 @@ class LMDEnv(gym.Env):
             for dr, dc in directions:
                 steps = 0
                 current = node
-                while steps < 1:
+                while steps < 2:
                     next_node = (current[0] + dr, current[1] + dc)
                     if not G.has_edge(current, next_node):
                         break
@@ -278,7 +279,7 @@ class LMDEnv(gym.Env):
             G.nodes[node]['wall_distance'] = wall_distances
 
         # # Wall Occupancy Grid 
-        # kernel_size = 3
+        # kernel_size = 5
         # for i in range(1,self.max_row+1):
         #     for j in range(1,self.max_col+1):
         #         occupancy_grid = [0]*kernel_size*(kernel_size+1)*2
@@ -311,6 +312,7 @@ class LMDEnv(gym.Env):
     
     def render(self):
         if self.render_mode == "human":
+            self.sleep_flag = True
             if self.screen is None:
                 self._initialize_render() # Initialize if not already done
                 if self.screen is None: # Check if initialization failed
@@ -395,50 +397,46 @@ class LMDEnv(gym.Env):
 
             # --- Draw Tasks ---
             task_radius = int(self.cell_size_px * 0.25)
-            for task_r, task_c in self.task_list:
-                task_px_c, task_py_c = self._cell_to_pygame_center(task_r, task_c)
-                pygame.draw.circle(self.screen, MAGENTA, (task_px_c, task_py_c), task_radius)
+            task_r, task_c = self.active_task
+            task_px_c, task_py_c = self._cell_to_pygame_center(task_r, task_c)
+            pygame.draw.circle(self.screen, MAGENTA, (task_px_c, task_py_c), task_radius)
 
             # --- Draw UGVs and Battery ---
-            patrol_positions = [ugv.position for ugv in self.ugv_states]
-            patrol_colors = [ugv.agent_id for ugv in self.ugv_states] # Get assigned colors
-            R_P = [ugv.current_range_percent for ugv in self.ugv_states] # Battery percentage
 
-            for i in range(self.num_patrols):
-                ugv_r, ugv_c = patrol_positions[i]
-                ugv_px_c, ugv_py_c = self._cell_to_pygame_center(ugv_r, ugv_c)
-                agent_color = patrol_colors[i] # Get assigned color
+            ugv_r, ugv_c = self.ugv.position
+            ugv_px_c, ugv_py_c = self._cell_to_pygame_center(ugv_r, ugv_c)
+            agent_color = 0
 
-                # Draw UGV (Image or Shape)
-                if self.truck_image:
-                    img_rect = self.truck_image.get_rect(center=(ugv_px_c, ugv_py_c))
-                    self.screen.blit(self.truck_image, img_rect)
-                    # Draw a small colored circle on the truck for identification if needed
-                    # id_radius = int(self.cell_size_px * 0.1)
-                    # pygame.draw.circle(self.screen, agent_color, (ugv_px_c + img_rect.width // 3, ugv_py_c - img_rect.height // 3), id_radius)
-                else:
-                    # Fallback to drawing a colored rectangle
-                    ugv_size = int(self.cell_size_px * 0.7)
-                    ugv_rect = pygame.Rect(0, 0, ugv_size, ugv_size)
-                    ugv_rect.center = (ugv_px_c, ugv_py_c)
-                    pygame.draw.rect(self.screen, agent_color, ugv_rect)
-                    pygame.draw.rect(self.screen, BLACK, ugv_rect, 1) # Border
+            # Draw UGV (Image or Shape)
+            if self.truck_image:
+                img_rect = self.truck_image.get_rect(center=(ugv_px_c, ugv_py_c))
+                self.screen.blit(self.truck_image, img_rect)
+                # Draw a small colored circle on the truck for identification if needed
+                # id_radius = int(self.cell_size_px * 0.1)
+                # pygame.draw.circle(self.screen, agent_color, (ugv_px_c + img_rect.width // 3, ugv_py_c - img_rect.height // 3), id_radius)
+            else:
+                # Fallback to drawing a colored rectangle
+                ugv_size = int(self.cell_size_px * 0.7)
+                ugv_rect = pygame.Rect(0, 0, ugv_size, ugv_size)
+                ugv_rect.center = (ugv_px_c, ugv_py_c)
+                pygame.draw.rect(self.screen, agent_color, ugv_rect)
+                pygame.draw.rect(self.screen, BLACK, ugv_rect, 1) # Border
 
-                # Draw Battery Bar below UGV
-                battery_width = int(self.cell_size_px * 0.8)
-                battery_height = max(3, int(self.cell_size_px * 0.1)) # Ensure minimum height
-                battery_x = ugv_px_c - battery_width // 2
-                # Position below the center, slightly offset
-                battery_y = ugv_py_c + (self.truck_image.get_height() // 2 if self.truck_image else self.cell_size_px // 2) + 2
+            # Draw Battery Bar below UGV
+            battery_width = int(self.cell_size_px * 0.8)
+            battery_height = max(3, int(self.cell_size_px * 0.1)) # Ensure minimum height
+            battery_x = ugv_px_c - battery_width // 2
+            # Position below the center, slightly offset
+            battery_y = ugv_py_c + (self.truck_image.get_height() // 2 if self.truck_image else self.cell_size_px // 2) + 2
 
-                filled_width = int(R_P[i] * battery_width)
+            filled_width = int(self.ugv.current_range_percent * battery_width)
 
-                # Background of battery bar (e.g., light gray)
-                pygame.draw.rect(self.screen, GRAY, (battery_x, battery_y, battery_width, battery_height))
-                # Filled portion (Green)
-                pygame.draw.rect(self.screen, GREEN, (battery_x, battery_y, filled_width, battery_height))
-                # Border
-                pygame.draw.rect(self.screen, BLACK, (battery_x, battery_y, battery_width, battery_height), 1)
+            # Background of battery bar (e.g., light gray)
+            pygame.draw.rect(self.screen, GRAY, (battery_x, battery_y, battery_width, battery_height))
+            # Filled portion (Green)
+            pygame.draw.rect(self.screen, GREEN, (battery_x, battery_y, filled_width, battery_height))
+            # Border
+            pygame.draw.rect(self.screen, BLACK, (battery_x, battery_y, battery_width, battery_height), 1)
 
             # --- Draw Info Text ---
             if self.font:
@@ -458,16 +456,29 @@ class LMDEnv(gym.Env):
 
             # --- Update Display ---
             pygame.display.flip()
-            self.clock.tick(self.metadata["render_fps"])
+            
+            # Wait until the Return key is pressed before ending render
+            if self.num_tasks_completed < 70:
+                self.clock.tick(self.metadata["render_fps"])
+            else:
+                waiting = True
+                while waiting:
+                    for event in pygame.event.get():
+                        if event.type == pygame.QUIT:
+                            self.close()
+                            waiting = False
+                        elif event.type == pygame.KEYDOWN:
+                            if event.key == pygame.K_RETURN:
+                                waiting = False
+                    self.clock.tick(self.metadata["render_fps"])
 
         elif self.render_mode == "print":
             # Print-based rendering
             print(f"--- Timestep: {self.current_timestep} ---")
             print(f"  Time Elapsed: {self.time_elapsed:.2f}")
             print(f"  Tasks Completed: {self.num_tasks_completed}")
-            print(f"  Active Tasks: {self.task_list}")
-            for i in range(self.num_patrols):
-                print(f"  UGV {i}: Pos={self.ugv_states[i].position}, Batt={self.ugv_states[i].current_range_percent*100:.1f}%")
+            print(f"  Active Tasks: {self.active_task}")
+            print(f"  UGV: Pos={self.ugv.position}, Batt={self.ugv.current_range_percent*100:.1f}%")
             print(f"  Total EV Distance: {self.total_ev_distance:.2f}")
             print(f"  Total Energy Consumed: {self.total_energy_consumed:.2f}")
             if self.traffic_b:
@@ -573,33 +584,29 @@ class LMDEnv(gym.Env):
         #     pygame.draw.circle(self.screen, BLACK, (bs_px_c, bs_py_c), bs_radius, 1)
         # --- Draw Tasks ---
         task_radius = int(self.cell_size_px * 0.25)
-        for task_r, task_c in self.task_list:
-            task_px_c, task_py_c = self._cell_to_pygame_center(task_r, task_c)
-            pygame.draw.circle(self.screen, MAGENTA, (task_px_c, task_py_c), task_radius)
+        task_r, task_c = self.active_task
+        task_px_c, task_py_c = self._cell_to_pygame_center(task_r, task_c)
+        pygame.draw.circle(self.screen, MAGENTA, (task_px_c, task_py_c), task_radius)
         # --- Draw UGVs and Battery ---
-        patrol_positions = [ugv.position for ugv in self.ugv_states]
-        patrol_colors = [ugv.agent_id for ugv in self.ugv_states] # Get assigned colors
-        R_P = [ugv.current_range_percent for ugv in self.ugv_states] # Battery percentage
-        for i in range(self.num_patrols):
-            ugv_r, ugv_c = patrol_positions[i]
-            ugv_px_c, ugv_py_c = self._cell_to_pygame_center(ugv_r, ugv_c)
-            agent_color = patrol_colors[i]
-            if self.truck_image:
-                img_rect = self.truck_image.get_rect(center=(ugv_px_c, ugv_py_c))
-                self.screen.blit(self.truck_image, img_rect)
-            else:
-                ugv_size = int(self.cell_size_px * 0.7)
-                ugv_rect = pygame.Rect(0, 0, ugv_size, ugv_size); ugv_rect.center = (ugv_px_c, ugv_py_c)
-                pygame.draw.rect(self.screen, agent_color, ugv_rect)
-                pygame.draw.rect(self.screen, BLACK, ugv_rect, 1)
-            battery_width = int(self.cell_size_px * 0.8)
-            battery_height = max(3, int(self.cell_size_px * 0.1))
-            battery_x = ugv_px_c - battery_width // 2
-            battery_y = ugv_py_c + (self.truck_image.get_height() // 2 if self.truck_image else self.cell_size_px // 2) + 2
-            filled_width = int(R_P[i] * battery_width)
-            pygame.draw.rect(self.screen, GRAY, (battery_x, battery_y, battery_width, battery_height))
-            pygame.draw.rect(self.screen, GREEN, (battery_x, battery_y, filled_width, battery_height))
-            pygame.draw.rect(self.screen, BLACK, (battery_x, battery_y, battery_width, battery_height), 1)
+        ugv_r, ugv_c = self.ugv.position
+        ugv_px_c, ugv_py_c = self._cell_to_pygame_center(ugv_r, ugv_c)
+        agent_color = 0
+        if self.truck_image:
+            img_rect = self.truck_image.get_rect(center=(ugv_px_c, ugv_py_c))
+            self.screen.blit(self.truck_image, img_rect)
+        else:
+            ugv_size = int(self.cell_size_px * 0.7)
+            ugv_rect = pygame.Rect(0, 0, ugv_size, ugv_size); ugv_rect.center = (ugv_px_c, ugv_py_c)
+            pygame.draw.rect(self.screen, agent_color, ugv_rect)
+            pygame.draw.rect(self.screen, BLACK, ugv_rect, 1)
+        battery_width = int(self.cell_size_px * 0.8)
+        battery_height = max(3, int(self.cell_size_px * 0.1))
+        battery_x = ugv_px_c - battery_width // 2
+        battery_y = ugv_py_c + (self.truck_image.get_height() // 2 if self.truck_image else self.cell_size_px // 2) + 2
+        filled_width = int(self.ugv.current_range_percent * battery_width)
+        pygame.draw.rect(self.screen, GRAY, (battery_x, battery_y, battery_width, battery_height))
+        pygame.draw.rect(self.screen, GREEN, (battery_x, battery_y, filled_width, battery_height))
+        pygame.draw.rect(self.screen, BLACK, (battery_x, battery_y, battery_width, battery_height), 1)
         # --- Draw Info Text ---
         if self.font:
             info_y_start = maze_area_height + 5
@@ -630,16 +637,15 @@ class LMDEnv(gym.Env):
         )
         self.G = self._build_graph() # Rebuild graph with new maze
 
-        self.action_response = [None]*self.num_patrols
-        self.prev_task_distances = [100]*self.num_patrols # Use infinity for initial distance
+        self.action_response = None
+        self.prev_task_distance = 100
         self.last_move_time = 0
-        self.latest_completed_tasks = []
         self.escape_pressed = False # Reset escape key flag
 
-        self.ugv_states = [UGV(ugv_id=i, base_position=self.warehouse_pos, cell_dist=self.cell_size, max_range=self.max_ugv_range,drain_rate=self.drain_rate, speed=self.ugv_speed, G=self.G) for i in range(self.num_patrols)]
-        self.task_list = []
-        self.active_tasks = [None]*self.num_patrols # Initialize active tasks for each UGV
-        self.fill_task_list()
+        self.ugv = UGV(ugv_id=0, base_position=self.warehouse_pos, cell_dist=self.cell_size, max_range=self.max_ugv_range,drain_rate=self.drain_rate, 
+                       speed=self.ugv_speed, G=self.G)
+        self.task_list = random.choices(list(self.G.nodes), k=self.num_tasks) # Randomly select tasks from graph nodes
+        self.active_task = self.task_list[0]
         self.red_roads = []
         self.yellow_roads = []
         self.traffic_centeroids = []
@@ -671,8 +677,8 @@ class LMDEnv(gym.Env):
             m = self.num_tasks-len(self.task_list)
             new_task = random.sample(list(self.G.nodes),m)
             self.task_list.extend(new_task)
-        if self.active_tasks[0] == None:
-            self.active_tasks[0] = min(self.task_list, key=lambda x: nx.shortest_path_length(self.G, self.ugv_states[0].position, x))
+        if self.active_task == None:
+            self.active_task = min(self.task_list, key=lambda x: nx.shortest_path_length(self.G, self.ugv.position, x))
 
     def fill_traffic_centroids(self):
         # Reset previous roads and weights
@@ -723,11 +729,11 @@ class LMDEnv(gym.Env):
         # Apply action, calculate reward, get next observation
         self._apply_action(action)
         reward = self._get_reward()
-        indices_to_remove = sorted(self.latest_completed_tasks, reverse=True)
-        for t_i in indices_to_remove:
-            if 0 <= t_i < len(self.task_list): # Check index validity
-                self.task_list.pop(t_i)
-        self.fill_task_list()
+        if self.ugv.position == self.active_task:
+            self.task_list.pop(0)
+            self.active_task = self.task_list[0]
+            self.num_tasks_completed += 1
+            self.prev_task_distance = nx.shortest_path_length(self.G, self.ugv.position, self.active_task)
         obs = self._get_observation() # Gets observation *after* action/reward
         done = self._check_termination_condition() # Check termination based on new state
 
@@ -757,7 +763,7 @@ class LMDEnv(gym.Env):
 
         self.last_move_time = 0
         self.latest_completed_tasks = []
-        self.action_response = [None] * self.num_patrols
+        self.action_response = None
 
         return obs, reward, terminated, truncated, self.info # Return standard gym step tuple
 
@@ -780,11 +786,11 @@ class LMDEnv(gym.Env):
 
 
     def _get_observation(self):
-        active_task_positions_flat = np.array(self.active_tasks, dtype=np.int32).flatten()
-        ugv_positions_flat = np.array([ugv.position for ugv in self.ugv_states], dtype=np.int32).flatten()
+        active_task_positions_flat = np.array(self.active_task, dtype=np.int32).flatten()
+        ugv_positions_flat = np.array(list(self.ugv.position)).flatten()
 
-        ugv_pos = self.ugv_states[0].position
-        task_pos = self.active_tasks[0]
+        ugv_pos = self.ugv.position
+        task_pos = self.active_task
         task_dir_id = None
         delta_row = task_pos[0] - ugv_pos[0]
         delta_col = task_pos[1] - ugv_pos[1]
@@ -801,25 +807,34 @@ class LMDEnv(gym.Env):
         wall_encoding = np.array(self.G.nodes[ugv_pos]['wall_distance'], dtype=np.int32).flatten()
         # wall_occupancy = np.array(self.G.nodes[ugv_pos]['occupancy_grid'], dtype=np.int32).flatten()
 
-        # Battery Levels
-        battery_flat = np.array([ugv.current_range for ugv in self.ugv_states], dtype=np.int32).flatten()
+        # Steps to destination in each direction
+        steps2dest = []
+        for dr, dc in [(0, 1), (1, 0), (0, -1), (-1, 0), (0,0)]:
+            r,c = ugv_pos[0] + dr, ugv_pos[1] + dc
+            if r > 0 and r <= self.max_row and c > 0 and c <= self.max_col:
+                tmp = min(nx.shortest_path_length(self.G, (r,c), task_pos), 5)
+                steps2dest.append(tmp)
+            else:
+                steps2dest.append(5)
+        steps2dest = np.array(steps2dest, dtype=np.int32).flatten()
+
+        # # Battery Levels
+        # battery_flat = int(self.ugv.current_range)
 
         # Neighbor Traffic
-        nb_traffic = []
-        for ugv in self.ugv_states:
-            traffic = self._get_nb_traffic(ugv.position)
-            nb_traffic.extend(traffic)
+        nb_traffic = self._get_nb_traffic(self.ugv.position)
         nb_traffic_flat = np.array(nb_traffic, dtype=np.int32).flatten()
 
 
         # Ensure observation matches the defined space structure
         obs_dict = {
-            'active_task_positions': active_task_positions_flat,
-            'ugv_positions': ugv_positions_flat,
+            # 'active_task_positions': active_task_positions_flat,
+            # 'ugv_positions': ugv_positions_flat,
             'wall_encoding': wall_encoding,
             # 'wall_occupancy': wall_occupancy,
             'task_direction': task_dir_id,
-            'battery_levels': battery_flat,
+            'steps2dest': steps2dest,
+            # 'battery_levels': battery_flat,
             # 'nb_traffic': nb_traffic_flat,
         }
 
@@ -831,12 +846,11 @@ class LMDEnv(gym.Env):
         return self.info
 
     def update_info(self):
-        self.total_ev_distance = sum([ugv.distance_traveled for ugv in self.ugv_states])
-        self.total_energy_consumed = sum([ugv.energy_consumed for ugv in self.ugv_states])
+        self.total_ev_distance = self.ugv.distance_traveled
+        self.total_energy_consumed = self.ugv.energy_consumed
         self.info = {
             "maze": self.df_maze,
             "graph": self.G,
-            "num_patrols": self.num_patrols,
             "warehouse_pos": self.warehouse_pos,
             "time_elapsed":self.time_elapsed,
             "num_tasks_completed": self.num_tasks_completed,
@@ -845,33 +859,17 @@ class LMDEnv(gym.Env):
         }
 
     def _apply_action(self, action):
-        # Define how each agent’s action modifies the simulation.
-        # Handle single-agent vs multi-agent action format
-        if isinstance(action, (list, tuple)):
-             # Assuming multi-agent action where action is a list/array of individual actions
-             act_list = action
-        if isinstance(action, np.ndarray):
-             # Assuming action is a numpy array, convert to list
-             act_list = action.tolist()
-        if isinstance(action, (int, np.integer)):
-             # Assuming single agent or shared policy, wrap action in a list
-             act_list = [action] * self.num_patrols # Apply same action to all if single value given
-        else:
-             print(f"Warning: Unexpected action type: {type(action)}. Assuming single action.")
-             act_list = [action] * self.num_patrols
+        action = int(action) # Ensure action is an integer
 
         max_move_time = self.cell_size/self.ugv_speed # Track the longest move time in this step for time_elapsed
 
-        for i, act in enumerate(act_list):
-            if i < len(self.ugv_states): # Ensure we don't exceed number of UGVs
-                ugv_i = self.ugv_states[i]
-                response, move_time = ugv_i.move(act, self.G)
-                self.action_response[i] = response
-                max_move_time = max(max_move_time, move_time)
+        response, move_time = self.ugv.move(action, self.G)
+        self.action_response = response
+        max_move_time = max(max_move_time, move_time)
 
-                # Recharge at warehouse
-                if ugv_i.position == self.warehouse_pos:
-                    ugv_i.recharge()
+        # Recharge at warehouse
+        if self.ugv.position == self.warehouse_pos:
+            self.ugv.recharge()
 
         self.last_move_time = max_move_time # Use the max time for simulation clock progression
 
@@ -883,39 +881,17 @@ class LMDEnv(gym.Env):
         # --- Progress-Based Shaping Reward ---
         # Reward for moving closer to the nearest task
         bonus_factor = 5.0 # Adjust shaping reward magnitude
-        for i, ugv in enumerate(self.ugv_states):
-            current_distance = nx.shortest_path_length(self.G, ugv.position, self.active_tasks[i])
-            # Reward if moving closer (and not already at distance 0)
-            if current_distance < self.prev_task_distances[i] and current_distance > 0:
-                # Reward proportional to distance reduction
-                reward += bonus_factor * (self.prev_task_distances[i] - current_distance)
-                self.prev_task_distances[i] = current_distance
+        current_distance = nx.shortest_path_length(self.G, self.ugv.position, self.active_task)
+        reward += bonus_factor * (self.prev_task_distance - current_distance)
+        if current_distance < self.prev_task_distance and current_distance > 0:
+            self.prev_task_distance = current_distance
+        
+        # print(f"Reward: {reward:.2f}, Current Distance: {current_distance}, Previous Distance: {self.prev_task_distance}")
 
         # --- Task Completion Reward ---
-        completed_task_indices_this_step = [] # Track indices to avoid double counting
         task_completion_reward = 50.0
-        for i, ugv in enumerate(self.ugv_states):
-            # Check if UGV is at a task location *that is currently active*
-            if ugv.position in self.task_list:
-                try:
-                    # Find the index of this task in the *current* task list
-                    t_i = self.task_list.index(ugv.position)
-
-                    # Ensure this task hasn't already been marked for completion this step
-                    # and wasn't completed in a *previous* step (handled by latest_completed_tasks check in obs)
-                    if t_i not in completed_task_indices_this_step:
-                        reward += task_completion_reward
-                        self.num_tasks_completed += 1
-                        # Mark task for removal in the *next* observation update
-                        self.latest_completed_tasks.append(t_i)
-                        completed_task_indices_this_step.append(t_i)
-                        self.active_tasks[i] = None
-
-                except ValueError:
-                    # This can happen if the task was already completed by another agent
-                    # in the same step and marked in completed_task_indices_this_step,
-                    # but not yet removed from self.task_list.
-                    pass
+        if self.ugv.position == self.active_task:
+            reward += task_completion_reward
 
         # --- Time Penalty ---
         # Penalize based on the time taken for the action
@@ -924,10 +900,8 @@ class LMDEnv(gym.Env):
 
         # --- Invalid Move Penalty ---
         invalid_move_penalty = 40.0
-        for ar in self.action_response:
-            # Assuming 0 indicates an invalid move from UGV.move
-            if ar == 0:
-                reward -= invalid_move_penalty
+        if self.action_response == 0:
+            reward -= invalid_move_penalty
         # No need to reset action_response here, it's reset in _apply_action
 
 

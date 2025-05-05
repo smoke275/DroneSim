@@ -1,12 +1,4 @@
 Policy Name,Algorithm,Experiment Description
-003d0595,sarsa,Graph nearest node in the state No osc reward
-8446b493,sarsa,Graph nearest direction in the state No osc reward
-0ef6cb77,sarsa,Graph nearest node battery level converted to cell range in state
-19dafa86,sarsa,All previous steps with ugv load in state,
-0d318b44,sarsa,No load Yes Trafffic graph nearest task location
-dbaaa61c,sarsa,No load Yes Trafffic graph nearest task location max time no stay
-724c906b,sarsa,No load Yes Trafffic graph nearest dir location max time no stay
-458afa3c,sarsa,No load Yes Trafffic graph nearest mod dir location max time no stay
-9548a1e3,sarsa,No load Yes Trafffic graph nearest mod2 dir location max time no stay
 e8e4dcda,sarsa,No load Yes Trafffic active tasks
 3619351e,dqn,gen maze
+d6882987,sarsa,gen maze wall dir dist encoding steps to goal

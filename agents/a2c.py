@@ -28,8 +28,8 @@ class A2CAgent(Agent):
         self.model = A2C(
             policy="MultiInputPolicy", 
             env=env,
-            learning_rate=7e-4,
-            n_steps=5,
+            # learning_rate=7e-4,
+            # n_steps=5,
             gamma=0.99,
             verbose=1,
             tensorboard_log="runs/a2c/tensorboard/"

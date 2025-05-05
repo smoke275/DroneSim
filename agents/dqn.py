@@ -27,7 +27,7 @@ class DQNAgent(Agent):
         super().__init__(env, *args, **kwargs)
         
         self.model = DQN(
-            policy="MultiInputPolicy", 
+            policy="MlpPolicy", 
             env=env,
             learning_rate=1e-2,
             buffer_size=10000,
