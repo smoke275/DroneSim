@@ -14,7 +14,7 @@ world:
   num_ugvs: 1
 
   bms: false
-  traffic: false
+  traffic: true
   max_time: 50000
 
 ugv:

@@ -18,6 +18,8 @@ if __name__ == '__main__':
             config_file = f"runs/sarsa/{args.policy}/config.yaml"
         elif args.algo == 'a2c':
             config_file = f"runs/a2c/{args.policy}/config.yaml"
+        elif args.algo == 'sarsa_l':
+            config_file = f"runs/sarsa_l/{args.policy}/config.yaml"
         else:
             raise ValueError("Invalid algorithm specified. Use 'dqn' or 'sarsa'.")
     else:

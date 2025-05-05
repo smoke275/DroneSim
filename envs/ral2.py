@@ -181,14 +181,14 @@ class LMDEnv(gym.Env):
         )
         
         self.observation_space = spaces.Dict({
-            # 'active_task_positions': active_task_space,
-            # 'ugv_positions': ugv_pos_space,
+            'active_task_positions': active_task_space,
+            'ugv_positions': ugv_pos_space,
             'wall_encoding': dir_wall_space,
             # 'wall_occupancy': wall_occupancy_space,
             'task_direction': task_dir_space,
             'steps2dest': steps2dest_space,
-            # 'battery_levels': battery_space,
-            # 'nb_traffic': nb_traffic_space,
+            'battery_levels': battery_space,
+            'nb_traffic': nb_traffic_space,
         })
         
         # Initialize rendering if mode is 'human'
@@ -818,8 +818,8 @@ class LMDEnv(gym.Env):
                 steps2dest.append(5)
         steps2dest = np.array(steps2dest, dtype=np.int32).flatten()
 
-        # # Battery Levels
-        # battery_flat = int(self.ugv.current_range)
+        # Battery Levels
+        battery_flat = int(self.ugv.current_range)
 
         # Neighbor Traffic
         nb_traffic = self._get_nb_traffic(self.ugv.position)
@@ -828,14 +828,14 @@ class LMDEnv(gym.Env):
 
         # Ensure observation matches the defined space structure
         obs_dict = {
-            # 'active_task_positions': active_task_positions_flat,
-            # 'ugv_positions': ugv_positions_flat,
+            'active_task_positions': active_task_positions_flat,
+            'ugv_positions': ugv_positions_flat,
             'wall_encoding': wall_encoding,
             # 'wall_occupancy': wall_occupancy,
             'task_direction': task_dir_id,
             'steps2dest': steps2dest,
-            # 'battery_levels': battery_flat,
-            # 'nb_traffic': nb_traffic_flat,
+            'battery_levels': battery_flat,
+            'nb_traffic': nb_traffic_flat,
         }
 
         return obs_dict
