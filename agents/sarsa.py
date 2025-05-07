@@ -47,7 +47,7 @@ class SARSAAgent(Agent):
         task_direction = int(observation['task_direction'])
         step2dest = tuple(observation['steps2dest'].tolist())
         nb_traffic = tuple(observation['nb_traffic'].tolist())
-        return (wall_encoding, task_direction, step2dest, nb_traffic)
+        return (wall_encoding, task_direction, step2dest,nb_traffic)
 
     def predict(self, observation):
         """

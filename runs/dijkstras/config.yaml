@@ -27,5 +27,5 @@ world:
   num_uavs_per_bs: 2
   num_ugvs: 1
   bms: false
-  traffic: false
+  traffic: true
   max_time: 50000

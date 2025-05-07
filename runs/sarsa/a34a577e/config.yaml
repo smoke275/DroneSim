@@ -1,6 +1,6 @@
-algo: dqn
-policy_name: 905647f8
-policy_path: runs/dqn/905647f8/policy
+algo: sarsa
+policy_name: a34a577e
+policy_path: runs/sarsa/a34a577e/policy.pkl
 traffic:
   num_centroids: 2
   prob: 0.3
@@ -27,5 +27,5 @@ world:
   num_uavs_per_bs: 2
   num_ugvs: 1
   task_prob: 0.8
-  traffic: false
+  traffic: true
   warehouse: center

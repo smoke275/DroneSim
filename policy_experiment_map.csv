@@ -3,3 +3,4 @@ e8e4dcda,sarsa,No load Yes Trafffic active tasks
 3619351e,dqn,gen maze
 d6882987,sarsa,gen maze wall dir dist encoding steps to goal
 7137e4e0,sarsa,gen maze wall dir dist encoding steps to goal traffic
+a34a577e,sarsa,wall dir dist traffic

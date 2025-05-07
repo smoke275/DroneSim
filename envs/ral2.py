@@ -171,7 +171,7 @@ class LMDEnv(gym.Env):
         )
         wall_occupancy_space = spaces.MultiDiscrete(np.array([2]*60))
         task_dir_space = spaces.Discrete(9)
-        steps2dest_space = spaces.MultiDiscrete(np.array([6,6,6,6,6]))
+        steps2dest_space = spaces.MultiDiscrete(np.array([10,10,10,10,10]))
 
         nb_traffic_space = spaces.MultiDiscrete(np.array([3,3,3,3]))
         battery_space = spaces.Box(
@@ -458,19 +458,19 @@ class LMDEnv(gym.Env):
             pygame.display.flip()
             
             # Wait until the Return key is pressed before ending render
-            if self.num_tasks_completed < 70:
-                self.clock.tick(self.metadata["render_fps"])
-            else:
-                waiting = True
-                while waiting:
-                    for event in pygame.event.get():
-                        if event.type == pygame.QUIT:
-                            self.close()
+            # if self.num_tasks_completed < 70:
+            #     self.clock.tick(self.metadata["render_fps"])
+            # else:
+            waiting = True
+            while waiting:
+                for event in pygame.event.get():
+                    if event.type == pygame.QUIT:
+                        self.close()
+                        waiting = False
+                    elif event.type == pygame.KEYDOWN:
+                        if event.key == pygame.K_RETURN:
                             waiting = False
-                        elif event.type == pygame.KEYDOWN:
-                            if event.key == pygame.K_RETURN:
-                                waiting = False
-                    self.clock.tick(self.metadata["render_fps"])
+                self.clock.tick(self.metadata["render_fps"])
 
         elif self.render_mode == "print":
             # Print-based rendering
@@ -812,14 +812,14 @@ class LMDEnv(gym.Env):
         for dr, dc in [(0, 1), (1, 0), (0, -1), (-1, 0), (0,0)]:
             r,c = ugv_pos[0] + dr, ugv_pos[1] + dc
             if r > 0 and r <= self.max_row and c > 0 and c <= self.max_col:
-                tmp = min(nx.shortest_path_length(self.G, (r,c), task_pos), 5)
+                tmp = min(nx.shortest_path_length(self.G, (r,c), task_pos), 9)
                 steps2dest.append(tmp)
             else:
-                steps2dest.append(5)
+                steps2dest.append(9)
         steps2dest = np.array(steps2dest, dtype=np.int32).flatten()
 
         # Battery Levels
-        battery_flat = int(self.ugv.current_range)
+        battery_flat = np.array(self.ugv.current_range, dtype=np.int32)
 
         # Neighbor Traffic
         nb_traffic = self._get_nb_traffic(self.ugv.position)

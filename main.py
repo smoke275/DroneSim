@@ -10,20 +10,20 @@ if __name__ == '__main__':
     parser.add_argument('-rm', '--render_mode', type=str, required=False, default='human', help="Render mode (e.g., 'human', 'rgb_array')")
 
     args = parser.parse_args()
+    args.policy = "a34a577e"
 
-    if args.policy:
-        if args.algo == 'dqn':
-            config_file = f"runs/dqn/{args.policy}/config.yaml"
-        elif args.algo == 'sarsa':
-            config_file = f"runs/sarsa/{args.policy}/config.yaml"
-        elif args.algo == 'a2c':
-            config_file = f"runs/a2c/{args.policy}/config.yaml"
-        elif args.algo == 'sarsa_l':
-            config_file = f"runs/sarsa_l/{args.policy}/config.yaml"
-        else:
-            raise ValueError("Invalid algorithm specified. Use 'dqn' or 'sarsa'.")
-    else:
+    if args.algo == 'dqn':
+        config_file = f"runs/dqn/{args.policy}/config.yaml"
+    elif args.algo == 'sarsa':
+        config_file = f"runs/sarsa/{args.policy}/config.yaml"
+    elif args.algo == 'a2c':
+        config_file = f"runs/a2c/{args.policy}/config.yaml"
+    elif args.algo == 'sarsa_l':
+        config_file = f"runs/sarsa_l/{args.policy}/config.yaml"
+    elif args.algo == 'dijkstras':
         config_file = f"runs/dijkstras/config.yaml"
+    else:
+        raise ValueError("Invalid algorithm specified. Use 'dqn' or 'sarsa'.")
 
     render_mode = args.render_mode
 
