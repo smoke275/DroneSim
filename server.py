@@ -88,6 +88,7 @@ def run_simulation(config_file, render_mode='human'): # Default to 'human' for v
             print(f"Observation: {observation}") # Observation can be large, maybe omit from console
             print(f"Reward: {reward}")
             print(f"Terminated: {terminated}, Truncated: {truncated}")
+            print(f"World State: {world_state}")
             log_f.write(f"Action taken: [{action_str}]\n")
             # log_f.write(f"Observation: {observation}\n") # Avoid logging large observations
             log_f.write(f"Reward: {reward}\n")

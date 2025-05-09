@@ -164,7 +164,7 @@ class LMDEnv(gym.Env):
             np.array([3,3,3,3])
         )
         wall_occupancy_space = spaces.MultiDiscrete(np.array([2]*60))
-        task_dir_space = spaces.Discrete(9)
+        task_dir_space = spaces.Discrete(self.max_row * self.max_col+1)
         steps2dest_space = spaces.MultiDiscrete(np.array([10,10,10,10,10]))
 
         nb_traffic_space = spaces.MultiDiscrete(np.array([3,3,3,3]))
@@ -722,8 +722,8 @@ class LMDEnv(gym.Env):
             if not self.charging_status:
                 self.task_list.pop(0)
                 self.num_tasks_completed += 1
-            dist2task = nx.shortest_path_length(self.G, self.ugv.position, self.task_list[0])
-            dist2wh = nx.shortest_path_length(self.G, self.task_list[0], self.warehouse_pos)
+            dist2task = nx.shortest_path_length(self.G, self.ugv.position, self.task_list[0])*self.cell_size
+            dist2wh = nx.shortest_path_length(self.G, self.task_list[0], self.warehouse_pos)*self.cell_size
             if self.ugv.current_range >= dist2task+dist2wh:
                 self.active_task = self.task_list[0]
                 self.charging_status = False
@@ -803,13 +803,13 @@ class LMDEnv(gym.Env):
 
         # Steps to destination in each direction
         steps2dest = []
-        for dr, dc in [(0, 1), (1, 0), (0, -1), (-1, 0), (0,0)]:
+        for dr, dc in [(-1, 0), (0, 1), (1, 0), (0, -1), (0,0)]:
             r,c = ugv_pos[0] + dr, ugv_pos[1] + dc
             if r > 0 and r <= self.max_row and c > 0 and c <= self.max_col:
-                tmp = min(nx.shortest_path_length(self.G, (r,c), task_pos), 9)
+                tmp = nx.shortest_path_length(self.G, (r,c), task_pos)
                 steps2dest.append(tmp)
             else:
-                steps2dest.append(9)
+                steps2dest.append(self.max_row * self.max_col+1)
         steps2dest = np.array(steps2dest, dtype=np.int32).flatten()
 
         # Neighbor Traffic
@@ -837,13 +837,14 @@ class LMDEnv(gym.Env):
         self.total_ev_distance = self.ugv.distance_traveled
         self.total_energy_consumed = self.ugv.energy_consumed
         self.info = {
-            "maze": self.df_maze,
-            "graph": self.G,
-            "warehouse_pos": self.warehouse_pos,
             "time_elapsed":self.time_elapsed,
             "num_tasks_completed": self.num_tasks_completed,
             "ev_distance_traveled": self.total_ev_distance,
             "total_energy_consumed": self.total_energy_consumed,
+
+            "active_task": self.active_task,
+            "ugv_position": self.ugv.position,
+            "charging_status": self.charging_status,
         }
 
     def _apply_action(self, action):

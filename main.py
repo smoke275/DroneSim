@@ -10,7 +10,7 @@ if __name__ == '__main__':
     parser.add_argument('-rm', '--render_mode', type=str, required=False, default='human', help="Render mode (e.g., 'human', 'rgb_array')")
 
     args = parser.parse_args()
-    args.policy = "439e5cee"
+    args.policy = "944756a0"
 
     if args.algo == 'dqn':
         config_file = f"runs/dqn/{args.policy}/config.yaml"

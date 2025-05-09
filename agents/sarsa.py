@@ -45,7 +45,8 @@ class SARSAAgent(Agent):
     def _observation_to_state(self, observation):
         wall_encoding = tuple(observation['wall_encoding'].tolist())
         task_direction = int(observation['task_direction'])
-        step2dest = tuple(observation['steps2dest'].tolist())
+        step2dest = observation['steps2dest'].tolist()
+        step2dest = tuple([min(i,8) for i in step2dest])
         nb_traffic = tuple(observation['nb_traffic'].tolist())
         return (wall_encoding, task_direction, step2dest,nb_traffic)
 

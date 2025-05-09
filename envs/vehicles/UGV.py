@@ -52,7 +52,7 @@ class UGV:
             self.distance_traveled += self.cell_dist
             self.energy_consumed += self.drain_rate * self.cell_dist
             traffic = graph.edges[(self.position, self.prev_position)]['traffic']
-            curr_speed = self.speed / (1 + 5*traffic)  # Speed reduces with increasing traffic
+            curr_speed = self.speed / (1 + 13*traffic)  # Speed reduces with increasing traffic
             move_time = self.cell_dist / curr_speed
             self.current_range = range_left
             self.current_range_percent = self.current_range / self.max_range
