@@ -151,7 +151,7 @@ class LMDEnv(gym.Env):
         '''State vars'''
         self.ugv = None
         self.task_list = []
-        self.active_task = []
+        self.active_task = None
         self.traffic_centeroids = []
         self.red_roads = []
         self.yellow_roads = []
@@ -160,12 +160,6 @@ class LMDEnv(gym.Env):
         '''SETUP YOUR OBSERVATION SPACE, ACTION SPACE, ENVIRONMENT-SPECIFIC VARIABLES'''
         self.action_space = spaces.Discrete(config["ugv"]["num_primitives"]-1)
         
-        active_task_space = spaces.MultiDiscrete(
-            np.array([self.max_row+1, self.max_col+1])
-        )
-        ugv_pos_space = spaces.MultiDiscrete(
-            np.array([self.max_row+1, self.max_col+1])
-        )
         dir_wall_space = spaces.MultiDiscrete(
             np.array([3,3,3,3])
         )
@@ -174,20 +168,12 @@ class LMDEnv(gym.Env):
         steps2dest_space = spaces.MultiDiscrete(np.array([10,10,10,10,10]))
 
         nb_traffic_space = spaces.MultiDiscrete(np.array([3,3,3,3]))
-        battery_space = spaces.Box(
-            low=0,
-            high=self.max_ugv_range,
-            dtype=np.int32
-        )
         
         self.observation_space = spaces.Dict({
-            'active_task_positions': active_task_space,
-            'ugv_positions': ugv_pos_space,
             'wall_encoding': dir_wall_space,
             # 'wall_occupancy': wall_occupancy_space,
             'task_direction': task_dir_space,
             'steps2dest': steps2dest_space,
-            'battery_levels': battery_space,
             'nb_traffic': nb_traffic_space,
         })
         
@@ -397,7 +383,7 @@ class LMDEnv(gym.Env):
 
             # --- Draw Tasks ---
             task_radius = int(self.cell_size_px * 0.25)
-            task_r, task_c = self.active_task
+            task_r, task_c = self.task_list[0]
             task_px_c, task_py_c = self._cell_to_pygame_center(task_r, task_c)
             pygame.draw.circle(self.screen, MAGENTA, (task_px_c, task_py_c), task_radius)
 
@@ -584,7 +570,7 @@ class LMDEnv(gym.Env):
         #     pygame.draw.circle(self.screen, BLACK, (bs_px_c, bs_py_c), bs_radius, 1)
         # --- Draw Tasks ---
         task_radius = int(self.cell_size_px * 0.25)
-        task_r, task_c = self.active_task
+        task_r, task_c = self.task_list[0]
         task_px_c, task_py_c = self._cell_to_pygame_center(task_r, task_c)
         pygame.draw.circle(self.screen, MAGENTA, (task_px_c, task_py_c), task_radius)
         # --- Draw UGVs and Battery ---
@@ -641,6 +627,7 @@ class LMDEnv(gym.Env):
         self.prev_task_distance = 100
         self.last_move_time = 0
         self.escape_pressed = False # Reset escape key flag
+        self.charging_status = False
 
         self.ugv = UGV(ugv_id=0, base_position=self.warehouse_pos, cell_dist=self.cell_size, max_range=self.max_ugv_range,drain_rate=self.drain_rate, 
                        speed=self.ugv_speed, G=self.G)
@@ -729,10 +716,20 @@ class LMDEnv(gym.Env):
         # Apply action, calculate reward, get next observation
         self._apply_action(action)
         reward = self._get_reward()
+        if self.ugv.position == self.warehouse_pos:
+            self.ugv.recharge()
         if self.ugv.position == self.active_task:
-            self.task_list.pop(0)
-            self.active_task = self.task_list[0]
-            self.num_tasks_completed += 1
+            if not self.charging_status:
+                self.task_list.pop(0)
+                self.num_tasks_completed += 1
+            dist2task = nx.shortest_path_length(self.G, self.ugv.position, self.task_list[0])
+            dist2wh = nx.shortest_path_length(self.G, self.task_list[0], self.warehouse_pos)
+            if self.ugv.current_range >= dist2task+dist2wh:
+                self.active_task = self.task_list[0]
+                self.charging_status = False
+            else:
+                self.active_task = self.warehouse_pos
+                self.charging_status = True
             self.prev_task_distance = nx.shortest_path_length(self.G, self.ugv.position, self.active_task)
         obs = self._get_observation() # Gets observation *after* action/reward
         done = self._check_termination_condition() # Check termination based on new state
@@ -786,9 +783,6 @@ class LMDEnv(gym.Env):
 
 
     def _get_observation(self):
-        active_task_positions_flat = np.array(self.active_task, dtype=np.int32).flatten()
-        ugv_positions_flat = np.array(list(self.ugv.position)).flatten()
-
         ugv_pos = self.ugv.position
         task_pos = self.active_task
         task_dir_id = None
@@ -818,9 +812,6 @@ class LMDEnv(gym.Env):
                 steps2dest.append(9)
         steps2dest = np.array(steps2dest, dtype=np.int32).flatten()
 
-        # Battery Levels
-        battery_flat = np.array(self.ugv.current_range, dtype=np.int32)
-
         # Neighbor Traffic
         nb_traffic = self._get_nb_traffic(self.ugv.position)
         nb_traffic_flat = np.array(nb_traffic, dtype=np.int32).flatten()
@@ -828,13 +819,10 @@ class LMDEnv(gym.Env):
 
         # Ensure observation matches the defined space structure
         obs_dict = {
-            'active_task_positions': active_task_positions_flat,
-            'ugv_positions': ugv_positions_flat,
             'wall_encoding': wall_encoding,
             # 'wall_occupancy': wall_occupancy,
             'task_direction': task_dir_id,
             'steps2dest': steps2dest,
-            'battery_levels': battery_flat,
             'nb_traffic': nb_traffic_flat,
         }
 
@@ -866,10 +854,6 @@ class LMDEnv(gym.Env):
         response, move_time = self.ugv.move(action, self.G)
         self.action_response = response
         max_move_time = max(max_move_time, move_time)
-
-        # Recharge at warehouse
-        if self.ugv.position == self.warehouse_pos:
-            self.ugv.recharge()
 
         self.last_move_time = max_move_time # Use the max time for simulation clock progression
 

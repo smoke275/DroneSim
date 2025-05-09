@@ -13,7 +13,7 @@ uav:
 ugv:
   drain_rate: 1
   num_primitives: 5
-  range: 100000000
+  range: 1500
   speed: 1
 world:
   bms: false
