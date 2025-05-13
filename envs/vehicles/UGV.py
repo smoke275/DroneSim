@@ -1,24 +1,25 @@
 class UGV:
-    def __init__(self, ugv_id, base_position, cell_dist, max_range, drain_rate, speed, G):
+    def __init__(self, ugv_id, base_position, cell_dist, max_range, drain_rate, max_speed, traffic_delay_factor, G):
         super().__init__()
         self.agent_id = ugv_id
         self.position = base_position  # e.g., (row, col) or (x, y)
         self.base_point = base_position  # Base station position
         self.max_range = max_range       # maximum battery capacity or range
+        self.drain_rate= drain_rate
+        self.G = G
+        self.max_speed = max_speed
+        self.cell_dist = cell_dist
+        self.traffic_delay_factor = traffic_delay_factor
+
         self.current_range = self.max_range    # start fully charged
         self.current_range_percent = 1.0
-        self.task_list = []               # tasks assigned to the UGV
-        self.path = []                    # planned path (list of positions)
-        self.task_timer = 0            # time spent on the current task
-        self.active_task = None        # current task being executed
-        self.distance_traveled = 0.0  # distance traveled by the UGV
-        self.G = G
-        self.drain_rate= drain_rate
-        self.speed = speed
-        self.cell_dist = cell_dist
-        self.energy_consumed = 0.0
-
         self.prev_position = None
+        self.local_time = 0.0
+        self.current_heading = 1
+        self.current_traffic = 0
+        
+        self.distance_traveled = 0.0  # distance traveled by the UGV
+        self.energy_consumed = 0.0
 
 
     def move(self, action, graph):
@@ -32,11 +33,16 @@ class UGV:
         Returns True if move was successful, False if out of range
         """
         action = int(action)
+        self.current_traffic = 0
         if action ==4:
-            return 1, self.cell_dist/self.speed
+            self.current_traffic = 0
+            self.local_time += self.cell_dist/self.max_speed
+            return 1, self.cell_dist/self.max_speed
         range_left = self.current_range - self.drain_rate * self.cell_dist
         if range_left<0:
-            return 0, self.cell_dist
+            self.current_traffic = 0
+            self.local_time += self.cell_dist/self.max_speed
+            return 0, self.cell_dist/self.max_speed
         moves = {
             0: (-1, 0),  # Up
             1: (0, 1),   # Right
@@ -52,12 +58,20 @@ class UGV:
             self.distance_traveled += self.cell_dist
             self.energy_consumed += self.drain_rate * self.cell_dist
             traffic = graph.edges[(self.position, self.prev_position)]['traffic']
-            curr_speed = self.speed / (1 + 13*traffic)  # Speed reduces with increasing traffic
+            curr_speed = self.max_speed / (1 + self.traffic_delay_factor*traffic)  # Speed reduces with increasing traffic
             move_time = self.cell_dist / curr_speed
             self.current_range = range_left
             self.current_range_percent = self.current_range / self.max_range
+            self.local_time += move_time
+
+            self.current_traffic = traffic
+            self.current_heading = action
+
             return 1, move_time
-        return 0, self.cell_dist/self.speed
+        
+        self.current_traffic = 0
+        self.local_time += self.cell_dist/self.max_speed
+        return 0, self.cell_dist/self.max_speed
 
     def recharge(self):
         """
@@ -66,21 +80,30 @@ class UGV:
         self.current_range = self.max_range
         self.current_range_percent = 1.0
 
-    def assign_task(self, task):
-        """
-        Add a new task to the agent's task list.
-        """
-        self.task_list.append(task)
+    def get_actual_position(self, global_time):
+        delta_t = self.local_time - global_time
+        if delta_t <= 0:
+            return self.position
+        curr_speed = self.max_speed / (1 + self.traffic_delay_factor*self.current_traffic)  # Speed reduces with increasing traffic
+        delta_d = curr_speed * delta_t/self.cell_dist
+        moves = {
+            0: (-1, 0),  # Up
+            1: (0, 1),   # Right
+            2: (1, 0),   # Down
+            3: (0, -1),  # Left
+        }
+        hr,hc = moves[self.current_heading]
+        (ar, ac) = self.position[0] - hr*delta_d, self.position[1] - hc*delta_d
+        return (ar, ac)
 
-    def update_path(self, new_path):
-        """
-        Update the planned path for the agent.
-        """
-        self.path = new_path
 
     def __str__(self):
-        return (f"UGVAgent(id={self.agent_id}, position={self.position}, "
-                f"current_range={self.current_range}/{self.max_range}, tasks={self.task_list})")
+        return (
+            f"UGV(agent_id={self.agent_id}, position={self.position}, "
+            f"current_range={self.current_range:.2f}/{self.max_range}, "
+            f"local_time={self.local_time:.2f},"
+            f"current_traffic={self.current_traffic}, current_heading={self.current_heading})"
+        )
 
 # Example usage:
 if __name__ == "__main__":

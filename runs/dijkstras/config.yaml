@@ -2,10 +2,11 @@ policy_name: NA
 policy_path: NA
 algo: dijkstra
 traffic:
+  delay_factor: 1
   std_dev: 1
   reset_dur: 5
-  prob: 0.3
-  num_centroids: 2
+  prob: 0.7
+  num_centroids: 3
 uav:
   range: 3000
   speed: 3
@@ -13,11 +14,11 @@ uav:
 ugv:
   drain_rate: 1
   num_primitives: 5
-  range: 2000
+  range: 5000
   speed: 1
 world:
   maze_file: data/rl_maze.csv
-  maze_size: 5
+  maze_size: 10
   maze_loop_percentage: 90
   cell_size: 50
   num_tasks: 5000
@@ -25,7 +26,7 @@ world:
   warehouse: center
   num_base_stations: 4
   num_uavs_per_bs: 2
-  num_ugvs: 1
+  num_ugvs: 3
   bms: false
   traffic: true
   max_time: 50000
