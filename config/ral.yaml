@@ -1,7 +1,7 @@
 world:
   maze_file: data/rl_maze.csv
   maze_size: 5
-  maze_loop_percentage: 90
+  maze_loop_percentage: 60
   cell_size: 50
   
   num_tasks: 5000
@@ -29,9 +29,11 @@ uav:
   swapping_time: 2
 
 traffic:
+  delay_factor: 10
   std_dev: 1
   reset_dur: 5
-  prob: 0.3
+  prob: 0.7
   num_centroids: 2
+
 
   

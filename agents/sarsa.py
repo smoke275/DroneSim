@@ -2,9 +2,10 @@ import numpy as np
 import pickle
 import os
 import random
-from agents.agent import Agent
 import networkx as nx
+from scipy.stats import rankdata
 
+from agents.agent import Agent
 class SARSAAgent(Agent):
     """
     SARSA (State-Action-Reward-State-Action) Learning Agent.
@@ -45,10 +46,18 @@ class SARSAAgent(Agent):
     def _observation_to_state(self, observation):
         wall_encoding = tuple(observation['wall_encoding'].tolist())
         task_direction = int(observation['task_direction'])
-        step2dest = observation['steps2dest'].tolist()
-        step2dest = tuple([min(i,8) for i in step2dest])
+        step2dest = observation['steps2dest']
+
+        # Normalize the step2dest values to be between 0 and 1
+        # step2dest = (step2dest - np.min(step2dest)) / (np.max(step2dest) - np.min(step2dest))
+        #Discretize the step2dest values into bins
+        # step2dest = tuple(np.digitize(step2dest, bins=np.linspace(0, 1, 8)).tolist())
+
+        step2dest_ranked = rankdata(step2dest, method='min')  # Subtract 1 to make ranks zero-based
+        step2dest = tuple(step2dest_ranked.tolist())
+
         nb_traffic = tuple(observation['nb_traffic'].tolist())
-        return (wall_encoding, task_direction, step2dest,nb_traffic)
+        return (step2dest, nb_traffic)
 
     def predict(self, observation):
         """
@@ -56,6 +65,7 @@ class SARSAAgent(Agent):
         for the given observation.
         """
         state = self._observation_to_state(observation)
+        print("State: ", state)
         if state not in self.Q:
             self.Q[state] = np.zeros(len(self.action_list))
         return int(np.argmax(self.Q[state]))

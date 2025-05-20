@@ -26,16 +26,16 @@ def extract_observations(observation, num_agents):
     all_obs = []
     for i in range(num_agents):
         obs = {
-            'ugv_status': ugv_status[i],
-            'wall_encoding': wall_encoding_list[i],
-            'task_direction': task_direction[i],
-            'steps2dest': steps2dest_list[i],
-            'nb_traffic': nb_traffic_list[i]
+            'ugv_status': np.array(ugv_status[i]),
+            'wall_encoding': np.array(wall_encoding_list[i]),
+            'task_direction': np.array(task_direction[i]),
+            'steps2dest': np.array(steps2dest_list[i]),
+            'nb_traffic': np.array(nb_traffic_list[i])
         }
         all_obs.append(obs)
     return all_obs
 
-def run_simulation(config_file, render_mode='human'): # Default to 'human' for visualization
+def run_simulation(config_file, render_mode='human', env_type='multi'): # Default to 'human' for visualization
     """
     Runs the simulation, optionally with GUI elements, and returns metrics
     """
@@ -55,15 +55,18 @@ def run_simulation(config_file, render_mode='human'): # Default to 'human' for v
     #     f.write("Server Simulation Log\n")
     #     f.write("===================\n")
 
-    # Initialize environment and agent
-    # Pass the desired render_mode to the environment
-    env = gym.make("LMDEnv-v0", config=config, render_mode=render_mode)
-    # Run simulation
+    if env_type == 'multi':
+        env = gym.make("MultiAgentLMDEnv-v0", config=config, render_mode=render_mode)
+    else:
+        if num_agents > 1:
+            print("Warning: Using a single agent environment with multiple agents. This may not work as expected.")
+            num_agents = 1
+        env = gym.make("LMDEnv-v0", config=config, render_mode=render_mode)
+    
     observation, info = env.reset(seed=42)
 
-    agents= []
     if algo == 'sarsa':
-        agent = SARSAAgent(env, config=config, policy_path=policy_path)
+        agents = [SARSAAgent(env, config=config, policy_path=policy_path) for _ in range(num_agents)]
     elif algo == 'dqn':
         agent = DQNAgent(env, config=config, policy_path=policy_path)
     elif algo == 'a2c':
@@ -90,18 +93,24 @@ def run_simulation(config_file, render_mode='human'): # Default to 'human' for v
         while not (terminated or truncated):
             print(f"Frame Number: {frame_num+1}")
 
-            all_obs = extract_observations(observation, num_agents)
-            action_list = []
-            for i, obs in enumerate(all_obs):
-                agent = agents[i]
-                if not obs['ugv_status']:
-                    print(f"UGV {i} is not active. Skipping.")
-                    action_list.append(4)
-                    continue
+            action_list = None
+            if env_type == 'multi':
+                action_list = []
+                all_obs = extract_observations(observation, num_agents)
+                for i, obs in enumerate(all_obs):
+                    agent = agents[i]
+                    if not obs['ugv_status']:
+                        print(f"UGV {i} is not active. Skipping.")
+                        action_list.append(4)
+                        continue
 
-                # Get action from policy
-                action = agent.predict(obs)
-                action_list.append(action)
+                    # Get action from policy
+                    action = agent.predict(obs)
+                    action_list.append(action)
+            else:
+                action_list = agents[0].predict(observation)
+                if isinstance(action_list, np.ndarray):
+                    action_list = action_list.tolist()
 
             observation, reward, terminated, truncated, world_state = env.step(action_list)
             total_reward += reward
@@ -116,19 +125,20 @@ def run_simulation(config_file, render_mode='human'): # Default to 'human' for v
             print(f"  EV distance traveled: {world_state['ev_distance_traveled']}")
             print(f"  Total time taken: {world_state['time_elapsed']}")
             print(f"  Total energy consumed: {world_state['total_energy_consumed']}")
-            for ugv_id in range(num_agents):
-                print(f"UGV {ugv_id} Info...")
-                action_str = acts[action_list[ugv_id]] # Format action list for logging
-                print(f"Action taken: {action_str}")
-                print(world_state['ugv_status'][ugv_id])
-                print("Active Task:", world_state['active_task'][ugv_id])
-                print(world_state['ugv_states'][ugv_id])
+            if env_type == 'multi':
+                for ugv_id in range(num_agents):
+                    print(f"UGV {ugv_id} Info...")
+                    action_str = acts[action_list[ugv_id]] # Format action list for logging
+                    print(f"Action taken: {action_str}")
+                    print(world_state['ugv_status'][ugv_id])
+                    print("Active Task:", world_state['active_task'][ugv_id])
+                    print(world_state['ugv_states'][ugv_id])
+            else:
+                print("Action taken:", acts[action_list])
 
             # Render the environment state if in human mode
             if render_mode == 'human':
                 env.render()
-                # Optional: Add a small delay to control speed if needed
-                # time.sleep(0.05)
 
             print("-------------------------------------------\n")
 
@@ -156,11 +166,11 @@ def run_simulation(config_file, render_mode='human'): # Default to 'human' for v
         'distance_traveled': ev_distance_traveled
     }
 
-def startup(config_file, render_mode='human'): # Pass render_mode through
+def startup(config_file, render_mode='human', env_type='multi'): # Pass render_mode through
     """
     Entry point that runs the simulation and returns metrics
     """
-    return run_simulation(config_file, render_mode)
+    return run_simulation(config_file, render_mode, env_type)
 
 if __name__ == "__main__":
     if len(sys.argv) < 2: # Allow optional render mode argument

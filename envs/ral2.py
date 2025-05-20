@@ -76,18 +76,18 @@ def get_agent_color(agent_id):
     return AGENT_COLORS[agent_id % len(AGENT_COLORS)]
 
 
-class LMDEnv(gym.Env):
+class MultiAgentLMDEnv(gym.Env):
     metadata = {'render_modes': ['human', 'print', 'rgb_array'], "render_fps": 1} # Adjusted FPS
 
     def __init__(self, config, render_mode=None): # Default render_mode is None
-        super(LMDEnv, self).__init__()
+        super(MultiAgentLMDEnv, self).__init__()
 
         '''GUI CONFIGURATION'''
         self.render_mode = render_mode
         self.screen = None
         self.clock = None
         self.font = None
-        self.cell_size_px = 100 #config["world"].get("cell_size", 30) # Pixel size for rendering cells
+        self.cell_size_px = 70 #config["world"].get("cell_size", 30) # Pixel size for rendering cells
         self.screen_width = None
         self.screen_height = None
         self.truck_image = None
@@ -459,7 +459,7 @@ class LMDEnv(gym.Env):
             pygame.display.flip()
             
             # Wait until the Return key is pressed before ending render
-            if self.num_tasks_completed < 0:
+            if self.num_tasks_completed < 10000:
                 self.clock.tick(self.metadata["render_fps"])
             else:
                 waiting = True
@@ -832,7 +832,8 @@ class LMDEnv(gym.Env):
             steps2dest_ = []
             for dr, dc in [(-1, 0), (0, 1), (1, 0), (0, -1), (0,0)]:
                 r,c = ugv_pos[0] + dr, ugv_pos[1] + dc
-                if r > 0 and r <= self.max_row and c > 0 and c <= self.max_col:
+                # if r > 0 and r <= self.max_row and c > 0 and c <= self.max_col:
+                if (dr,dc)==(0,0) or (ugv_pos,(r,c)) in self.G.edges:
                     steps2dest_.append(self.all_shortest_path_lengths[(r,c)][task_pos])
                 else:
                     steps2dest_.append(self.max_row * self.max_col+1)

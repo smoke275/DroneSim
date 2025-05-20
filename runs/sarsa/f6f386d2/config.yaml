@@ -1,6 +1,6 @@
-policy_name: NA
-policy_path: NA
-algo: dijkstra
+algo: sarsa
+policy_name: f6f386d2
+policy_path: runs/sarsa/f6f386d2/policy.pkl
 traffic:
   delay_factor: 10
   num_centroids: 3

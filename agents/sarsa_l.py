@@ -4,6 +4,7 @@ import os
 import random
 from agents.agent import Agent
 import networkx as nx
+from scipy.stats import rankdata
 
 class SARSALambdaAgent(Agent):
     """
@@ -50,8 +51,12 @@ class SARSALambdaAgent(Agent):
     def _observation_to_state(self, observation):
         wall_encoding = tuple(observation['wall_encoding'].tolist())
         task_direction = int(observation['task_direction'])
-        step2dest = tuple(observation['steps2dest'].tolist())
-        return (wall_encoding, task_direction, step2dest)
+        step2dest = observation['steps2dest']
+        step2dest_ranked = rankdata(step2dest, method='min')  # Subtract 1 to make ranks zero-based
+        step2dest = tuple(step2dest_ranked.tolist())
+
+        nb_traffic = tuple(observation['nb_traffic'].tolist())
+        return (task_direction, step2dest,nb_traffic)
 
     def predict(self, observation):
         """

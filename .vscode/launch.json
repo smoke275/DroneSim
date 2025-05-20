@@ -2,28 +2,53 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "Run Dijkstras gui",
+            "name": "Run Dijkstras Single Agent gui",
             "type": "debugpy",
             "request": "launch",
             "program": "${workspaceFolder}/main.py",
             "console": "integratedTerminal",
             "args": [
                 "-a", "dijkstras",
+                "-e", "single"
             ]
         },
         {
-            "name": "Run Dijkstras Print",
+            "name": "Run Dijkstras Single Agent Print",
             "type": "debugpy",
             "request": "launch",
             "program": "${workspaceFolder}/main.py",
             "console": "integratedTerminal",
             "args": [
                 "-a", "dijkstras",
-                "-rm", "print"
+                "-rm", "print",
+                "-e", "single"
             ]
         },
         {
-            "name": "Run SARSA GUI",
+            "name": "Run Dijkstras Multi Agent gui",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder}/main.py",
+            "console": "integratedTerminal",
+            "args": [
+                "-a", "dijkstras",
+                "-e", "multi"
+            ]
+        },
+        {
+            "name": "Run Dijkstras Multi Agent Print",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder}/main.py",
+            "console": "integratedTerminal",
+            "args": [
+                "-a", "dijkstras",
+                "-rm", "print",
+                "-e", "multi"
+            ]
+        },
+        {
+            "name": "Run SARSA Single Agent GUI",
             "type": "debugpy",
             "request": "launch",
             "program": "${workspaceFolder}/main.py",
@@ -31,10 +56,11 @@
             "args": [
                 "-a", "sarsa",
                 // "-p", "7137e4e0",
+                "-e", "single"
             ]
         },
         {
-            "name": "Run SARSA print",
+            "name": "Run SARSA Single Agent print",
             "type": "debugpy",
             "request": "launch",
             "program": "${workspaceFolder}/main.py",
@@ -43,6 +69,32 @@
                 "-a", "sarsa",
                 "-rm", "print",
                 // "-p", "7137e4e0",
+                "-e", "single"
+            ]
+        },
+        {
+            "name": "Run SARSA Multi Agent GUI",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder}/main.py",
+            "console": "integratedTerminal",
+            "args": [
+                "-a", "sarsa",
+                // "-p", "7137e4e0",
+                "-e", "multi"
+            ]
+        },
+        {
+            "name": "Run SARSA Multi Agent print",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder}/main.py",
+            "console": "integratedTerminal",
+            "args": [
+                "-a", "sarsa",
+                "-rm", "print",
+                // "-p", "7137e4e0",
+                "-e", "multi"
             ]
         },
         {
@@ -96,6 +148,13 @@
             "type": "debugpy",
             "request": "launch",
             "program": "${workspaceFolder}/sarsa_train.py",
+            "console": "integratedTerminal",
+        },
+        {
+            "name": "Train SARSA l",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder}/sarsa_l_train.py",
             "console": "integratedTerminal",
         },
         {

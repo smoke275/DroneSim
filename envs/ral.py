@@ -85,7 +85,7 @@ class LMDEnv(gym.Env):
         self.screen = None
         self.clock = None
         self.font = None
-        self.cell_size_px = 150 #config["world"].get("cell_size", 30) # Pixel size for rendering cells
+        self.cell_size_px = 100 #config["world"]["cell_size_px"]
         self.screen_width = None
         self.screen_height = None
         self.truck_image = None
@@ -139,6 +139,7 @@ class LMDEnv(gym.Env):
         self.traffic_reset_dur = config['traffic']['reset_dur'] 
         self.traffic_prob = config['traffic']['prob']
         self.traffic_num_centroids = config['traffic']['num_centroids']
+        self.traffic_delay_factor = config['traffic']['delay_factor']  # Factor to adjust traffic delay
 
         '''METRICS DEFINITIONS'''
         # NEW: Track total distance traveled by EVs and drones.
@@ -158,14 +159,14 @@ class LMDEnv(gym.Env):
         self.info = {}
 
         '''SETUP YOUR OBSERVATION SPACE, ACTION SPACE, ENVIRONMENT-SPECIFIC VARIABLES'''
-        self.action_space = spaces.Discrete(config["ugv"]["num_primitives"]-1)
+        self.action_space = spaces.Discrete(config["ugv"]["num_primitives"])
         
         dir_wall_space = spaces.MultiDiscrete(
             np.array([3,3,3,3])
         )
         wall_occupancy_space = spaces.MultiDiscrete(np.array([2]*60))
-        task_dir_space = spaces.Discrete(self.max_row * self.max_col+1)
-        steps2dest_space = spaces.MultiDiscrete(np.array([10,10,10,10,10]))
+        task_dir_space = spaces.Discrete(9)
+        steps2dest_space = spaces.MultiDiscrete(np.array([self.max_row * self.max_col+2]*5))
 
         nb_traffic_space = spaces.MultiDiscrete(np.array([3,3,3,3]))
         
@@ -444,19 +445,19 @@ class LMDEnv(gym.Env):
             pygame.display.flip()
             
             # Wait until the Return key is pressed before ending render
-            # if self.num_tasks_completed < 70:
-            #     self.clock.tick(self.metadata["render_fps"])
-            # else:
-            waiting = True
-            while waiting:
-                for event in pygame.event.get():
-                    if event.type == pygame.QUIT:
-                        self.close()
-                        waiting = False
-                    elif event.type == pygame.KEYDOWN:
-                        if event.key == pygame.K_RETURN:
-                            waiting = False
+            if self.num_tasks_completed < 0:
                 self.clock.tick(self.metadata["render_fps"])
+            else:
+                waiting = True
+                while waiting:
+                    for event in pygame.event.get():
+                        if event.type == pygame.QUIT:
+                            self.close()
+                            waiting = False
+                        elif event.type == pygame.KEYDOWN:
+                            if event.key == pygame.K_RETURN:
+                                waiting = False
+                    self.clock.tick(self.metadata["render_fps"])
 
         elif self.render_mode == "print":
             # Print-based rendering
@@ -630,7 +631,7 @@ class LMDEnv(gym.Env):
         self.charging_status = False
 
         self.ugv = UGV(ugv_id=0, base_position=self.warehouse_pos, cell_dist=self.cell_size, max_range=self.max_ugv_range,drain_rate=self.drain_rate, 
-                       speed=self.ugv_speed, G=self.G)
+                       max_speed=self.ugv_speed, traffic_delay_factor=self.traffic_delay_factor, G=self.G)
         self.task_list = random.choices(list(self.G.nodes), k=self.num_tasks) # Randomly select tasks from graph nodes
         self.active_task = self.task_list[0]
         self.red_roads = []
@@ -791,21 +792,17 @@ class LMDEnv(gym.Env):
         if delta_row == 0 and delta_col == 0:
             task_dir_id = 8  # No movement, indeterminate direction
         else:
-            # Convert grid differences to an angle with 0 degrees = North and increasing clockwise.
-            # Using math.atan2(delta_col, -delta_row) gives the desired angle.
             angle = math.degrees(math.atan2(delta_col, -delta_row)) % 360
-            # Divide the circle into 8 sectors of 45° each.
             task_dir_id = int(((angle + 22.5) % 360) // 45)
 
         # Neighborhood Wall Encoding
         wall_encoding = np.array(self.G.nodes[ugv_pos]['wall_distance'], dtype=np.int32).flatten()
-        # wall_occupancy = np.array(self.G.nodes[ugv_pos]['occupancy_grid'], dtype=np.int32).flatten()
 
         # Steps to destination in each direction
         steps2dest = []
         for dr, dc in [(-1, 0), (0, 1), (1, 0), (0, -1), (0,0)]:
             r,c = ugv_pos[0] + dr, ugv_pos[1] + dc
-            if r > 0 and r <= self.max_row and c > 0 and c <= self.max_col:
+            if (dr,dc)==(0,0) or (ugv_pos,(r,c)) in self.G.edges:
                 tmp = nx.shortest_path_length(self.G, (r,c), task_pos)
                 steps2dest.append(tmp)
             else:
