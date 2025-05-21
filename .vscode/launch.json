@@ -25,6 +25,18 @@
             ]
         },
         {
+            "name": "Run Dijkstras Single Agent Quiet",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder}/main.py",
+            "console": "integratedTerminal",
+            "args": [
+                "-a", "dijkstras",
+                "-rm", "quiet",
+                "-e", "single"
+            ]
+        },
+        {
             "name": "Run Dijkstras Multi Agent gui",
             "type": "debugpy",
             "request": "launch",
@@ -44,6 +56,18 @@
             "args": [
                 "-a", "dijkstras",
                 "-rm", "print",
+                "-e", "multi"
+            ]
+        },
+        {
+            "name": "Run Dijkstras Multi Agent Quiet",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder}/main.py",
+            "console": "integratedTerminal",
+            "args": [
+                "-a", "dijkstras",
+                "-rm", "quiet",
                 "-e", "multi"
             ]
         },
@@ -73,6 +97,19 @@
             ]
         },
         {
+            "name": "Run SARSA Single Agent Quiet",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder}/main.py",
+            "console": "integratedTerminal",
+            "args": [
+                "-a", "sarsa",
+                "-rm", "quiet",
+                // "-p", "7137e4e0",
+                "-e", "single"
+            ]
+        },
+        {
             "name": "Run SARSA Multi Agent GUI",
             "type": "debugpy",
             "request": "launch",
@@ -93,6 +130,19 @@
             "args": [
                 "-a", "sarsa",
                 "-rm", "print",
+                // "-p", "7137e4e0",
+                "-e", "multi"
+            ]
+        },
+        {
+            "name": "Run SARSA Multi Agent Quiet",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder}/main.py",
+            "console": "integratedTerminal",
+            "args": [
+                "-a", "sarsa",
+                "-rm", "quiet",
                 // "-p", "7137e4e0",
                 "-e", "multi"
             ]

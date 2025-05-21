@@ -77,7 +77,7 @@ def get_agent_color(agent_id):
 
 
 class MultiAgentLMDEnv(gym.Env):
-    metadata = {'render_modes': ['human', 'print', 'rgb_array'], "render_fps": 1} # Adjusted FPS
+    metadata = {'render_modes': ['human', 'print', 'rgb_array', 'quiet'], "render_fps": 1} # Adjusted FPS
 
     def __init__(self, config, render_mode=None): # Default render_mode is None
         super(MultiAgentLMDEnv, self).__init__()
@@ -474,17 +474,21 @@ class MultiAgentLMDEnv(gym.Env):
                     self.clock.tick(self.metadata["render_fps"])
 
         elif self.render_mode == "print":
-            # Print-based rendering
-            print(f"--- Timestep: {self.current_timestep} ---")
-            print(f"  Time Elapsed: {self.time_elapsed:.2f}")
-            print(f"  Tasks Completed: {self.num_tasks_completed}")
-            print(f"  Active Tasks: {self.active_tasks}")
-            print(f"  Total EV Distance: {self.total_ev_distance:.2f}")
-            print(f"  Total Energy Consumed: {self.total_energy_consumed:.2f}")
-            if self.traffic_b:
-                 print(f"  Red Roads: {len(self.red_roads)}, Yellow Roads: {len(self.yellow_roads)}")
-            print("-" * (len(f"--- Timestep: {self.current_timestep} ---")))
-
+            print("=== Simulation State ===")
+            print(f"Time: {self.time_elapsed:.2f}s")
+            print(f"Timestep: {self.current_timestep}")
+            print(f"Tasks Completed: {self.num_tasks_completed}")
+            print(f"Total Distance: {self.total_ev_distance:.1f}m")
+            print(f"Total Energy: {self.total_energy_consumed:.1f}")
+            print("UGV States:")
+            for idx, ugv in enumerate(self.ugv_states):
+                print(f"  UGV {idx}: Position {ugv.position}, Status: {self.ugv_status[idx]}, Battery: {ugv.current_range_percent:.2f}")
+            print("Active Tasks:", self.active_tasks)
+            print("Traffic Information:")
+            print(f"  Red Roads: {self.red_roads}")
+            print(f"  Yellow Roads: {self.yellow_roads}")
+            print(f"  Traffic Centeroids: {self.traffic_centeroids}")
+            print("==========================")
 
         elif self.render_mode == "rgb_array":
             # Return screen surface as numpy array
@@ -665,6 +669,7 @@ class MultiAgentLMDEnv(gym.Env):
         self.current_timestep = 0
         self.time_elapsed = 0.0
         self.total_energy_consumed = 0.0
+        self.task_completion_times = []
 
         initial_obs = self._get_observation()
         self.update_info() # Update info dict with initial state
@@ -747,6 +752,7 @@ class MultiAgentLMDEnv(gym.Env):
                     if not self.charging_status[ugv_id]:
                         self.ugv_task_list[ugv_id].pop(0)
                         self.num_tasks_completed += 1
+                        self.task_completion_times.append(self.time_elapsed)
                     dist2task = self.all_shortest_path_lengths[ugv.position][self.ugv_task_list[ugv_id][0]]*self.cell_size
                     dist2wh = self.all_shortest_path_lengths[self.ugv_task_list[ugv_id][0]][self.warehouse_pos]*self.cell_size
                     if ugv.current_range >= dist2task+dist2wh:
@@ -868,11 +874,14 @@ class MultiAgentLMDEnv(gym.Env):
     def update_info(self):
         self.total_ev_distance = sum([ugv.distance_traveled for ugv in self.ugv_states])
         self.total_energy_consumed = sum([ugv.energy_consumed for ugv in self.ugv_states])
+        task_completion_time_diffs = [self.task_completion_times[i] - self.task_completion_times[i-1] for i in range(1, len(self.task_completion_times))]
+        avg_task_completion_time = np.mean(task_completion_time_diffs) if task_completion_time_diffs else 0.0
         self.info = {
             "time_elapsed":self.time_elapsed,
             "num_tasks_completed": self.num_tasks_completed,
             "ev_distance_traveled": self.total_ev_distance,
             "total_energy_consumed": self.total_energy_consumed,
+            "avg_task_completion_time": avg_task_completion_time,
 
             "ugv_states": self.ugv_states,
             "active_task": self.active_tasks,

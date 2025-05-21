@@ -18,7 +18,7 @@ world:
   max_time: 50000
 
 ugv:
-  range: 100000000
+  range: 1500
   drain_rate: 1
   num_primitives: 5
   speed: 1

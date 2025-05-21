@@ -75,7 +75,7 @@ def get_agent_color(agent_id):
 
 
 class LMDEnv(gym.Env):
-    metadata = {'render_modes': ['human', 'print', 'rgb_array'], "render_fps": 30} # Adjusted FPS
+    metadata = {'render_modes': ['human', 'print', 'rgb_array', 'quiet'], "render_fps": 30} # Adjusted FPS
 
     def __init__(self, config, render_mode=None): # Default render_mode is None
         super(LMDEnv, self).__init__()
@@ -649,6 +649,7 @@ class LMDEnv(gym.Env):
         self.current_timestep = 0
         self.time_elapsed = 0.0
         self.total_energy_consumed = 0.0
+        self.task_completion_times = []
 
         initial_obs = self._get_observation()
         self.update_info() # Update info dict with initial state
@@ -723,6 +724,7 @@ class LMDEnv(gym.Env):
             if not self.charging_status:
                 self.task_list.pop(0)
                 self.num_tasks_completed += 1
+                self.task_completion_times.append(self.time_elapsed)
             dist2task = nx.shortest_path_length(self.G, self.ugv.position, self.task_list[0])*self.cell_size
             dist2wh = nx.shortest_path_length(self.G, self.task_list[0], self.warehouse_pos)*self.cell_size
             if self.ugv.current_range >= dist2task+dist2wh:
@@ -833,11 +835,14 @@ class LMDEnv(gym.Env):
     def update_info(self):
         self.total_ev_distance = self.ugv.distance_traveled
         self.total_energy_consumed = self.ugv.energy_consumed
+        task_completion_time_diffs = [self.task_completion_times[i] - self.task_completion_times[i-1] for i in range(1, len(self.task_completion_times))]
+        avg_task_completion_time = np.mean(task_completion_time_diffs) if task_completion_time_diffs else 0.0
         self.info = {
             "time_elapsed":self.time_elapsed,
             "num_tasks_completed": self.num_tasks_completed,
             "ev_distance_traveled": self.total_ev_distance,
             "total_energy_consumed": self.total_energy_consumed,
+            "avg_task_completion_time": avg_task_completion_time,
 
             "active_task": self.active_task,
             "ugv_position": self.ugv.position,
