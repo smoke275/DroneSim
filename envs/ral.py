@@ -92,7 +92,6 @@ class LMDEnv(gym.Env):
         self.warehouse_image = None # Optional: image for warehouse
         self.task_image = None      # Optional: image for tasks
         self.bs_image = None        # Optional: image for base stations
-        self.escape_pressed = False # Flag to track if escape was pressed
 
         '''LOADING THE CONFIGURATION VARIABLES'''
         self.max_row = config["world"]["maze_size"]
@@ -315,8 +314,7 @@ class LMDEnv(gym.Env):
                     return
                 elif event.type == pygame.KEYDOWN:
                     if event.key == pygame.K_ESCAPE:
-                        print("Escape key pressed - episode will be truncated")
-                        self.escape_pressed = True
+                        self.terminated = True
 
             # --- Drawing ---
             self.screen.fill(WHITE) # Clear screen
@@ -627,8 +625,8 @@ class LMDEnv(gym.Env):
         self.action_response = None
         self.prev_task_distance = 100
         self.last_move_time = 0
-        self.escape_pressed = False # Reset escape key flag
         self.charging_status = False
+        self.terminated = False
 
         self.ugv = UGV(ugv_id=0, base_position=self.warehouse_pos, cell_dist=self.cell_size, max_range=self.max_ugv_range,drain_rate=self.drain_rate, 
                        max_speed=self.ugv_speed, traffic_delay_factor=self.traffic_delay_factor, G=self.G)
@@ -715,12 +713,23 @@ class LMDEnv(gym.Env):
 
 
     def step(self, action):
-        # Apply action, calculate reward, get next observation
+        if self.terminated:
+            return None, None, self.terminated, None, self.info # Return None if already terminated
+
         self._apply_action(action)
         reward = self._get_reward()
+
+        self.time_elapsed += self.last_move_time
+        self.current_timestep += 1
+        if self.traffic_b:
+            if self.current_timestep % self.traffic_reset_dur == 0:
+                self.fill_traffic_centroids()
+
+        truncated = False
         if self.ugv.position == self.warehouse_pos:
             self.ugv.recharge()
         if self.ugv.position == self.active_task:
+            truncated = True
             if not self.charging_status:
                 self.task_list.pop(0)
                 self.num_tasks_completed += 1
@@ -734,38 +743,17 @@ class LMDEnv(gym.Env):
                 self.active_task = self.warehouse_pos
                 self.charging_status = True
             self.prev_task_distance = nx.shortest_path_length(self.G, self.ugv.position, self.active_task)
+
         obs = self._get_observation() # Gets observation *after* action/reward
-        done = self._check_termination_condition() # Check termination based on new state
-
-        # Update time and timestep *after* action and reward calculation for the current step
-        self.current_timestep += 1
-        self.time_elapsed += self.last_move_time # Accumulate time based on last move
-
-        # Update traffic periodically *before* updating info for the next step's rendering
-        if self.traffic_b:
-            if self.current_timestep % self.traffic_reset_dur == 0:
-                self.fill_traffic_centroids()
-
-        # Update info dict *after* all state changes for the current step
         self.update_info()
 
-        # Gymnasium expects terminated, truncated, info
-        terminated = done
-        truncated = False # Assuming truncation is handled by max_timesteps check in done
-        
-        # Check if escape key was pressed or max timesteps reached
-        if terminated or self.escape_pressed:
-             truncated = True
-             if self.escape_pressed:
-                 self.info["truncated_by_escape"] = True
-             else:
-                 terminated = True # Gym standard is that max timestep truncation implies termination
+        self._check_termination_condition() # Check termination based on new stat
 
         self.last_move_time = 0
         self.latest_completed_tasks = []
         self.action_response = None
 
-        return obs, reward, terminated, truncated, self.info # Return standard gym step tuple
+        return obs, reward, self.terminated, truncated, self.info # Return standard gym step tuple
 
     def _get_nb_traffic(self, position):
         """
@@ -896,18 +884,8 @@ class LMDEnv(gym.Env):
 
 
     def _check_termination_condition(self):
-        # Terminate if maximum timesteps are reached (handled by truncated flag in step).
         if self.time_elapsed >= self.max_time:
-            # print(f"Termination: Max timesteps ({self.max_timesteps}) reached.")
-            return True # Indicates termination
-
-        # Optional: Terminate if any UGV runs out of battery *not* at the warehouse
-        # for ugv in self.ugv_states:
-        #     if ugv.current_range <= 0 and ugv.position != self.warehouse_pos:
-        #          print(f"Termination: UGV {ugv.agent_id} ran out of battery at {ugv.position}.")
-        #          return True
-
-        return False # Not terminated based on these conditions
+            self.terminated = True
 
     def close(self):
         """Cleans up pygame resources."""

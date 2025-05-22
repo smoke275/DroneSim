@@ -111,7 +111,7 @@ def run_simulation(config, render_mode='human', env_type='multi'): # Default to 
     env.render()
 
     # The main loop now uses terminated and truncated flags
-    while not (terminated or truncated):
+    while not terminated:
         action_list = None
         if env_type == 'multi':
             action_list = []

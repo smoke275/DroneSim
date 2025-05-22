@@ -32,7 +32,7 @@ if __name__ == "__main__":
     dp_agent = SARSAAgent(env, env_config)
 
     print(f"Policy Name: {policy_name}")
-    dp_agent.learn(num_episodes=1000, max_steps_per_episode=1010, policy_path=env_config['policy_path'],
+    dp_agent.learn(num_episodes=200000, policy_path=env_config['policy_path'],
                    log_path=os.path.join(policy_dir, "train_log.txt"),)
     env.close()
 

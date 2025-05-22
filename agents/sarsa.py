@@ -80,46 +80,62 @@ class SARSAAgent(Agent):
         else:
             return int(np.argmax(self.Q[state]))
 
-    def learn(self, num_episodes=1000, max_steps_per_episode=100, policy_path=None, log_path=None):
+    def learn(self, num_episodes=1000, policy_path=None, log_path=None):
         """
         Run SARSA learning over multiple episodes. Each episode starts with an env.reset()
         and runs until done or a max number of steps is reached.
         """
         results = []
-        for episode in range(num_episodes):
-            obs, info = self.env.reset()
-            state = self._observation_to_state(obs)
-            if state not in self.Q:
-                self.Q[state] = np.zeros(len(self.action_list))
-            action = self.choose_action(state)
-            total_reward = 0.0
+        obs, info = self.env.reset()
+        state = self._observation_to_state(obs)
+        if state not in self.Q:
+            self.Q[state] = np.zeros(len(self.action_list))
+        action = self.choose_action(state)
+        total_reward = 0.0
+        episode_idx = 0
+        while episode_idx < num_episodes:
+            next_obs, reward, done, trunc, info = self.env.step(action)
+            next_state = self._observation_to_state(next_obs)
+            if next_state not in self.Q:
+                self.Q[next_state] = np.zeros(len(self.action_list))
+            next_action = self.choose_action(next_state)
 
-            for step in range(max_steps_per_episode):
-                next_obs, reward, done, trunc, info = self.env.step(action)
-                next_state = self._observation_to_state(next_obs)
-                if next_state not in self.Q:
-                    self.Q[next_state] = np.zeros(len(self.action_list))
-                next_action = self.choose_action(next_state)
-
-                # SARSA update rule:
+            # SARSA update rule:
+            if not trunc:
                 td_target = reward + self.gamma * self.Q[next_state][next_action]
-                td_error = td_target - self.Q[state][action]
-                self.Q[state][action] += self.alpha * td_error
+            else:
+                td_target = reward
+                print(f"Episode {episode_idx+1}/{num_episodes}  Total Reward: {total_reward:.2f}  Epsilon: {self.epsilon:.4f}")
+                results.append((total_reward, self.epsilon))
+                episode_idx += 1
+                self.epsilon *= self.epsilon_decay
+                total_reward = 0.0
+                if episode_idx%1000 == 0:
+                    with open(policy_path, 'wb') as f:
+                        pickle.dump(self.Q, f)
+                
+            td_error = td_target - self.Q[state][action]
+            self.Q[state][action] += self.alpha * td_error
 
+            if done:
+                if not trunc:
+                    print(f"Episode {episode_idx+1}/{num_episodes}  Total Reward: {total_reward:.2f}  Epsilon: {self.epsilon:.4f}")
+                    results.append((total_reward, self.epsilon))
+                    episode_idx += 1
+                    self.epsilon *= self.epsilon_decay
+                    if episode_idx%1000 == 0:
+                        with open(policy_path, 'wb') as f:
+                            pickle.dump(self.Q, f)
+                obs, info = self.env.reset()
+                state = self._observation_to_state(obs)
+                if state not in self.Q:
+                    self.Q[state] = np.zeros(len(self.action_list))
+                action = self.choose_action(state)
+                total_reward = 0.0
+            else:
                 state = next_state
                 action = next_action
                 total_reward += reward
-
-                if done or trunc:
-                    break
-
-            self.epsilon *= self.epsilon_decay
-            print(f"Episode {episode+1}/{num_episodes}  Total Reward: {total_reward:.2f}  Epsilon: {self.epsilon:.4f}")
-            results.append((total_reward, self.epsilon))
-
-            if episode%100 == 0:
-                with open(policy_path, 'wb') as f:
-                    pickle.dump(self.Q, f)
 
         if log_path is not None:
             with open(log_path, 'a') as f:

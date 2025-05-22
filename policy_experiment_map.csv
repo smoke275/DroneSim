@@ -1,9 +1,2 @@
 Policy Name,Algorithm,Experiment Description
-e8e4dcda,sarsa,No load Yes Trafffic active tasks
-3619351e,dqn,gen maze
-d6882987,sarsa,gen maze wall dir dist encoding steps to goal
-7137e4e0,sarsa,gen maze wall dir dist encoding steps to goal traffic
-a34a577e,sarsa,wall dir dist traffic
-944756a0,sarsa,wall dir dist traffic battery aware env
-684b9526,sarsa,normalize no traffic
-f6f386d2,sarsa,steps rank no wall info no task dir with traffic stay
+f6f386d2,sarsa,steps rank no wall info no task dir with traffic stay full episodes
