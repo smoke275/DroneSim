@@ -15,15 +15,8 @@ class DijkstraAgent(Agent):
         
     def predict(self, observation):
         steps2dest = observation['steps2dest']
-        wall_encoding = observation['wall_encoding']
-        min_steps, best_act=None,None
-        for i, steps in enumerate(steps2dest):
-            if i==4 or wall_encoding[i]>0:
-                if min_steps is None or steps<min_steps:
-                    min_steps = steps
-                    best_act = i
-
-        return best_act
+        best_action = np.argmin(steps2dest)
+        return int(best_action)
         
     def learn(self):
         """

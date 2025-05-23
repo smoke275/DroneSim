@@ -1,2 +1,3 @@
 Policy Name,Algorithm,Experiment Description
 f6f386d2,sarsa,steps rank no wall info no task dir with traffic stay full episodes
+9e19ef9b,sarsa,cut episodes best direction nb traffic stay

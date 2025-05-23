@@ -65,7 +65,7 @@ def extract_observations(observation, num_agents):
         all_obs.append(obs)
     return all_obs
 
-def run_simulation(config, render_mode='human', env_type='multi'): # Default to 'human' for visualization
+def run_simulation(config, render_mode='human', env_type='multi', seed=42): # Default to 'human' for visualization
     """
     Runs the simulation, optionally with GUI elements, and returns metrics
     """
@@ -87,7 +87,7 @@ def run_simulation(config, render_mode='human', env_type='multi'): # Default to 
             num_agents = 1
         env = gym.make("LMDEnv-v0", config=config, render_mode=render_mode)
     
-    observation, info = env.reset(seed=42)
+    observation, info = env.reset(seed=seed)
 
     if algo == 'sarsa':
         agents = [SARSAAgent(env, config=config, policy_path=policy_path) for _ in range(num_agents)]

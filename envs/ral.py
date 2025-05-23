@@ -106,8 +106,8 @@ class LMDEnv(gym.Env):
         # Warehouse vars
         self.warehouse_opt = config["world"]["warehouse"]
         if self.warehouse_opt == "center":
-            center_row = self.max_row // 2
-            center_col = self.max_col // 2
+            center_row = self.max_row // 2 + self.max_row % 2
+            center_col = self.max_col // 2 + self.max_row % 2
             self.warehouse_pos = (int(center_row), int(center_col))
         elif self.warehouse_opt == "random":
             self.warehouse_pos = (
@@ -160,21 +160,14 @@ class LMDEnv(gym.Env):
         '''SETUP YOUR OBSERVATION SPACE, ACTION SPACE, ENVIRONMENT-SPECIFIC VARIABLES'''
         self.action_space = spaces.Discrete(config["ugv"]["num_primitives"])
         
-        dir_wall_space = spaces.MultiDiscrete(
-            np.array([3,3,3,3])
-        )
-        wall_occupancy_space = spaces.MultiDiscrete(np.array([2]*60))
-        task_dir_space = spaces.Discrete(9)
         steps2dest_space = spaces.MultiDiscrete(np.array([self.max_row * self.max_col+2]*5))
-
         nb_traffic_space = spaces.MultiDiscrete(np.array([3,3,3,3]))
+        battery_space = spaces.Discrete(2)  # Binary space: 0 or 1
         
         self.observation_space = spaces.Dict({
-            'wall_encoding': dir_wall_space,
-            # 'wall_occupancy': wall_occupancy_space,
-            'task_direction': task_dir_space,
             'steps2dest': steps2dest_space,
             'nb_traffic': nb_traffic_space,
+            'battery_status': battery_space,  # Add binary space for battery status
         })
         
         # Initialize rendering if mode is 'human'
@@ -673,7 +666,6 @@ class LMDEnv(gym.Env):
         self.yellow_roads = []
         for u, v in self.G.edges():
             self.G[u][v]['traffic'] = 0
-            self.G[u][v]['weight'] = 1 # Reset weight
 
         if random.random() < self.traffic_prob:
             self.traffic_centeroids = random.sample(list(self.G.nodes), self.traffic_num_centroids)
@@ -695,21 +687,17 @@ class LMDEnv(gym.Env):
 
                 if total_contrib < 0.33:
                     self.G[u][v]['traffic'] = 0
-                    self.G[u][v]['weight'] = 1
                 elif total_contrib < 0.66:
                     self.G[u][v]['traffic'] = 1
-                    self.G[u][v]['weight'] = weight_penalty_yellow
                     self.yellow_roads.append((u, v))
                 else:
                     self.G[u][v]['traffic'] = 2
-                    self.G[u][v]['weight'] = weight_penalty_red
                     self.red_roads.append((u, v))
         else:
             self.traffic_centeroids = []
             # Ensure weights are reset even if no traffic is generated
             for u, v in self.G.edges():
                  self.G[u][v]['traffic'] = 0
-                 self.G[u][v]['weight'] = 1
 
 
     def step(self, action):
@@ -724,6 +712,8 @@ class LMDEnv(gym.Env):
         if self.traffic_b:
             if self.current_timestep % self.traffic_reset_dur == 0:
                 self.fill_traffic_centroids()
+
+        self._check_termination_condition() # Check termination based on new stat
 
         truncated = False
         if self.ugv.position == self.warehouse_pos:
@@ -746,8 +736,6 @@ class LMDEnv(gym.Env):
 
         obs = self._get_observation() # Gets observation *after* action/reward
         self.update_info()
-
-        self._check_termination_condition() # Check termination based on new stat
 
         self.last_move_time = 0
         self.latest_completed_tasks = []
@@ -776,17 +764,6 @@ class LMDEnv(gym.Env):
     def _get_observation(self):
         ugv_pos = self.ugv.position
         task_pos = self.active_task
-        task_dir_id = None
-        delta_row = task_pos[0] - ugv_pos[0]
-        delta_col = task_pos[1] - ugv_pos[1]
-        if delta_row == 0 and delta_col == 0:
-            task_dir_id = 8  # No movement, indeterminate direction
-        else:
-            angle = math.degrees(math.atan2(delta_col, -delta_row)) % 360
-            task_dir_id = int(((angle + 22.5) % 360) // 45)
-
-        # Neighborhood Wall Encoding
-        wall_encoding = np.array(self.G.nodes[ugv_pos]['wall_distance'], dtype=np.int32).flatten()
 
         # Steps to destination in each direction
         steps2dest = []
@@ -803,14 +780,15 @@ class LMDEnv(gym.Env):
         nb_traffic = self._get_nb_traffic(self.ugv.position)
         nb_traffic_flat = np.array(nb_traffic, dtype=np.int32).flatten()
 
+        battery_status = 1
+        if self.ugv.current_range < nx.shortest_path_length(self.G, ugv_pos, self.warehouse_pos)*self.cell_size:
+            battery_status = 0
 
         # Ensure observation matches the defined space structure
         obs_dict = {
-            'wall_encoding': wall_encoding,
-            # 'wall_occupancy': wall_occupancy,
-            'task_direction': task_dir_id,
             'steps2dest': steps2dest,
             'nb_traffic': nb_traffic_flat,
+            'battery_status': battery_status,
         }
 
         return obs_dict
@@ -870,7 +848,7 @@ class LMDEnv(gym.Env):
 
         # --- Time Penalty ---
         # Penalize based on the time taken for the action
-        time_penalty_factor = 1.0 # Adjust this factor based on desired behavior
+        time_penalty_factor = 5.0 # Adjust this factor based on desired behavior
         reward -= time_penalty_factor * self.last_move_time/self.cell_size
 
         # --- Invalid Move Penalty ---
@@ -879,13 +857,19 @@ class LMDEnv(gym.Env):
             reward -= invalid_move_penalty
         # No need to reset action_response here, it's reset in _apply_action
 
+        # If UGV is out of range, apply a penalty
+        out_of_range_penalty = 20.0
+        if self.ugv.current_range < nx.shortest_path_length(self.G, self.ugv.position, self.warehouse_pos)*self.cell_size:
+            reward -= out_of_range_penalty
 
         return reward
 
 
     def _check_termination_condition(self):
-        if self.time_elapsed >= self.max_time:
+        if self.time_elapsed >= self.max_time or self.ugv.current_range < nx.shortest_path_length(self.G, self.ugv.position, self.warehouse_pos)*self.cell_size:
             self.terminated = True
+        else:
+            self.terminated = False
 
     def close(self):
         """Cleans up pygame resources."""

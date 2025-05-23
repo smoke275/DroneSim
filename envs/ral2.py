@@ -94,7 +94,6 @@ class MultiAgentLMDEnv(gym.Env):
         self.warehouse_image = None # Optional: image for warehouse
         self.task_image = None      # Optional: image for tasks
         self.bs_image = None        # Optional: image for base stations
-        self.escape_pressed = False # Flag to track if escape was pressed
 
         '''LOADING THE CONFIGURATION VARIABLES'''
         self.max_row = config["world"]["maze_size"]
@@ -138,11 +137,11 @@ class MultiAgentLMDEnv(gym.Env):
         self.traffic_b = config['world']['traffic']
 
         # Traffic vars
-        self.traffic_delay_factor = config['traffic']['delay_factor']  # Factor to adjust traffic delay
         self.traffic_std_dev = config['traffic']['std_dev']  # Standard deviation for Gaussian distribution
         self.traffic_reset_dur = config['traffic']['reset_dur'] 
         self.traffic_prob = config['traffic']['prob']
         self.traffic_num_centroids = config['traffic']['num_centroids']
+        self.traffic_delay_factor = config['traffic']['delay_factor']  # Factor to adjust traffic delay
 
         '''METRICS DEFINITIONS'''
         # NEW: Track total distance traveled by EVs and drones.
@@ -325,8 +324,7 @@ class MultiAgentLMDEnv(gym.Env):
                     return
                 elif event.type == pygame.KEYDOWN:
                     if event.key == pygame.K_ESCAPE:
-                        print("Escape key pressed - episode will be truncated")
-                        self.escape_pressed = True
+                        self.terminated = True
 
             # --- Drawing ---
             self.screen.fill(WHITE) # Clear screen
@@ -646,6 +644,7 @@ class MultiAgentLMDEnv(gym.Env):
         self.last_move_time = [0 for _ in range(self.num_ugvs)]
         self.escape_pressed = False # Reset escape key flag
         self.charging_status = [False for _ in range(self.num_ugvs)]
+        self.terminated = False
 
         self.ugv_states = [UGV(ugv_id=i, base_position=self.warehouse_pos, cell_dist=self.cell_size, max_range=self.max_ugv_range,drain_rate=self.drain_rate, 
                        max_speed=self.ugv_speed, traffic_delay_factor= self.traffic_delay_factor, G=self.G) for i in range(self.num_ugvs)]
@@ -736,11 +735,20 @@ class MultiAgentLMDEnv(gym.Env):
                  self.G[u][v]['traffic'] = 0
 
     def step(self, action):
-        # Apply action, calculate reward, get next observation
+        if self.terminated:
+            return None, None, self.terminated, None, self.info # Return None if already terminated
         self._apply_action(action)
         reward = self._get_reward()
         
         self.time_elapsed = min([ugv.local_time for ugv in self.ugv_states])
+        self.current_timestep += 1
+
+        # Update traffic periodically *before* updating info for the next step's rendering
+        if self.traffic_b:
+            if self.current_timestep % self.traffic_reset_dur == 0:
+                self.fill_traffic_centroids()
+
+        done = self._check_termination_condition() # Check termination based on new state
 
         for ugv_id, ugv in enumerate(self.ugv_states):
             if ugv.local_time == self.time_elapsed:
@@ -766,35 +774,19 @@ class MultiAgentLMDEnv(gym.Env):
                 self.ugv_status[ugv_id] = 0
 
         obs = self._get_observation() # Gets observation *after* action/reward
-        done = self._check_termination_condition() # Check termination based on new state
 
         # Update time and timestep *after* action and reward calculation for the current step
-        self.current_timestep += 1
 
-        # Update traffic periodically *before* updating info for the next step's rendering
-        if self.traffic_b:
-            if self.current_timestep % self.traffic_reset_dur == 0:
-                self.fill_traffic_centroids()
 
         # Update info dict *after* all state changes for the current step
         self.update_info()
 
-        # Gymnasium expects terminated, truncated, info
-        terminated = done
-        truncated = False # Assuming truncation is handled by max_timesteps check in done
         
-        # Check if escape key was pressed or max timesteps reached
-        if terminated or self.escape_pressed:
-             truncated = True
-             if self.escape_pressed:
-                 self.info["truncated_by_escape"] = True
-             else:
-                 terminated = True # Gym standard is that max timestep truncation implies termination
 
         self.last_move_time = [0 for _ in range(self.num_ugvs)]
         self.action_response = [None for _ in range(self.num_ugvs)]
 
-        return obs, reward, terminated, truncated, self.info # Return standard gym step tuple
+        return obs, reward, self.terminated, None, self.info # Return standard gym step tuple
 
     def _get_nb_traffic(self, position):
         """
@@ -935,18 +927,10 @@ class MultiAgentLMDEnv(gym.Env):
 
 
     def _check_termination_condition(self):
-        # Terminate if maximum timesteps are reached (handled by truncated flag in step).
         if self.time_elapsed >= self.max_time:
-            # print(f"Termination: Max timesteps ({self.max_timesteps}) reached.")
-            return True # Indicates termination
-
-        # Optional: Terminate if any UGV runs out of battery *not* at the warehouse
-        # for ugv in self.ugv_states:
-        #     if ugv.current_range <= 0 and ugv.position != self.warehouse_pos:
-        #          print(f"Termination: UGV {ugv.agent_id} ran out of battery at {ugv.position}.")
-        #          return True
-
-        return False # Not terminated based on these conditions
+            self.terminated = True
+        else:
+            self.terminated = False
 
     def close(self):
         """Cleans up pygame resources."""
@@ -955,3 +939,4 @@ class MultiAgentLMDEnv(gym.Env):
             pygame.display.quit()
             pygame.quit()
             self.screen = None # Mark as closed
+

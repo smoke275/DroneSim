@@ -44,8 +44,6 @@ class SARSAAgent(Agent):
             print(f"Policy loaded from {policy_path}")
 
     def _observation_to_state(self, observation):
-        wall_encoding = tuple(observation['wall_encoding'].tolist())
-        task_direction = int(observation['task_direction'])
         step2dest = observation['steps2dest']
 
         # Normalize the step2dest values to be between 0 and 1
@@ -53,11 +51,15 @@ class SARSAAgent(Agent):
         #Discretize the step2dest values into bins
         # step2dest = tuple(np.digitize(step2dest, bins=np.linspace(0, 1, 8)).tolist())
 
-        step2dest_ranked = rankdata(step2dest, method='min')  # Subtract 1 to make ranks zero-based
-        step2dest = tuple(step2dest_ranked.tolist())
+        # step2dest_ranked = rankdata(step2dest, method='min')  # Subtract 1 to make ranks zero-based
+        # step2dest = tuple(step2dest_ranked.tolist())
+        step2dest = int(np.argmin(step2dest))
 
         nb_traffic = tuple(observation['nb_traffic'].tolist())
-        return (step2dest, nb_traffic)
+
+        # battery_status = int(observation['battery_status'])
+
+        return (step2dest, nb_traffic)#, battery_status)
 
     def predict(self, observation):
         """
