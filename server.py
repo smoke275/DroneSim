@@ -13,6 +13,15 @@ from agents.dqn import DQNAgent
 from agents.a2c import A2CAgent
 from agents.sarsa_l import SARSALambdaAgent
 
+def lmd_simulator(config):
+    
+
+    metrics = {
+        "Task Throughput": None,
+        "Average Task Completion Time": None,
+        "Total Energy Consumed": None,
+    }
+    return metrics
 
 def setup_logging(mode, log_file="simulation_log.txt"):
     """
@@ -180,11 +189,4 @@ def run_simulation(config, render_mode='human', env_type='multi', seed=42): # De
         'avg_task_completion_time': avg_task_completion_time,
     }
 
-def startup(config_file, render_mode='human', env_type='multi'): # Pass render_mode through
-    """
-    Entry point that runs the simulation and returns metrics
-    """
-    with open(config_file, "r") as file:
-        config = yaml.safe_load(file)
-
-    return run_simulation(config, render_mode, env_type)
+    
