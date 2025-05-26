@@ -21,6 +21,10 @@ class UGV:
         self.distance_traveled = 0.0  # distance traveled by the UGV
         self.energy_consumed = 0.0
 
+        self.task_list = []
+        self.active_task = None
+        self.status = False
+
 
     def move(self, action, graph):
         """

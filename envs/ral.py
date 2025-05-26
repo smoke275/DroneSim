@@ -14,7 +14,7 @@ import time
 import gymnasium as gym
 from gymnasium import spaces
 
-from envs.states.UGVState import UGV
+from envs.fleet.UGV import UGV
 from sklearn.cluster import KMeans
 import numpy as np
 # from agents.UAV import UAVAgent
@@ -207,12 +207,14 @@ class LMDEnv(gym.Env):
         '''SETUP YOUR OBSERVATION SPACE, ACTION SPACE, ENVIRONMENT-SPECIFIC VARIABLES'''
         self.action_space = spaces.MultiDiscrete([config["fleet"]['ugv']["num_primitives"]]*self.num_ugvs)
         
-        best_dir_space = spaces.Discrete(5)
+        best_dir_space = spaces.Discrete(5*self.num_ugvs)
         nb_traffic_space = spaces.MultiDiscrete(np.array([3,3,3,3]*self.num_ugvs))
+        ugv_status_space = spaces.MultiDiscrete([3]*self.num_ugvs) # 0: idle, 1: moving, 2: charging
         
         self.observation_space = spaces.Dict({
             'best_dir': best_dir_space,
             'nb_traffic': nb_traffic_space,
+            'ugv_status': ugv_status_space,
         })
         
         # Initialize rendering if mode is 'human'
@@ -592,68 +594,6 @@ class LMDEnv(gym.Env):
         py += self.cell_size_px // 2
         return int(px), int(py)
 
-    def reset(self, seed=None, options=None):
-        super().reset(seed=seed) # Call parent reset for seeding RNG
-        if seed: # Seeding is handled by super().reset()
-            random.seed(seed)
-            np.random.seed(seed) # Also seed numpy for consistent sampling if used
-
-        df_maze = generate_df_maze(
-            self.max_row,
-            self.max_col,
-            self.maze_lp,
-        )
-        self.G, self.all_shortest_path_lengths = build_graph(df_maze) # Rebuild graph with new maze
-
-        self.action_response = [None for _ in range(self.num_ugvs)]
-        self.prev_task_distance = [100 for _ in range(self.num_ugvs)]
-        self.last_move_time = [0 for _ in range(self.num_ugvs)]
-        self.escape_pressed = False # Reset escape key flag
-        self.charging_status = [False for _ in range(self.num_ugvs)]
-        self.terminated = False
-
-        self.ugv_states = [UGV(ugv_id=i, base_position=self.warehouse_pos, cell_dist=self.cell_size, max_range=self.max_ugv_range,drain_rate=self.drain_rate, 
-                       max_speed=self.ugv_speed, traffic_delay_factor= self.traffic_delay_factor, G=self.G) for i in range(self.num_ugvs)]
-        self.task_list = random.choices(list(self.G.nodes), k=self.num_tasks) # Randomly select tasks from graph nodes
-        self.ugv_task_list = [[] for _ in range(self.num_ugvs)]
-        self.distrubute_tasks() # Distribute tasks to UGVs
-        self.active_tasks = [i[0] for i in self.ugv_task_list]
-        self.ugv_status = [1 for _ in range(self.num_ugvs)]
-        self.red_roads = []
-        self.yellow_roads = []
-        self.traffic_centeroids = []
-        for u, v in self.G.edges():
-            self.G[u][v]['traffic'] = 0 # Reset traffic on graph edges
-        if self.traffic_b:
-            self.fill_traffic_centroids() # Generate initial traffic if enabled
-        # Initialize UGV states - pass physical cell_size
-
-        # Reset metrics
-        self.total_ev_distance = 0.0
-        self.num_tasks_completed = 0
-        self.current_timestep = 0
-        self.time_elapsed = 0.0
-        self.total_energy_consumed = 0.0
-        self.task_completion_times = []
-
-        initial_obs = self._get_observation()
-        self.update_info() # Update info dict with initial state
-
-        # Render initial state if mode is human
-        # No need to call render here, the main loop should call it after reset
-        # if self.render_mode == "human":
-        #     self.render()
-
-        return initial_obs, self.info
-
-    def fill_task_list(self):
-        if len(self.task_list) < self.num_tasks and random.random() < self.task_prob:
-            m = self.num_tasks-len(self.task_list)
-            new_task = random.sample(list(self.G.nodes),m)
-            self.task_list.extend(new_task)
-        if self.active_task == None:
-            self.active_task = min(self.task_list, key=lambda x: nx.shortest_path_length(self.G, self.ugv.position, x))
-
     def distrubute_tasks(self):
         if self.task_list:
             # Convert task tuples to a NumPy array of shape (n_tasks, 2)
@@ -662,9 +602,12 @@ class LMDEnv(gym.Env):
             kmeans = KMeans(n_clusters=self.num_ugvs)
             labels = kmeans.fit_predict(tasks_array)
             # Assign tasks to each UGV based on clustering labels
-            self.ugv_task_list = [[] for _ in range(self.num_ugvs)]
+            ugv_task_list = [[] for _ in range(self.num_ugvs)]
             for task, label in zip(self.task_list, labels):
-                self.ugv_task_list[label].append(task)
+                ugv_task_list[label].append(task)
+            for ugv in self.ugv_states:
+                ugv.task_list = ugv_task_list[ugv.id]
+                ugv.active_task = ugv.task_list[0] if ugv.task_list else None
 
     def fill_traffic_centroids(self):
         # Reset previous roads and weights
@@ -700,10 +643,116 @@ class LMDEnv(gym.Env):
             for u, v in self.G.edges():
                  self.G[u][v]['traffic'] = 0
 
+    def init_rewarder(self):
+        self.action_response = [None for _ in range(self.num_ugvs)]
+        self.prev_task_distance = [100 for _ in range(self.num_ugvs)]
+        self.last_move_time = [0 for _ in range(self.num_ugvs)]
+
+    def init_analyzer(self):
+        # Reset metrics
+        self.total_ev_distance = 0.0
+        self.num_tasks_completed = 0
+        self.total_energy_consumed = 0.0
+        self.task_completion_times = []
+
+    def observer(self):
+        best_dirs = []
+        nb_traffic = []
+        ugv_status = []
+
+        for ugv_id, ugv in enumerate(self.ugv_states):
+            # Steps to destination in each direction
+            ugv_pos = ugv.position
+            task_pos = ugv.active_task
+            
+            next_cell = nx.shortest_path(self.G, ugv_pos, task_pos)[0]
+            if next_cell == ugv_pos:
+                best_dirs.append(4)
+            else:
+                direction = (next_cell[0] - ugv_pos[0], next_cell[1] - ugv_pos[1])
+                if direction == (-1, 0):  # North
+                    best_dirs.append(0)
+                elif direction == (0, 1):  # East
+                    best_dirs.append(1)
+                elif direction == (1, 0):  # South
+                    best_dirs.append(2)
+                elif direction == (0, -1):  # West
+                    best_dirs.append(3)
+            
+            # Neighbor Traffic
+            nb_traffic.append(self._get_nb_traffic(ugv_pos))
+
+            ugv_status.append(ugv.status) # 1: moving, 0: idle, 2: charging
+
+        best_dirs_flat = np.array(best_dirs, dtype=np.int32).flatten()
+        nb_traffic_flat = np.array(nb_traffic, dtype=np.int32).flatten()
+        ugv_status_flat = np.array(ugv_status, dtype=np.int32).flatten()
+
+        # Ensure observation matches the defined space structure
+        obs_dict = {
+            'best_dir': best_dirs_flat,
+            'nb_traffic': nb_traffic_flat,
+            'ugv_status': ugv_status_flat,
+        }
+
+        return obs_dict
+
+    def analyzer(self):
+        self.total_ev_distance = sum([ugv.distance_traveled for ugv in self.ugv_states])
+        self.total_energy_consumed = sum([ugv.energy_consumed for ugv in self.ugv_states])
+        task_completion_time_diffs = [self.task_completion_times[i] - self.task_completion_times[i-1] for i in range(1, len(self.task_completion_times))]
+        avg_task_completion_time = np.mean(task_completion_time_diffs) if task_completion_time_diffs else 0.0
+        self.info = {
+            "time_elapsed":self.time_elapsed,
+            "num_tasks_completed": self.num_tasks_completed,
+            "ev_distance_traveled": self.total_ev_distance,
+            "total_energy_consumed": self.total_energy_consumed,
+            "avg_task_completion_time": avg_task_completion_time,
+        }
+
+    def reset(self, seed=None, options=None):
+        super().reset(seed=seed) # Call parent reset for seeding RNG
+        if seed: # Seeding is handled by super().reset()
+            random.seed(seed)
+            np.random.seed(seed) # Also seed numpy for consistent sampling if used
+
+        self.current_timestep = 0
+        self.time_elapsed = 0.0
+
+        df_maze = generate_df_maze(
+            self.max_row,
+            self.max_col,
+            self.maze_lp,
+        )
+        self.G, self.all_shortest_path_lengths = build_graph(df_maze) # Rebuild graph with new maze
+        for u, v in self.G.edges():
+            self.G[u][v]['traffic'] = 0 # Reset traffic on graph edges
+        self.red_roads = []
+        self.yellow_roads = []
+        self.traffic_centeroids = []
+        if self.traffic_b:
+            self.fill_traffic_centroids() # Generate initial traffic if enabled
+
+        self.ugv_states = [UGV(ugv_id=i, base_position=self.warehouse_pos, cell_dist=self.cell_size, max_range=self.max_ugv_range,drain_rate=self.drain_rate, 
+                       max_speed=self.ugv_speed, traffic_delay_factor= self.traffic_delay_factor, G=self.G) for i in range(self.num_ugvs)]
+        self.task_list = random.choices(list(self.G.nodes), k=self.num_tasks) # Randomly select tasks from graph nodes
+        self.distrubute_tasks() # Distribute tasks to UGVs
+
+        self.init_rewarder()
+
+        self.init_analyzer()
+
+        self.terminated = False
+
+        initial_obs, _ = self.observer()
+        info = self.analyzer()
+
+        return initial_obs, info
+
     def step(self, action):
         if self.terminated:
             return None, None, self.terminated, None, self.info # Return None if already terminated
-        self._apply_action(action)
+        self.ugv_handler(action)
         reward = self._get_reward()
         
         self.time_elapsed = min([ugv.local_time for ugv in self.ugv_states])
@@ -771,85 +820,9 @@ class LMDEnv(gym.Env):
         traffic_levels = [self.G.edges.get((position, neighbor), {}).get('traffic', 0) for neighbor in neighbor_positions]
         return traffic_levels
 
-
-    def _get_observation(self):
-        wall_encoding = []
-        task_dir_id = []
-        steps2dest = []
-        nb_traffic = []
-
-        for ugv_id, ugv in enumerate(self.ugv_states):
-            ugv_pos = ugv.position
-            task_pos = self.active_tasks[ugv_id]
-            delta_row = task_pos[0] - ugv_pos[0]
-            delta_col = task_pos[1] - ugv_pos[1]
-            if delta_row == 0 and delta_col == 0:
-                task_dir_id.append(8)
-            else:
-                angle = math.degrees(math.atan2(delta_col, -delta_row)) % 360
-                task_dir_id.append(int(((angle + 22.5) % 360) // 45))
-
-            wall_encoding.append(np.array(self.G.nodes[ugv_pos]['wall_distance'], dtype=np.int32).flatten())
-            # wall_occupancy = np.array(self.G.nodes[ugv_pos]['occupancy_grid'], dtype=np.int32).flatten()
-
-            # Steps to destination in each direction
-            steps2dest_ = []
-            for dr, dc in [(-1, 0), (0, 1), (1, 0), (0, -1), (0,0)]:
-                r,c = ugv_pos[0] + dr, ugv_pos[1] + dc
-                # if r > 0 and r <= self.max_row and c > 0 and c <= self.max_col:
-                if (dr,dc)==(0,0) or (ugv_pos,(r,c)) in self.G.edges:
-                    steps2dest_.append(self.all_shortest_path_lengths[(r,c)][task_pos])
-                else:
-                    steps2dest_.append(self.max_row * self.max_col+1)
-            steps2dest.append(steps2dest_)
-
-            # Neighbor Traffic
-            nb_traffic.append(self._get_nb_traffic(ugv_pos))
-
-        wall_encoding_flat = np.array(wall_encoding, dtype=np.int32).flatten()
-        task_dir_id_flat = np.array(task_dir_id, dtype=np.int32).flatten()
-        steps2dest_flat = np.array(steps2dest, dtype=np.int32).flatten()
-        nb_traffic_flat = np.array(nb_traffic, dtype=np.int32).flatten()
-        ugv_status_flat = np.array(self.ugv_status, dtype=np.int32).flatten()
-
-        # Ensure observation matches the defined space structure
-        obs_dict = {
-            'wall_encoding': wall_encoding_flat,
-            # 'wall_occupancy': wall_occupancy,
-            'task_direction': task_dir_id_flat,
-            'steps2dest': steps2dest_flat,
-            'nb_traffic': nb_traffic_flat,
-            'ugv_status': ugv_status_flat,
-        }
-
-        return obs_dict
-
-
-    def _get_info(self):
-        # This method is often used by wrappers, ensure it returns the latest info
-        return self.info
-
-    def update_info(self):
-        self.total_ev_distance = sum([ugv.distance_traveled for ugv in self.ugv_states])
-        self.total_energy_consumed = sum([ugv.energy_consumed for ugv in self.ugv_states])
-        task_completion_time_diffs = [self.task_completion_times[i] - self.task_completion_times[i-1] for i in range(1, len(self.task_completion_times))]
-        avg_task_completion_time = np.mean(task_completion_time_diffs) if task_completion_time_diffs else 0.0
-        self.info = {
-            "time_elapsed":self.time_elapsed,
-            "num_tasks_completed": self.num_tasks_completed,
-            "ev_distance_traveled": self.total_ev_distance,
-            "total_energy_consumed": self.total_energy_consumed,
-            "avg_task_completion_time": avg_task_completion_time,
-
-            "ugv_states": self.ugv_states,
-            "active_task": self.active_tasks,
-            "ugv_status": self.ugv_status,
-            "charging_status": self.charging_status,
-        }
-
-    def _apply_action(self, action):
+    def ugv_handler(self, action):
         for act_id, act in enumerate(action):
-            if self.ugv_status[act_id]:
+            if self.ugv_states[act_id].status != 0:
                 act = int(act)
 
                 response, move_time = self.ugv_states[act_id].move(act, self.G)
