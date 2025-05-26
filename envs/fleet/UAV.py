@@ -1,4 +1,4 @@
-from envs.vehicles.vehicle import Agent
+from envs.states.vehicle import Agent
 from gymnasium import spaces
 
 class UAVAgent(Agent):

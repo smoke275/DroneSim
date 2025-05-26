@@ -1,5 +1,6 @@
+policy_name: "dijkstra"
 maze:
-  maze_size: 5
+  maze_size: 10
   maze_loop_percentage: 60
   cell_size: 50
   warehouse: center
@@ -34,7 +35,7 @@ simulation:
   bms: false
   traffic: true
   algo: "dijkstra"
-  render_mode: "human"
+  render_mode: "print"
   train: false
 
 training:

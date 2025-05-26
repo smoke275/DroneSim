@@ -7,21 +7,7 @@ import time # Added time for potential delay
 import logging
 
 import envs
-from agents.sarsa import SARSAAgent
-from agents.dijkstra import DijkstraAgent
-from agents.dqn import DQNAgent
-from agents.a2c import A2CAgent
-from agents.sarsa_l import SARSALambdaAgent
-
-def lmd_simulator(config):
-    
-
-    metrics = {
-        "Task Throughput": None,
-        "Average Task Completion Time": None,
-        "Total Energy Consumed": None,
-    }
-    return metrics
+from agents import get_agent
 
 def setup_logging(mode, log_file="simulation_log.txt"):
     """
@@ -74,75 +60,66 @@ def extract_observations(observation, num_agents):
         all_obs.append(obs)
     return all_obs
 
-def run_simulation(config, render_mode='human', env_type='multi', seed=42): # Default to 'human' for visualization
-    """
-    Runs the simulation, optionally with GUI elements, and returns metrics
-    """
+def lmd_simulator(config):
+    if config['simulation']['train'] == 'true':
+        train_config = config.copy()
+        train_config['fleet']['ugv']['count'] = 1
+
+        policy_name = os.urandom(4).hex()
+        root_dir = "runs/"
+        policy_dir = os.path.join(root_dir, policy_name)
+        policy_path = os.path.join(policy_dir, "policy.pkl")
+        os.makedirs(policy_dir, exist_ok=True)
+        train_config['policy_name'] = policy_name
+        config_file = os.path.join(policy_dir, "config.yaml")
+        train_config['simulation']['train'] = 'false'
+        with open(config_file, "w") as file:
+            yaml.dump(train_config, file)
+        print(f"Policy Name: {policy_name}")
+
+        env = gym.make("LMDEnv-v0", config=train_config)
+        agent = get_agent(train_config, env)
+        agent.learn(num_episodes=200000, policy_path=policy_path,
+                    log_path=os.path.join(policy_dir, "train_log.txt"),)
+        env.close()
+        
+
+    env = gym.make("LMDEnv-v0", config=config)
+    num_agents = config['fleet']['ugv']['count']
+    render_mode = config['simulation']['render_mode']
     policy_name = config["policy_name"]
-    policy_path = config["policy_path"]
-    policy_dir = os.path.dirname(policy_path)
+    policy_dir = f"runs/{policy_name}/"
     log_file = f"{policy_dir}/server_log.txt"
     open(log_file, "w").close()
     setup_logging(render_mode, log_file=log_file)
-    
-    algo = config['algo']
-    num_agents = config['world']['num_ugvs']
 
-    if env_type == 'multi':
-        env = gym.make("MultiAgentLMDEnv-v0", config=config, render_mode=render_mode)
-    else:
-        if num_agents > 1:
-            logging.info("Warning: Using a single agent environment with multiple agents. This may not work as expected.")
-            num_agents = 1
-        env = gym.make("LMDEnv-v0", config=config, render_mode=render_mode)
-    
-    observation, info = env.reset(seed=seed)
-
-    if algo == 'sarsa':
-        agents = [SARSAAgent(env, config=config, policy_path=policy_path) for _ in range(num_agents)]
-    elif algo == 'dqn':
-        agent = DQNAgent(env, config=config, policy_path=policy_path)
-    elif algo == 'a2c':
-        agent = A2CAgent(env, config=config, policy_path=policy_path)
-    elif algo == 'sarsa_l':
-        agent = SARSALambdaAgent(env, config=config, policy_path=policy_path)
-    else:
-        agents = [DijkstraAgent(i, env) for i in range(num_agents)]
-
-    acts = ["Up", "Right", "Down", "Left", "Stay"]
-
-    terminated = False
-    truncated = False
-    frame_num = 0
-    total_reward = 0.0
+    agents = get_agent(config, env)
 
     logging.info("Starting Simulation")
+    observation, world_state = env.reset(seed=42)
     env.render()
 
-    # The main loop now uses terminated and truncated flags
+    acts = ["Up", "Right", "Down", "Left", "Stay"]
+    terminated = False
+    total_reward = 0.0
+    step_idx = 0
     while not terminated:
-        action_list = None
-        if env_type == 'multi':
-            action_list = []
-            all_obs = extract_observations(observation, num_agents)
-            for i, obs in enumerate(all_obs):
-                agent = agents[i]
-                if not obs['ugv_status']:
-                    logging.info(f"UGV {i} is not active. Skipping.")
-                    action_list.append(4)
-                    continue
+        action_list = []
+        all_obs = extract_observations(observation, num_agents)
+        for i, obs in enumerate(all_obs):
+            agent = agents[i]
+            if not obs['ugv_status']:
+                logging.info(f"UGV {i} is not active. Skipping.")
+                action_list.append(4)
+                continue
 
-                # Get action from policy
-                action = agent.predict(obs)
-                action_list.append(action)
-        else:
-            action_list = agents[0].predict(observation)
-            if isinstance(action_list, np.ndarray):
-                action_list = action_list.tolist()
+            # Get action from policy
+            action = agent.predict(obs)
+            action_list.append(action)
 
         observation, reward, terminated, truncated, world_state = env.step(action_list)
         total_reward += reward
-        frame_num += 1
+        step_idx += 1
 
         env.render()
 
@@ -150,43 +127,20 @@ def run_simulation(config, render_mode='human', env_type='multi', seed=42): # De
         logging.info(f"Observation: {observation}") # Observation can be large, maybe omit from console
         logging.info(f"Reward: {reward}")
         logging.info(f"Terminated: {terminated}, Truncated: {truncated}")
-        if env_type == 'multi':
-            for ugv_id in range(num_agents):
-                logging.info(f"UGV {ugv_id} Info...")
-                action_str = acts[action_list[ugv_id]] # Format action list for logging
-                logging.info(f"Action taken: {action_str}")
-        else:
-            logging.info(f"Action taken: {acts[action_list]}")
-
+        for ugv_id in range(num_agents):
+            logging.info(f"UGV {ugv_id} Info...")
+            action_str = acts[action_list[ugv_id]] # Format action list for logging
+            logging.info(f"Action taken: {action_str}")
 
         logging.info("-------------------------------------------\n")
 
-    # Log final metrics (use the last world_state)
-    num_tasks_completed = world_state["num_tasks_completed"]
-    ev_distance_traveled = world_state["ev_distance_traveled"]
-    total_time_taken = world_state["time_elapsed"]
-    total_energy_consumed = world_state["total_energy_consumed"]
-    avg_task_completion_time = world_state["avg_task_completion_time"]
+    # metrics = world_state['metrics']
 
-    logging.info("\nSimulation completed.")
-    logging.info(f"Termination reason: {'Terminated' if terminated else 'Truncated' if truncated else 'Unknown'}")
-    logging.info(f"Final frame: {frame_num}")
-    logging.info(f"Total reward: {total_reward}")
-    logging.info(f"Tasks completed: {num_tasks_completed}")
-    logging.info(f"EV distance traveled: {ev_distance_traveled}")
-    logging.info(f"Total time taken: {total_time_taken}")
-    logging.info(f"Total energy consumed: {total_energy_consumed}")
-
+    # logging.info("\nSimulation completed.")
+    # logging.info(f"Termination reason: {'Terminated' if terminated else 'Truncated' if truncated else 'Unknown'}")
+    # logging.info(f"Final frame: {step_idx}")
+    # logging.info(f"Total reward: {total_reward}")
+    # logging.info(f"Metrics: {metrics}")
 
     env.close() # Ensure pygame resources are cleaned up
-    return {
-        'frames': frame_num,
-        'total_reward': total_reward,
-        'tasks_completed': num_tasks_completed,
-        'distance_traveled': ev_distance_traveled,
-        'time_taken': total_time_taken,
-        'energy_consumed': total_energy_consumed,
-        'avg_task_completion_time': avg_task_completion_time,
-    }
-
-    
+    # return metrics

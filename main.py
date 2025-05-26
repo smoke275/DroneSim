@@ -4,7 +4,7 @@ import yaml
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description="Drone Simulation Configuration")
-    parser.add_argument('config', type=str, required=False, help="Configuration file path")
+    parser.add_argument('-c', '--config', type=str, help="Configuration file path")
     parser.add_argument('-p', '--policy', type=str, required=False, help="Policy name (e.g., '0d318b44')")
     args = parser.parse_args()
 
