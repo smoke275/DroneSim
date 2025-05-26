@@ -117,12 +117,8 @@ class MultiAgentLMDEnv(gym.Env):
                 random.randint(1, self.max_col)
             )
 
-        # # Base station vars
-        # self.num_base_stations = config["world"]["num_base_stations"]
-        # bs_df = self.df_maze.sample(self.num_base_stations, random_state=47)[['row', 'col']]
-        # self.base_stations = []
-        # for t in bs_df.values.tolist():
-        #     self.base_stations.append( (int(t[0]), int(t[1])) )
+        # Base station vars
+        self.num_base_stations = config["world"]["num_base_stations"]
 
         # Agent vars
         self.num_ugvs = config["world"]["num_ugvs"]
@@ -662,6 +658,14 @@ class MultiAgentLMDEnv(gym.Env):
             self.fill_traffic_centroids() # Generate initial traffic if enabled
         # Initialize UGV states - pass physical cell_size
 
+        self.base_stations = random.sample(list(self.G.nodes), self.num_base_stations)
+        self.uav_states = []
+        for i in range(self.num_base_stations):
+            for j in range(self.num_ugvs):
+                self.uav_states.append(UAV(uav_id=i*self.num_ugvs+j, base_position=self.base_stations[i], cell_dist=self.cell_size, max_range=self.max_uav_range, 
+                                           max_speed=self.uav_speed,G=self.G))
+        
+
         # Reset metrics
         self.total_ev_distance = 0.0
         self.num_tasks_completed = 0
@@ -738,6 +742,13 @@ class MultiAgentLMDEnv(gym.Env):
         if self.terminated:
             return None, None, self.terminated, None, self.info # Return None if already terminated
         self._apply_action(action)
+
+        for uav_id, uav in enumerate(self.uav_states):
+            ugv_id_recharge = uav.update(self.time_elapsed, self.ugv_states)
+            if ugv_id_recharge:
+                self.ugv_states[ugv_id_recharge].recharge()
+                
+
         reward = self._get_reward()
         
         self.time_elapsed = min([ugv.local_time for ugv in self.ugv_states])
@@ -767,6 +778,8 @@ class MultiAgentLMDEnv(gym.Env):
                         self.active_tasks[ugv_id] = self.ugv_task_list[ugv_id][0]
                         self.charging_status[ugv_id] = False
                     else:
+                        
+
                         self.active_tasks[ugv_id] = self.warehouse_pos
                         self.charging_status[ugv_id] = True
                     self.prev_task_distance[ugv_id] = self.all_shortest_path_lengths[ugv.position][self.active_tasks[ugv_id]]
