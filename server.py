@@ -36,7 +36,7 @@ def setup_logging(mode, log_file="simulation_log.txt"):
     logger.addHandler(file_handler)
 
     # Console handler (only if mode is 'logging.info')
-    if mode == 'print':
+    if mode != 'quiet':
         console_handler = logging.StreamHandler()
         console_handler.setLevel(logging.INFO)  # Adjust console log level
         console_handler.setFormatter(formatter)

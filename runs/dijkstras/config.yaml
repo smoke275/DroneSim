@@ -8,16 +8,16 @@ traffic:
   reset_dur: 5
   std_dev: 1
 uav:
-  range: 3000
-  speed: 3
+  range: 1000
+  speed: 2
   swapping_time: 2
 ugv:
   drain_rate: 1
   num_primitives: 5
-  range: 2000
+  range: 500
   speed: 1
 world:
-  bms: false
+  bms: true
   cell_size: 50
   max_time: 50000
   maze_file: data/rl_maze.csv

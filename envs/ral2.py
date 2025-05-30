@@ -15,6 +15,7 @@ import gymnasium as gym
 from gymnasium import spaces
 
 from envs.vehicles.UGV import UGV
+from envs.vehicles.UAV import UAV
 from sklearn.cluster import KMeans
 import numpy as np
 # from agents.UAV import UAVAgent
@@ -94,6 +95,7 @@ class MultiAgentLMDEnv(gym.Env):
         self.warehouse_image = None # Optional: image for warehouse
         self.task_image = None      # Optional: image for tasks
         self.bs_image = None        # Optional: image for base stations
+        self.uav_image = None       # Optional: image for UAVs
 
         '''LOADING THE CONFIGURATION VARIABLES'''
         self.max_row = config["world"]["maze_size"]
@@ -126,6 +128,8 @@ class MultiAgentLMDEnv(gym.Env):
         self.max_ugv_range = config['ugv']['range']
         self.drain_rate = config['ugv']['drain_rate']
         self.ugv_speed = config['ugv']['speed']
+        self.max_uav_range = config['uav']['range']
+        self.uav_speed = config['uav']['speed']
         
         # Simulation vars
         self.bms = config['world']['bms']
@@ -221,6 +225,12 @@ class MultiAgentLMDEnv(gym.Env):
                 # self.warehouse_image = pygame.transform.scale(pygame.image.load(os.path.join(base_path, 'warehouse.png')).convert_alpha(), (img_size, img_size))
                 # self.task_image = pygame.transform.scale(pygame.image.load(os.path.join(base_path, 'task.png')).convert_alpha(), (img_size // 2, img_size // 2))
                 # self.bs_image = pygame.transform.scale(pygame.image.load(os.path.join(base_path, 'base_station.png')).convert_alpha(), (img_size, img_size))
+                if self.bms:
+                    uav_img_path = os.path.join('data/transparent_drone.png')
+                    self.uav_image = pygame.image.load(uav_img_path).convert_alpha() # Use convert_alpha for transparency
+                    scale_factor = 0.6
+                    img_size = int(self.cell_size_px * scale_factor)
+                    self.uav_image = pygame.transform.scale(self.uav_image, (img_size, img_size))
 
             except pygame.error as e:
                 print(f"Warning: Could not load image assets. Rendering with shapes. Error: {e}")
@@ -379,12 +389,13 @@ class MultiAgentLMDEnv(gym.Env):
             warehouse_radius = int(self.cell_size_px * 0.4)
             pygame.draw.circle(self.screen, BLUE, (wh_px_c, wh_py_c), warehouse_radius)
 
-            # # --- Draw Base Stations ---
-            # bs_radius = int(self.cell_size_px * 0.3)
-            # for bs_r, bs_c in self.base_stations:
-            #     bs_px_c, bs_py_c = self._cell_to_pygame_center(bs_r, bs_c)
-            #     pygame.draw.circle(self.screen, DARK_GREEN, (bs_px_c, bs_py_c), bs_radius)
-            #     pygame.draw.circle(self.screen, BLACK, (bs_px_c, bs_py_c), bs_radius, 1) # Border
+            # --- Draw Base Stations ---
+            if self.bms:
+                bs_radius = int(self.cell_size_px * 0.3)
+                for bs_r, bs_c in self.base_stations:
+                    bs_px_c, bs_py_c = self._cell_to_pygame_center(bs_r, bs_c)
+                    pygame.draw.circle(self.screen, DARK_GREEN, (bs_px_c, bs_py_c), bs_radius)
+                    pygame.draw.circle(self.screen, BLACK, (bs_px_c, bs_py_c), bs_radius, 1) # Border
 
             for ugv_id, ugv in enumerate(self.ugv_states):
                 # --- Draw Tasks ---
@@ -433,6 +444,14 @@ class MultiAgentLMDEnv(gym.Env):
                 # Border
                 pygame.draw.rect(self.screen, BLACK, (battery_x, battery_y, battery_width, battery_height), 1)
 
+            if self.bms:
+                for uav_id, uav in enumerate(self.uav_states):
+                    # --- Draw UAVs ---
+                    uav_r, uav_c = uav.actual_position
+                    uav_px_c, uav_py_c = self._cell_to_pygame_center(uav_r, uav_c)
+                    img_rect = self.uav_image.get_rect(center=(uav_px_c, uav_py_c))
+                    self.screen.blit(self.uav_image, img_rect)
+
             # --- Draw Info Text ---
             if self.font:
                 info_y_start = maze_area_height + 5 # Start below maze area
@@ -451,9 +470,25 @@ class MultiAgentLMDEnv(gym.Env):
 
             # --- Update Display ---
             pygame.display.flip()
+
+            print("=== Simulation State ===")
+            print(f"Time: {self.time_elapsed:.2f}s")
+            print(f"Timestep: {self.current_timestep}")
+            print(f"Tasks Completed: {self.num_tasks_completed}")
+            print(f"Total Distance: {self.total_ev_distance:.1f}m")
+            print(f"Total Energy: {self.total_energy_consumed:.1f}")
+            print("UGV States:")
+            for idx, ugv in enumerate(self.ugv_states):
+                print(f"  UGV {idx}: Position {ugv.position}, Status: {self.ugv_status[idx]}, Battery: {ugv.current_range_percent:.2f}, Local Time: {ugv.local_time:.2f}s")
+            print("Active Tasks:", self.active_tasks)
+            print("Traffic Information:")
+            print(f"  Red Roads: {self.red_roads}")
+            print(f"  Yellow Roads: {self.yellow_roads}")
+            print(f"  Traffic Centeroids: {self.traffic_centeroids}")
+            print("==========================")
             
             # Wait until the Return key is pressed before ending render
-            if self.num_tasks_completed < 10000:
+            if self.num_tasks_completed <1000000:
                 self.clock.tick(self.metadata["render_fps"])
             else:
                 waiting = True
@@ -640,6 +675,7 @@ class MultiAgentLMDEnv(gym.Env):
         self.last_move_time = [0 for _ in range(self.num_ugvs)]
         self.escape_pressed = False # Reset escape key flag
         self.charging_status = [False for _ in range(self.num_ugvs)]
+        self.ugv_uav_mapping = []
         self.terminated = False
 
         self.ugv_states = [UGV(ugv_id=i, base_position=self.warehouse_pos, cell_dist=self.cell_size, max_range=self.max_ugv_range,drain_rate=self.drain_rate, 
@@ -658,12 +694,13 @@ class MultiAgentLMDEnv(gym.Env):
             self.fill_traffic_centroids() # Generate initial traffic if enabled
         # Initialize UGV states - pass physical cell_size
 
-        self.base_stations = random.sample(list(self.G.nodes), self.num_base_stations)
-        self.uav_states = []
-        for i in range(self.num_base_stations):
-            for j in range(self.num_ugvs):
-                self.uav_states.append(UAV(uav_id=i*self.num_ugvs+j, base_position=self.base_stations[i], cell_dist=self.cell_size, max_range=self.max_uav_range, 
-                                           max_speed=self.uav_speed,G=self.G))
+        if self.bms:
+            self.base_stations = random.sample(list(self.G.nodes), self.num_base_stations)
+            self.uav_states = []
+            for i in range(self.num_base_stations):
+                for j in range(self.num_uavs_bs):
+                        self.uav_states.append(UAV(agent_id=i*self.num_uavs_bs+j, base_position=self.base_stations[i], cell_dist=self.cell_size, max_range=self.max_uav_range, 
+                                            max_speed=self.uav_speed,G=self.G))
         
 
         # Reset metrics
@@ -743,11 +780,9 @@ class MultiAgentLMDEnv(gym.Env):
             return None, None, self.terminated, None, self.info # Return None if already terminated
         self._apply_action(action)
 
-        for uav_id, uav in enumerate(self.uav_states):
-            ugv_id_recharge = uav.update(self.time_elapsed, self.ugv_states)
-            if ugv_id_recharge:
-                self.ugv_states[ugv_id_recharge].recharge()
-                
+        if self.bms:
+            for uav_id, uav in enumerate(self.uav_states):
+                uav.update(self.time_elapsed)
 
         reward = self._get_reward()
         
@@ -764,25 +799,60 @@ class MultiAgentLMDEnv(gym.Env):
         for ugv_id, ugv in enumerate(self.ugv_states):
             if ugv.local_time == self.time_elapsed:
                 self.ugv_status[ugv_id] = 1
-
-                if ugv.position == self.warehouse_pos:
-                    ugv.recharge()
-                if ugv.position == self.active_tasks[ugv_id]:
-                    if not self.charging_status[ugv_id]:
+                if not self.charging_status[ugv_id]:
+                    if ugv.position == self.active_tasks[ugv_id]:
                         self.ugv_task_list[ugv_id].pop(0)
                         self.num_tasks_completed += 1
                         self.task_completion_times.append(self.time_elapsed)
-                    dist2task = self.all_shortest_path_lengths[ugv.position][self.ugv_task_list[ugv_id][0]]*self.cell_size
-                    dist2wh = self.all_shortest_path_lengths[self.ugv_task_list[ugv_id][0]][self.warehouse_pos]*self.cell_size
-                    if ugv.current_range >= dist2task+dist2wh:
-                        self.active_tasks[ugv_id] = self.ugv_task_list[ugv_id][0]
-                        self.charging_status[ugv_id] = False
+                        dist2task = self.all_shortest_path_lengths[ugv.position][self.ugv_task_list[ugv_id][0]]*self.cell_size
+                        dist2wh = self.all_shortest_path_lengths[self.ugv_task_list[ugv_id][0]][self.warehouse_pos]*self.cell_size
+                        if ugv.current_range >= dist2task+dist2wh:
+                            self.active_tasks[ugv_id] = self.ugv_task_list[ugv_id][0]
+                            self.charging_status[ugv_id] = False
+                        else:
+                            if self.bms:
+                                free_uavs = []
+                                for uav in self.uav_states:
+                                    d = np.linalg.norm(np.array(uav.position) - np.array(ugv.position))*self.cell_size
+                                    if uav.status == 0:# and 2*d <= self.max_uav_range:
+                                        free_uavs.append(uav)
+                                if free_uavs:
+                                    nearest_uav = min(free_uavs, key=lambda uav: np.linalg.norm(np.array(uav.position) - np.array(ugv.position)))
+                                    self.ugv_status[ugv_id] = 2
+                                    self.charging_status[ugv_id] = True
+                                    self.ugv_uav_mapping.append((ugv_id, nearest_uav.agent_id))
+                                    nearest_uav.status = 1 # Charging with UGV
+                                    nearest_uav.active_task = ugv.position # UAV will charge at UGV's position
+                                else:
+                                    self.active_tasks[ugv_id] = self.warehouse_pos
+                                    self.charging_status[ugv_id] = True
+                            else:
+                                self.active_tasks[ugv_id] = self.warehouse_pos
+                                self.charging_status[ugv_id] = True
+                        self.prev_task_distance[ugv_id] = self.all_shortest_path_lengths[ugv.position][self.active_tasks[ugv_id]]
+                else:
+                    if self.bms:
+                        if ugv_id in [mapping[0] for mapping in self.ugv_uav_mapping]:
+                            uav_id = [mapping[1] for mapping in self.ugv_uav_mapping if mapping[0] == ugv_id][0]
+                            uav = self.uav_states[uav_id]
+                            if ugv.position[0] == uav.position[0] and ugv.position[1] == uav.position[1]:
+                                ugv.recharge()
+                                self.ugv_status[ugv_id] = 1
+                                self.charging_status[ugv_id] = False
+                                self.ugv_uav_mapping.remove((ugv_id, uav_id))
+                                uav.status = 2 #back to base station
+                                self.active_tasks[ugv_id] = self.ugv_task_list[ugv_id][0]
+                        elif ugv.position == self.warehouse_pos:
+                            ugv.recharge()
+                            self.ugv_status[ugv_id] = 1
+                            self.charging_status[ugv_id] = False
+                            self.active_tasks[ugv_id] = self.ugv_task_list[ugv_id][0]
                     else:
-                        
-
-                        self.active_tasks[ugv_id] = self.warehouse_pos
-                        self.charging_status[ugv_id] = True
-                    self.prev_task_distance[ugv_id] = self.all_shortest_path_lengths[ugv.position][self.active_tasks[ugv_id]]
+                        if ugv.position == self.warehouse_pos:
+                            ugv.recharge()
+                            self.ugv_status[ugv_id] = 1
+                            self.charging_status[ugv_id] = False
+                            self.active_tasks[ugv_id] = self.ugv_task_list[ugv_id][0]
             else:
                 self.ugv_status[ugv_id] = 0
 
@@ -857,9 +927,8 @@ class MultiAgentLMDEnv(gym.Env):
         task_dir_id_flat = np.array(task_dir_id, dtype=np.int32).flatten()
         steps2dest_flat = np.array(steps2dest, dtype=np.int32).flatten()
         nb_traffic_flat = np.array(nb_traffic, dtype=np.int32).flatten()
-        ugv_status_flat = np.array(self.ugv_status, dtype=np.int32).flatten()
-
-        # Ensure observation matches the defined space structure
+        ugv_status_ = [1 if status == 1 else 0 for status in self.ugv_status]
+        ugv_status_flat = np.array(ugv_status_, dtype=np.int32).flatten()
         obs_dict = {
             'wall_encoding': wall_encoding_flat,
             # 'wall_occupancy': wall_occupancy,
@@ -896,8 +965,11 @@ class MultiAgentLMDEnv(gym.Env):
 
     def _apply_action(self, action):
         for act_id, act in enumerate(action):
-            if self.ugv_status[act_id]:
-                act = int(act)
+            if self.ugv_status[act_id] != 0:
+                if self.ugv_status[act_id] == 1: # Charging with UAV
+                    act = int(act)
+                else:
+                    act = 4
 
                 response, move_time = self.ugv_states[act_id].move(act, self.G)
                 self.action_response[act_id] = response
