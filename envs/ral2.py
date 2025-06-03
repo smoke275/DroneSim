@@ -98,17 +98,17 @@ class MultiAgentLMDEnv(gym.Env):
         self.uav_image = None       # Optional: image for UAVs
 
         '''LOADING THE CONFIGURATION VARIABLES'''
-        self.max_row = config["world"]["maze_size"]
-        self.max_col = config["world"]["maze_size"]
-        self.maze_lp = config["world"]["maze_loop_percentage"]
-        self.cell_size = config["world"]["cell_size"] # Physical cell size
+        self.max_row = config["maze"]["maze_size"]
+        self.max_col = config["maze"]["maze_size"]
+        self.maze_lp = config["maze"]["maze_loop_percentage"]
+        self.cell_size = config["maze"]["cell_size"] # Physical cell size
 
         # Task vars
-        self.num_tasks = config["world"]["num_tasks"]
-        self.task_prob = config["world"]["task_prob"]
+        self.num_tasks = config["task"]["num_tasks"]
+        self.task_prob = config["task"]["task_prob"]
 
         # Warehouse vars
-        self.warehouse_opt = config["world"]["warehouse"]
+        self.warehouse_opt = config["maze"]["warehouse"]
         if self.warehouse_opt == "center":
             center_row = self.max_row // 2 + self.max_row % 2
             center_col = self.max_col // 2 + self.max_row % 2
@@ -120,21 +120,22 @@ class MultiAgentLMDEnv(gym.Env):
             )
 
         # Base station vars
-        self.num_base_stations = config["world"]["num_base_stations"]
+        self.num_base_stations = config["maze"]["num_base_stations"]
 
         # Agent vars
-        self.num_ugvs = config["world"]["num_ugvs"]
-        self.num_uavs_bs = config["world"]["num_uavs_per_bs"]
-        self.max_ugv_range = config['ugv']['range']
-        self.drain_rate = config['ugv']['drain_rate']
-        self.ugv_speed = config['ugv']['speed']
-        self.max_uav_range = config['uav']['range']
-        self.uav_speed = config['uav']['speed']
+        self.num_ugvs = config['fleet']['ugv']["count"]
+        self.max_ugv_range = config['fleet']['ugv']['range']
+        self.drain_rate = config['fleet']['ugv']['drain_rate']
+        self.ugv_speed = config['fleet']['ugv']['speed']
+
+        self.num_uavs_bs = config['fleet']['uav']["num_uavs_per_bs"]
+        self.max_uav_range = config['fleet']['uav']['range']
+        self.uav_speed = config['fleet']['uav']['speed']
         
         # Simulation vars
-        self.bms = config['world']['bms']
-        self.max_time = config['world']['max_time']
-        self.traffic_b = config['world']['traffic']
+        self.bms = config['simulation']['bms']
+        self.max_time = config['simulation']['max_time']
+        self.traffic_b = config['simulation']['traffic']
 
         # Traffic vars
         self.traffic_std_dev = config['traffic']['std_dev']  # Standard deviation for Gaussian distribution
@@ -163,26 +164,20 @@ class MultiAgentLMDEnv(gym.Env):
         self.info = {}
 
         '''SETUP YOUR OBSERVATION SPACE, ACTION SPACE, ENVIRONMENT-SPECIFIC VARIABLES'''
-        self.action_space = spaces.MultiDiscrete([config["ugv"]["num_primitives"]]*self.num_ugvs)
+        self.action_space = spaces.MultiDiscrete([config['fleet']["ugv"]["num_primitives"]]*self.num_ugvs)
         
-        dir_wall_space = spaces.MultiDiscrete(
-            np.array([3,3,3,3]*self.num_ugvs)
-        )
-        wall_occupancy_space = spaces.MultiDiscrete(np.array([2]*60))
-        task_dir_space = spaces.MultiDiscrete([9]*self.num_ugvs)
+        ugv_status_space = spaces.MultiBinary(self.num_ugvs)
+
         max_moves = self.max_row * self.max_col+1
         steps2dest_space = spaces.MultiDiscrete(np.array([max_moves]*5*self.num_ugvs))
-        ugv_status_space = spaces.MultiBinary(self.num_ugvs)
 
         nb_traffic_space = spaces.MultiDiscrete(np.array([3,3,3,3]*self.num_ugvs))
         
         self.observation_space = spaces.Dict({
             'ugv_status': ugv_status_space,
-            'wall_encoding': dir_wall_space,
-            # 'wall_occupancy': wall_occupancy_space,
-            'task_direction': task_dir_space,
             'steps2dest': steps2dest_space,
             'nb_traffic': nb_traffic_space,
+            # 'battery_status': battery_space,  # Add binary space for battery status
         })
         
         # Initialize rendering if mode is 'human'
@@ -890,24 +885,12 @@ class MultiAgentLMDEnv(gym.Env):
 
 
     def _get_observation(self):
-        wall_encoding = []
-        task_dir_id = []
         steps2dest = []
         nb_traffic = []
 
         for ugv_id, ugv in enumerate(self.ugv_states):
             ugv_pos = ugv.position
             task_pos = self.active_tasks[ugv_id]
-            delta_row = task_pos[0] - ugv_pos[0]
-            delta_col = task_pos[1] - ugv_pos[1]
-            if delta_row == 0 and delta_col == 0:
-                task_dir_id.append(8)
-            else:
-                angle = math.degrees(math.atan2(delta_col, -delta_row)) % 360
-                task_dir_id.append(int(((angle + 22.5) % 360) // 45))
-
-            wall_encoding.append(np.array(self.G.nodes[ugv_pos]['wall_distance'], dtype=np.int32).flatten())
-            # wall_occupancy = np.array(self.G.nodes[ugv_pos]['occupancy_grid'], dtype=np.int32).flatten()
 
             # Steps to destination in each direction
             steps2dest_ = []
@@ -923,16 +906,11 @@ class MultiAgentLMDEnv(gym.Env):
             # Neighbor Traffic
             nb_traffic.append(self._get_nb_traffic(ugv_pos))
 
-        wall_encoding_flat = np.array(wall_encoding, dtype=np.int32).flatten()
-        task_dir_id_flat = np.array(task_dir_id, dtype=np.int32).flatten()
         steps2dest_flat = np.array(steps2dest, dtype=np.int32).flatten()
         nb_traffic_flat = np.array(nb_traffic, dtype=np.int32).flatten()
         ugv_status_ = [1 if status == 1 else 0 for status in self.ugv_status]
         ugv_status_flat = np.array(ugv_status_, dtype=np.int32).flatten()
         obs_dict = {
-            'wall_encoding': wall_encoding_flat,
-            # 'wall_occupancy': wall_occupancy,
-            'task_direction': task_dir_id_flat,
             'steps2dest': steps2dest_flat,
             'nb_traffic': nb_traffic_flat,
             'ugv_status': ugv_status_flat,
@@ -1000,7 +978,7 @@ class MultiAgentLMDEnv(gym.Env):
 
             # --- Time Penalty ---
             # Penalize based on the time taken for the action
-            time_penalty_factor = 1.0 # Adjust this factor based on desired behavior
+            time_penalty_factor = 5.0 # Adjust this factor based on desired behavior
             reward -= time_penalty_factor * self.last_move_time[ugv_id]/self.cell_size
 
             # --- Invalid Move Penalty ---

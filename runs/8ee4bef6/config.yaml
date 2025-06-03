@@ -16,9 +16,9 @@ maze:
   maze_size: 10
   num_base_stations: 4
   warehouse: center
-policy_name: dijkstras
+policy_name: 8ee4bef6
 simulation:
-  algo: dijkstra
+  algo: sarsa
   bms: false
   max_time: 50000
   render_mode: print

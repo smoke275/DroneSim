@@ -15,18 +15,18 @@ class SARSAAgent(Agent):
       
     It uses the environment's reward function.
     """
-    def __init__(self, env, config, gamma=0.99, alpha=0.1, epsilon=0.2, epsilon_decay=0.995,
+    def __init__(self, env, config,
                  policy_path=None, *args, **kwargs):
         super().__init__(env, *args, **kwargs)
-        self.gamma = gamma
-        self.alpha = alpha
-        self.epsilon = epsilon
-        self.epsilon_decay = epsilon_decay
+        self.gamma = config['training']['sarsa']['gamma']
+        self.alpha = config['training']['sarsa']['alpha']
+        self.epsilon = config['training']['sarsa']['epsilon']
+        self.epsilon_decay = config['training']['sarsa']['epsilon_decay']
 
-        self.cell_size = config['world']['cell_size']
-        self.max_range = config['ugv']['range']
+        self.cell_size = config['maze']['cell_size']
+        self.max_range = config['fleet']['ugv']['range']
         self.max_cell_range = int(self.max_range/self.cell_size)
-        self.max_rows = config['world']['maze_size']
+        self.max_rows = config['maze']['maze_size']
         self.max_cols = self.max_rows
 
         if hasattr(env.action_space, 'n'):
@@ -96,7 +96,7 @@ class SARSAAgent(Agent):
         total_reward = 0.0
         episode_idx = 0
         while episode_idx < num_episodes:
-            next_obs, reward, done, trunc, info = self.env.step(action)
+            next_obs, reward, done, trunc, info = self.env.step([action])
             next_state = self._observation_to_state(next_obs)
             if next_state not in self.Q:
                 self.Q[next_state] = np.zeros(len(self.action_list))

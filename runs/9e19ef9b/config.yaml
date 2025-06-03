@@ -1,5 +1,6 @@
+policy_name: "9e19ef9b"
 maze:
-  maze_size: 5
+  maze_size: 10
   maze_loop_percentage: 60
   cell_size: 50
   warehouse: center
@@ -31,11 +32,11 @@ traffic:
 
 simulation:
   max_time: 50000
-  bms: false
+  bms: true
   traffic: true
   algo: "sarsa"
   render_mode: "print"
-  train: true
+  train: false
 
 training:
   sarsa:
