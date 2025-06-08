@@ -14,10 +14,6 @@ def get_agent(config, env):
     if algo == 'dijkstra':
         return [DijkstraAgent(i, env) for i in range(num_agents)]
     
-    if config['simulation']['train'] == 'true':
-        if algo == 'sarsa':
-            return SARSAAgent(env, config=config)
-    
     else:
         policy_name = config['simulation']['policy']
         policy_path = f"runs/{policy_name}/policy.pkl"

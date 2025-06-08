@@ -17,13 +17,17 @@ class UGV:
         self.local_time = 0.0
         self.current_heading = 1
         self.current_traffic = 0
+        self.act_response = None
+        self.move_time = None
         
         self.distance_traveled = 0.0  # distance traveled by the UGV
         self.energy_consumed = 0.0
 
         self.task_list = []
         self.active_task = None
-        self.status = False
+        self.status = 1
+        self.charging_status = 0  # 0: not charging, 1: charging
+        self.task_completed = False
 
 
     def move(self, action, graph):
@@ -36,46 +40,52 @@ class UGV:
         4: Stay
         Returns True if move was successful, False if out of range
         """
-        action = int(action)
-        self.current_traffic = 0
-        if action ==4:
-            self.current_traffic = 0
-            self.local_time += self.cell_dist/self.max_speed
-            return 1, self.cell_dist/self.max_speed
-        range_left = self.current_range - self.drain_rate * self.cell_dist
-        if range_left<0:
-            self.current_traffic = 0
-            self.local_time += self.cell_dist/self.max_speed
-            return 0, self.cell_dist/self.max_speed
-        moves = {
-            0: (-1, 0),  # Up
-            1: (0, 1),   # Right
-            2: (1, 0),   # Down
-            3: (0, -1),  # Left
-        }
-            
-        dy, dx = moves[action]
-        self.prev_position = self.position
-        tmp_position = (self.position[0] + dy, self.position[1] + dx)
-        if tmp_position in self.G.nodes and (tmp_position, self.position) in self.G.edges:
-            self.position = tmp_position
-            self.distance_traveled += self.cell_dist
-            self.energy_consumed += self.drain_rate * self.cell_dist
-            traffic = graph.edges[(self.position, self.prev_position)]['traffic']
-            curr_speed = self.max_speed / (1 + self.traffic_delay_factor*traffic)  # Speed reduces with increasing traffic
-            move_time = self.cell_dist / curr_speed
-            self.current_range = range_left
-            self.current_range_percent = self.current_range / self.max_range
-            self.local_time += move_time
+        if self.status:
+            action = int(action)
+            if action ==4:
+                self.current_traffic = 0
+                self.move_time = self.cell_dist/self.max_speed
+                self.local_time += self.move_time
+                self.act_response = 1
+            else:
+                self.current_traffic = 0
+                range_left = self.current_range - self.drain_rate * self.cell_dist
+                if range_left<0:
+                    self.current_traffic = 0
+                    self.move_time = self.cell_dist/self.max_speed
+                    self.local_time += self.move_time
+                    self.act_response = 0
+                else:
+                    moves = {
+                        0: (-1, 0),  # Up
+                        1: (0, 1),   # Right
+                        2: (1, 0),   # Down
+                        3: (0, -1),  # Left
+                    }
+                        
+                    dy, dx = moves[action]
+                    self.prev_position = self.position
+                    tmp_position = (self.position[0] + dy, self.position[1] + dx)
+                    if tmp_position in self.G.nodes and (tmp_position, self.position) in self.G.edges:
+                        self.position = tmp_position
+                        self.distance_traveled += self.cell_dist
+                        self.energy_consumed += self.drain_rate * self.cell_dist
+                        traffic = graph.edges[(self.position, self.prev_position)]['traffic']
+                        curr_speed = self.max_speed / (1 + self.traffic_delay_factor*traffic)  # Speed reduces with increasing traffic
+                        self.move_time = self.cell_dist / curr_speed
+                        self.current_range = range_left
+                        self.current_range_percent = self.current_range / self.max_range
+                        self.local_time += self.move_time
 
-            self.current_traffic = traffic
-            self.current_heading = action
+                        self.current_traffic = traffic
+                        self.current_heading = action
 
-            return 1, move_time
-        
-        self.current_traffic = 0
-        self.local_time += self.cell_dist/self.max_speed
-        return 0, self.cell_dist/self.max_speed
+                        self.act_response = 1
+                    else:
+                        self.current_traffic = 0
+                        self.move_time = self.cell_dist/self.max_speed
+                        self.local_time += self.move_time
+                        self.act_response = 0
 
     def recharge(self):
         """
@@ -83,6 +93,7 @@ class UGV:
         """
         self.current_range = self.max_range
         self.current_range_percent = 1.0
+        self.charging_status = 0
 
     def get_actual_position(self, global_time):
         delta_t = self.local_time - global_time
@@ -102,12 +113,15 @@ class UGV:
 
 
     def __str__(self):
-        return (
-            f"UGV(agent_id={self.agent_id}, position={self.position}, "
-            f"current_range={self.current_range:.2f}/{self.max_range}, "
-            f"local_time={self.local_time:.2f},"
-            f"current_traffic={self.current_traffic}, current_heading={self.current_heading})"
-        )
+        return (f"UGV Agent ID: {self.agent_id}, "
+                f"Position: {self.position}, "
+                f"Active Task: {self.active_task}, "
+                f"Current Range: {self.current_range}, "
+                f"Local Time: {self.local_time}, "
+                f"Distance Traveled: {self.distance_traveled}, "
+                f"Energy Consumed: {self.energy_consumed}, "
+                f"Status: {self.status}, "
+                f"Charging Status: {'Charging' if self.charging_status else 'Not Charging'}")
 
 # Example usage:
 if __name__ == "__main__":

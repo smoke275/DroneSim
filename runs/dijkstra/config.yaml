@@ -36,12 +36,3 @@ simulation:
   traffic: true
   algo: "dijkstra"
   render_mode: "print"
-  train: false
-
-training:
-  sarsa:
-    num_episodes: 50000
-    gamma: 0.99
-    alpha: 0.1
-    epsilon: 0.2
-    epsilon_decay: 0.999

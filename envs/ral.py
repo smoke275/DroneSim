@@ -48,69 +48,6 @@ def generate_df_maze(rows=20, cols=20, lp=80):
         )
     return df
 
-def build_graph(df_maze):
-    G = nx.Graph()
-    for _, row in df_maze.iterrows():
-        r, c = int(row['row']), int(row['col'])
-        G.add_node((r, c))
-        if row['E'] == 1:
-            G.add_edge((r, c), (r, c+1), traffic=0)
-        if row['W'] == 1:
-            G.add_edge((r, c), (r, c - 1), traffic=0)
-        if row['N'] == 1:
-            G.add_edge((r, c), (r - 1, c), traffic=0)
-        if row['S'] == 1:
-            G.add_edge((r, c), (r + 1,c), traffic=0)
-
-    all_shortest_path_lengths = dict(nx.all_pairs_shortest_path_length(G))
-
-    directions = [(-1, 0), (0, 1), (1, 0), (0, -1)]
-    for node in G.nodes:
-        wall_distances = []
-        for dr, dc in directions:
-            steps = 0
-            current = node
-            while steps < 2:
-                next_node = (current[0] + dr, current[1] + dc)
-                if not G.has_edge(current, next_node):
-                    break
-                steps += 1
-                current = next_node
-            wall_distances.append(steps)
-        G.nodes[node]['wall_distance'] = wall_distances
-
-    # # Wall Occupancy Grid 
-    # kernel_size = 5
-    # for i in range(1,self.max_row+1):
-    #     for j in range(1,self.max_col+1):
-    #         occupancy_grid = [0]*kernel_size*(kernel_size+1)*2
-    #         m = len(occupancy_grid)
-    #         for k in range(m):
-    #             if k<m//2:
-    #                 row_id = k//kernel_size
-    #                 col_id = k%kernel_size
-    #                 row_t_diff = row_id-2
-    #                 row_b_diff = row_id-1
-    #                 col_diff = col_id-1
-    #                 cell_t = (i+row_t_diff,j+col_diff)
-    #                 cell_b = (i+row_b_diff,j+col_diff)
-    #                 if G.has_edge(cell_t,cell_b):
-    #                     occupancy_grid[k] = 1
-    #             else:
-    #                 k_ = k-m//2
-    #                 row_id = k_%kernel_size
-    #                 col_id = k_//kernel_size
-    #                 col_l_diff = col_id-2
-    #                 col_r_diff = col_id-1
-    #                 row_diff = row_id-1
-    #                 cell_l = (j+row_diff,i+col_l_diff)
-    #                 cell_r = (j+row_diff,i+col_r_diff)
-    #                 if G.has_edge(cell_l,cell_r):
-    #                     occupancy_grid[k] = 1
-    #         G.nodes[(i,j)]['occupancy_grid'] = occupancy_grid
-
-    return G, all_shortest_path_lengths
-
 # Define colors for pygame
 WHITE = (255, 255, 255)
 BLACK = (0, 0, 0)
@@ -139,7 +76,7 @@ def get_agent_color(agent_id):
 
 
 class LMDEnv(gym.Env):
-    metadata = {'render_modes': ['human', 'print', 'rgb_array', 'quiet'], "render_fps": 1} # Adjusted FPS
+    metadata = {'render_modes': ['human', 'print', 'rgb_array', 'quiet'], "render_fps": 30} # Adjusted FPS
 
     def __init__(self, config): # Default render_mode is None
         super(LMDEnv, self).__init__()
@@ -207,14 +144,16 @@ class LMDEnv(gym.Env):
         '''SETUP YOUR OBSERVATION SPACE, ACTION SPACE, ENVIRONMENT-SPECIFIC VARIABLES'''
         self.action_space = spaces.MultiDiscrete([config["fleet"]['ugv']["num_primitives"]]*self.num_ugvs)
         
-        best_dir_space = spaces.Discrete(5*self.num_ugvs)
-        nb_traffic_space = spaces.MultiDiscrete(np.array([3,3,3,3]*self.num_ugvs))
         ugv_status_space = spaces.MultiDiscrete([3]*self.num_ugvs) # 0: idle, 1: moving, 2: charging
+        max_moves = self.max_row * self.max_col+1
+        steps2dest_space = spaces.MultiDiscrete(np.array([max_moves]*5*self.num_ugvs))
+
+        nb_traffic_space = spaces.MultiDiscrete(np.array([3,3,3,3]*self.num_ugvs))
         
         self.observation_space = spaces.Dict({
-            'best_dir': best_dir_space,
-            'nb_traffic': nb_traffic_space,
             'ugv_status': ugv_status_space,
+            'steps2dest': steps2dest_space,
+            'nb_traffic': nb_traffic_space,
         })
         
         # Initialize rendering if mode is 'human'
@@ -361,7 +300,7 @@ class LMDEnv(gym.Env):
 
             for ugv_id, ugv in enumerate(self.ugv_states):
                 # --- Draw Tasks ---
-                task_r, task_c = self.ugv_task_list[ugv_id][0]
+                task_r, task_c = ugv.active_task
                 task_px_c, task_py_c = self._cell_to_pygame_center(task_r, task_c)
                 task_radius = int(self.cell_size_px * 0.25)
                 pygame.draw.circle(self.screen, MAGENTA, (task_px_c, task_py_c), task_radius)
@@ -424,9 +363,24 @@ class LMDEnv(gym.Env):
 
             # --- Update Display ---
             pygame.display.flip()
+
+            print("=== Environment State ===")
+            print(f"Time Elapsed: {self.time_elapsed:.2f}s")
+            print(f"Current Timestep: {self.current_timestep}")
+            print(f"Tasks Completed: {self.num_tasks_completed}")
+            print(f"Total Distance Traveled: {self.total_ev_distance:.1f}m")
+            print(f"Total Energy Consumed: {self.total_energy_consumed:.1f}")
+            print("UGV States:")
+            for idx, ugv in enumerate(self.ugv_states):
+                print(str(ugv))
+            print("Traffic Information:")
+            print(f"  Red Roads: {self.red_roads}")
+            print(f"  Yellow Roads: {self.yellow_roads}")
+            print(f"  Traffic Centroids: {self.traffic_centeroids}")
+            print("==========================")
             
             # Wait until the Return key is pressed before ending render
-            if self.num_tasks_completed < 10000:
+            if self.num_tasks_completed < 0:
                 self.clock.tick(self.metadata["render_fps"])
             else:
                 waiting = True
@@ -441,21 +395,19 @@ class LMDEnv(gym.Env):
                     self.clock.tick(self.metadata["render_fps"])
 
         elif self.render_mode == "print":
-            print("=== Simulation State ===")
-            print(f"Time: {self.time_elapsed:.2f}s")
-            print(f"Timestep: {self.current_timestep}")
+            print("=== Environment State ===")
+            print(f"Time Elapsed: {self.time_elapsed:.2f}s")
+            print(f"Current Timestep: {self.current_timestep}")
             print(f"Tasks Completed: {self.num_tasks_completed}")
-            print(f"Total Distance: {self.total_ev_distance:.1f}m")
-            print(f"Total Energy: {self.total_energy_consumed:.1f}")
+            print(f"Total Distance Traveled: {self.total_ev_distance:.1f}m")
+            print(f"Total Energy Consumed: {self.total_energy_consumed:.1f}")
             print("UGV States:")
             for idx, ugv in enumerate(self.ugv_states):
-                print(f"  UGV {idx}: Position {ugv.position}, Status: {self.ugv_status[idx]}, Battery: {ugv.current_range_percent:.2f}")
-            print("Active Tasks:", self.active_tasks)
+                print(str(ugv))
             print("Traffic Information:")
             print(f"  Red Roads: {self.red_roads}")
             print(f"  Yellow Roads: {self.yellow_roads}")
-            print(f"  Traffic Centeroids: {self.traffic_centeroids}")
-            print("==========================")
+            print(f"  Traffic Centroids: {self.traffic_centeroids}")
 
         elif self.render_mode == "rgb_array":
             # Return screen surface as numpy array
@@ -606,7 +558,7 @@ class LMDEnv(gym.Env):
             for task, label in zip(self.task_list, labels):
                 ugv_task_list[label].append(task)
             for ugv in self.ugv_states:
-                ugv.task_list = ugv_task_list[ugv.id]
+                ugv.task_list = ugv_task_list[ugv.agent_id]
                 ugv.active_task = ugv.task_list[0] if ugv.task_list else None
 
     def fill_traffic_centroids(self):
@@ -643,88 +595,57 @@ class LMDEnv(gym.Env):
             for u, v in self.G.edges():
                  self.G[u][v]['traffic'] = 0
 
-    def init_rewarder(self):
-        self.action_response = [None for _ in range(self.num_ugvs)]
-        self.prev_task_distance = [100 for _ in range(self.num_ugvs)]
-        self.last_move_time = [0 for _ in range(self.num_ugvs)]
+    def build_graph(self,):
+        df_maze = generate_df_maze(
+                self.max_row,
+                self.max_col,
+                self.maze_lp,
+            )
+        G = nx.Graph()
+        for _, row in df_maze.iterrows():
+            r, c = int(row['row']), int(row['col'])
+            G.add_node((r, c))
+            if row['E'] == 1:
+                G.add_edge((r, c), (r, c+1), traffic=0)
+            if row['W'] == 1:
+                G.add_edge((r, c), (r, c - 1), traffic=0)
+            if row['N'] == 1:
+                G.add_edge((r, c), (r - 1, c), traffic=0)
+            if row['S'] == 1:
+                G.add_edge((r, c), (r + 1,c), traffic=0)
 
-    def init_analyzer(self):
-        # Reset metrics
-        self.total_ev_distance = 0.0
-        self.num_tasks_completed = 0
-        self.total_energy_consumed = 0.0
-        self.task_completion_times = []
+        all_shortest_path_lengths = dict(nx.all_pairs_shortest_path_length(G))
 
-    def observer(self):
-        best_dirs = []
-        nb_traffic = []
-        ugv_status = []
+        directions = [(-1, 0), (0, 1), (1, 0), (0, -1)]
+        for node in G.nodes:
+            wall_distances = []
+            for dr, dc in directions:
+                steps = 0
+                current = node
+                while steps < 2:
+                    next_node = (current[0] + dr, current[1] + dc)
+                    if not G.has_edge(current, next_node):
+                        break
+                    steps += 1
+                    current = next_node
+                wall_distances.append(steps)
+            G.nodes[node]['wall_distance'] = wall_distances
 
-        for ugv_id, ugv in enumerate(self.ugv_states):
-            # Steps to destination in each direction
-            ugv_pos = ugv.position
-            task_pos = ugv.active_task
-            
-            next_cell = nx.shortest_path(self.G, ugv_pos, task_pos)[0]
-            if next_cell == ugv_pos:
-                best_dirs.append(4)
-            else:
-                direction = (next_cell[0] - ugv_pos[0], next_cell[1] - ugv_pos[1])
-                if direction == (-1, 0):  # North
-                    best_dirs.append(0)
-                elif direction == (0, 1):  # East
-                    best_dirs.append(1)
-                elif direction == (1, 0):  # South
-                    best_dirs.append(2)
-                elif direction == (0, -1):  # West
-                    best_dirs.append(3)
-            
-            # Neighbor Traffic
-            nb_traffic.append(self._get_nb_traffic(ugv_pos))
-
-            ugv_status.append(ugv.status) # 1: moving, 0: idle, 2: charging
-
-        best_dirs_flat = np.array(best_dirs, dtype=np.int32).flatten()
-        nb_traffic_flat = np.array(nb_traffic, dtype=np.int32).flatten()
-        ugv_status_flat = np.array(ugv_status, dtype=np.int32).flatten()
-
-        # Ensure observation matches the defined space structure
-        obs_dict = {
-            'best_dir': best_dirs_flat,
-            'nb_traffic': nb_traffic_flat,
-            'ugv_status': ugv_status_flat,
-        }
-
-        return obs_dict
-
-    def analyzer(self):
-        self.total_ev_distance = sum([ugv.distance_traveled for ugv in self.ugv_states])
-        self.total_energy_consumed = sum([ugv.energy_consumed for ugv in self.ugv_states])
-        task_completion_time_diffs = [self.task_completion_times[i] - self.task_completion_times[i-1] for i in range(1, len(self.task_completion_times))]
-        avg_task_completion_time = np.mean(task_completion_time_diffs) if task_completion_time_diffs else 0.0
-        self.info = {
-            "time_elapsed":self.time_elapsed,
-            "num_tasks_completed": self.num_tasks_completed,
-            "ev_distance_traveled": self.total_ev_distance,
-            "total_energy_consumed": self.total_energy_consumed,
-            "avg_task_completion_time": avg_task_completion_time,
-        }
-
+        return G, all_shortest_path_lengths
+    
     def reset(self, seed=None, options=None):
         super().reset(seed=seed) # Call parent reset for seeding RNG
         if seed: # Seeding is handled by super().reset()
             random.seed(seed)
             np.random.seed(seed) # Also seed numpy for consistent sampling if used
 
+        # Simulation State
         self.current_timestep = 0
+        self.terminated = False
         self.time_elapsed = 0.0
 
-        df_maze = generate_df_maze(
-            self.max_row,
-            self.max_col,
-            self.maze_lp,
-        )
-        self.G, self.all_shortest_path_lengths = build_graph(df_maze) # Rebuild graph with new maze
+        # Maze State
+        self.G, self.all_shortest_path_lengths = self.build_graph() # Rebuild graph with new maze
         for u, v in self.G.edges():
             self.G[u][v]['traffic'] = 0 # Reset traffic on graph edges
         self.red_roads = []
@@ -733,76 +654,23 @@ class LMDEnv(gym.Env):
         if self.traffic_b:
             self.fill_traffic_centroids() # Generate initial traffic if enabled
 
+        # UGV States
         self.ugv_states = [UGV(ugv_id=i, base_position=self.warehouse_pos, cell_dist=self.cell_size, max_range=self.max_ugv_range,drain_rate=self.drain_rate, 
                        max_speed=self.ugv_speed, traffic_delay_factor= self.traffic_delay_factor, G=self.G) for i in range(self.num_ugvs)]
         self.task_list = random.choices(list(self.G.nodes), k=self.num_tasks) # Randomly select tasks from graph nodes
         self.distrubute_tasks() # Distribute tasks to UGVs
 
-        self.init_rewarder()
+        # Metrics
+        self.num_tasks_completed = 0
+        self.task_completion_times = []
+        self.total_ev_distance = 0.0
+        self.total_energy_consumed = 0.0
 
-        self.init_analyzer()
-
-        self.terminated = False
-
-        initial_obs, _ = self.observer()
+        obs = self._get_observation()
         info = self.analyzer()
 
-        return initial_obs, info
-
-    def step(self, action):
-        if self.terminated:
-            return None, None, self.terminated, None, self.info # Return None if already terminated
-        self.ugv_handler(action)
-        reward = self._get_reward()
-        
-        self.time_elapsed = min([ugv.local_time for ugv in self.ugv_states])
-        self.current_timestep += 1
-
-        # Update traffic periodically *before* updating info for the next step's rendering
-        if self.traffic_b:
-            if self.current_timestep % self.traffic_reset_dur == 0:
-                self.fill_traffic_centroids()
-
-        done = self._check_termination_condition() # Check termination based on new state
-
-        for ugv_id, ugv in enumerate(self.ugv_states):
-            if ugv.local_time == self.time_elapsed:
-                self.ugv_status[ugv_id] = 1
-
-                if ugv.position == self.warehouse_pos:
-                    ugv.recharge()
-                if ugv.position == self.active_tasks[ugv_id]:
-                    if not self.charging_status[ugv_id]:
-                        self.ugv_task_list[ugv_id].pop(0)
-                        self.num_tasks_completed += 1
-                        self.task_completion_times.append(self.time_elapsed)
-                    dist2task = self.all_shortest_path_lengths[ugv.position][self.ugv_task_list[ugv_id][0]]*self.cell_size
-                    dist2wh = self.all_shortest_path_lengths[self.ugv_task_list[ugv_id][0]][self.warehouse_pos]*self.cell_size
-                    if ugv.current_range >= dist2task+dist2wh:
-                        self.active_tasks[ugv_id] = self.ugv_task_list[ugv_id][0]
-                        self.charging_status[ugv_id] = False
-                    else:
-                        self.active_tasks[ugv_id] = self.warehouse_pos
-                        self.charging_status[ugv_id] = True
-                    self.prev_task_distance[ugv_id] = self.all_shortest_path_lengths[ugv.position][self.active_tasks[ugv_id]]
-            else:
-                self.ugv_status[ugv_id] = 0
-
-        obs = self._get_observation() # Gets observation *after* action/reward
-
-        # Update time and timestep *after* action and reward calculation for the current step
-
-
-        # Update info dict *after* all state changes for the current step
-        self.update_info()
-
-        
-
-        self.last_move_time = [0 for _ in range(self.num_ugvs)]
-        self.action_response = [None for _ in range(self.num_ugvs)]
-
-        return obs, reward, self.terminated, None, self.info # Return standard gym step tuple
-
+        return obs, info
+    
     def _get_nb_traffic(self, position):
         """
         Get the traffic density in the North, East, South, and West directions
@@ -819,54 +687,170 @@ class LMDEnv(gym.Env):
         
         traffic_levels = [self.G.edges.get((position, neighbor), {}).get('traffic', 0) for neighbor in neighbor_positions]
         return traffic_levels
+    
+    def _get_observation(self):
+        steps2dest = []
+        nb_traffic = []
+        ugv_status = []
+
+        for ugv_id, ugv in enumerate(self.ugv_states):
+            ugv_pos = ugv.position
+            task_pos = ugv.active_task
+
+            # Steps to destination in each direction
+            steps2dest_ = []
+            for dr, dc in [(-1, 0), (0, 1), (1, 0), (0, -1), (0,0)]:
+                r,c = ugv_pos[0] + dr, ugv_pos[1] + dc
+                # if r > 0 and r <= self.max_row and c > 0 and c <= self.max_col:
+                if (dr,dc)==(0,0) or (ugv_pos,(r,c)) in self.G.edges:
+                    steps2dest_.append(self.all_shortest_path_lengths[(r,c)][task_pos])
+                else:
+                    steps2dest_.append(self.max_row * self.max_col+1)
+            steps2dest.append(steps2dest_)
+
+            # Neighbor Traffic
+            nb_traffic.append(self._get_nb_traffic(ugv_pos))
+
+            ugv_status.append(ugv.status)
+
+        steps2dest_flat = np.array(steps2dest, dtype=np.int32).flatten()
+        nb_traffic_flat = np.array(nb_traffic, dtype=np.int32).flatten()
+        ugv_status_flat = np.array(ugv_status, dtype=np.int32).flatten()
+        obs_dict = {
+            'steps2dest': steps2dest_flat,
+            'nb_traffic': nb_traffic_flat,
+            'ugv_status': ugv_status_flat,
+        }
+
+        return obs_dict
+    
+    def analyzer(self):
+        """Analyzes the current state and returns an info dictionary."""
+        self.total_ev_distance = sum(ugv.distance_traveled for ugv in self.ugv_states)
+        self.total_energy_consumed = sum(ugv.energy_consumed for ugv in self.ugv_states)
+        task_completion_time_diffs = [self.task_completion_times[i] - self.task_completion_times[i-1] for i in range(1, len(self.task_completion_times))]
+        avg_task_completion_time = np.mean(task_completion_time_diffs) if task_completion_time_diffs else 0.0
+
+        active_tasks = [ugv.active_task for ugv in self.ugv_states]
+        info = {
+            'time_elapsed': self.time_elapsed,
+            'current_timestep': self.current_timestep,
+            
+            'num_tasks_completed': self.num_tasks_completed,
+            'total_ev_distance': self.total_ev_distance,
+            'total_energy_consumed': self.total_energy_consumed,
+            'avg_task_completion_time': avg_task_completion_time,
+
+            'active_tasks': active_tasks,
+            'red_roads': self.red_roads,
+            'yellow_roads': self.yellow_roads,
+        }
+        return info
+    
+    def step(self, action):
+        if self.terminated:
+            return None, None, self.terminated, None, self.info # Return None if already terminated
+        self.ugv_handler(action)
+        self.time_elapsed = min([ugv.local_time for ugv in self.ugv_states])
+        truncated = self.task_handler() # Handle task completion and updates
+        reward = self._get_reward()
+        
+        self.current_timestep += 1
+
+        # Update traffic periodically *before* updating info for the next step's rendering
+        if self.traffic_b:
+            if self.current_timestep % self.traffic_reset_dur == 0:
+                self.fill_traffic_centroids()
+
+        self._check_termination_condition() # Check termination based on new state
+
+        obs = self._get_observation() # Gets observation *after* action/reward
+
+        self.info = self.analyzer() # Update info with current state
+        self.last_move_time = [0 for _ in range(self.num_ugvs)]
+        self.action_response = [None for _ in range(self.num_ugvs)]
+
+        return obs, reward, self.terminated, truncated, self.info # Return standard gym step tuple
 
     def ugv_handler(self, action):
-        for act_id, act in enumerate(action):
-            if self.ugv_states[act_id].status != 0:
-                act = int(act)
+        truncated = False
+        for ugv_id, ugv in enumerate(self.ugv_states):
+            act = action[ugv_id]
+            self.ugv_states[ugv_id].move(act, self.G)
+            if ugv.position == self.warehouse_pos:
+                ugv.recharge()
 
-                response, move_time = self.ugv_states[act_id].move(act, self.G)
-                self.action_response[act_id] = response
+    def task_handler(self):
+        truncated = False
+        for ugv_id, ugv in enumerate(self.ugv_states):
+            if ugv.local_time == self.time_elapsed:
+                ugv.status = 1
+                if ugv.position == ugv.active_task:
+                    ugv.task_completed = True
+                    truncated = True
+                    if ugv.active_task == ugv.task_list[0]:
+                        ugv.task_list.pop(0)
+                        self.num_tasks_completed += 1
+                        self.task_completion_times.append(self.time_elapsed)
+                    dist2task = self.all_shortest_path_lengths[ugv.position][ugv.task_list[0]]*self.cell_size
+                    dist2wh = self.all_shortest_path_lengths[ugv.task_list[0]][self.warehouse_pos]*self.cell_size
+                    if ugv.current_range >= dist2task+dist2wh:
+                        ugv.active_task = ugv.task_list[0]
+                        ugv.charging_status = 0
+                    else:
+                        ugv.active_task = self.warehouse_pos
+                        ugv.charging_status = 1
+                    ugv.prev_position = ugv.position
+                else:
+                    ugv.task_completed = False
+            else:
+                ugv.status = 0
 
-                self.last_move_time[act_id] = move_time
-
-
+        return truncated # Return if any UGV completed a task
+    
     def _get_reward(self):
         # Calculate reward based on the outcome of the action in the previous state
         reward = 0.0
 
         for ugv_id, ugv in enumerate(self.ugv_states):
-            # --- Progress-Based Shaping Reward ---
-            # Reward for moving closer to the nearest task
-            bonus_factor = 5.0 # Adjust shaping reward magnitude
-            current_distance = self.all_shortest_path_lengths[ugv.position][self.active_tasks[ugv_id]]
-            prev_task_distance = self.prev_task_distance[ugv_id]
-            reward += bonus_factor * (prev_task_distance - current_distance)
-            if current_distance < prev_task_distance and current_distance > 0:
-                self.prev_task_distance[ugv_id] = current_distance
-            
-            # print(f"Reward: {reward:.2f}, Current Distance: {current_distance}, Previous Distance: {self.prev_task_distance}")
+            if ugv.status:
+                # --- Progress-Based Shaping Reward ---
+                # Reward for moving closer to the nearest task
+                bonus_factor = 5.0 
+                current_distance = self.all_shortest_path_lengths[ugv.position][ugv.active_task]
+                prev_distance = self.all_shortest_path_lengths[ugv.prev_position][ugv.active_task]
+                reward += bonus_factor * (prev_distance - current_distance)
+                
+                # --- Task Completion Reward ---
+                task_completion_reward = 50.0
+                if ugv.task_completed:
+                    reward += task_completion_reward
 
-            # --- Task Completion Reward ---
-            task_completion_reward = 50.0
-            if ugv.position == self.active_tasks[ugv_id]:
-                reward += task_completion_reward
+                # --- Time Penalty ---
+                # Penalize based on the time taken for the action
+                time_penalty_factor = 5.0 # Adjust this factor based on desired behavior
+                reward -= time_penalty_factor * ugv.move_time/self.cell_size
 
-            # --- Time Penalty ---
-            # Penalize based on the time taken for the action
-            time_penalty_factor = 1.0 # Adjust this factor based on desired behavior
-            reward -= time_penalty_factor * self.last_move_time[ugv_id]/self.cell_size
+                # --- Invalid Move Penalty ---
+                invalid_move_penalty = 40.0
+                if ugv.act_response == 0:
+                    reward -= invalid_move_penalty
 
-            # --- Invalid Move Penalty ---
-            invalid_move_penalty = 40.0
-            if self.action_response[ugv_id] == 0:
-                reward -= invalid_move_penalty
+                # If UGV is out of range, apply a penalty
+                out_of_range_penalty = 20.0
+                if ugv.current_range < nx.shortest_path_length(self.G, ugv.position, self.warehouse_pos)*self.cell_size:
+                    reward -= out_of_range_penalty
 
         return reward
 
 
     def _check_termination_condition(self):
-        if self.time_elapsed >= self.max_time:
+        no_fuel_flag = True
+        for ugv in self.ugv_states:
+            if ugv.current_range >= self.cell_size:
+                no_fuel_flag = False
+                break
+        if self.time_elapsed >= self.max_time or no_fuel_flag:
             self.terminated = True
         else:
             self.terminated = False
