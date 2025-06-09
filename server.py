@@ -53,7 +53,7 @@ def extract_observations(observation, num_agents):
     return all_obs
 
 def lmd_simulator(config):
-    policy_name = config["policy_name"]
+    policy_name = config["policy"]
     policy_dir = f"runs/{policy_name}/"
     log_file = f"{policy_dir}/server_log.txt"
     render_mode = config['simulation']['render_mode']

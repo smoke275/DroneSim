@@ -11,8 +11,8 @@ task:
 
 fleet:  
   ugv:
-    count: 5
-    range: 2000
+    count: 1
+    range: 100000000
     drain_rate: 1
     num_primitives: 5
     speed: 1
@@ -33,14 +33,14 @@ simulation:
   max_time: 50000
   bms: false
   traffic: true
-  algo: "dijkstra"
-  render_mode: "human"
-  train: false
+  algo: "sarsa"
+  render_mode: "quiet"
+  train: true
 
 training:
   sarsa:
-    num_episodes: 50000
+    num_episodes: 30000
     gamma: 0.99
     alpha: 0.1
     epsilon: 0.2
-    epsilon_decay: 0.999
+    epsilon_decay: 0.99

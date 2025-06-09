@@ -44,6 +44,7 @@ class UGV:
             action = int(action)
             if action ==4:
                 self.current_traffic = 0
+                self.prev_position = self.position
                 self.move_time = self.cell_dist/self.max_speed
                 self.local_time += self.move_time
                 self.act_response = 1
