@@ -1,20 +1,19 @@
-import contextlib
+import sys
 import threading
-import time
-from multiprocessing import Queue, Process
 
-import uvicorn
+from PyQt5.QtWidgets import QApplication
 
-import drone_sim
+from dronesim.render import Window
+from dronesim.simulation import Simulation
 
-# This is a sample Python script.
 
-# Press ⌃R to execute it or replace it with your code.
-# Press Double ⇧ to search everywhere for classes, files, tool windows, actions, and settings.
+def main():
+    app = QApplication(sys.argv)
+    window = Window()
+    sim = Simulation(window)
+    threading.Thread(target=sim.run, daemon=True).start()
+    sys.exit(app.exec())
 
-# Press the green button in the gutter to run the script.
+
 if __name__ == '__main__':
-    drone_sim.startup()
-
-
-# See PyCharm help at https://www.jetbrains.com/help/pycharm/
+    main()
