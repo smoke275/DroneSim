@@ -76,13 +76,20 @@ class Simulation:
                  num_trucks: int = config.NUM_TRUCKS,
                  num_stations: int = config.NUM_BASE_STATIONS,
                  drones_per_station: int = config.DRONES_PER_STATION,
-                 seed: Optional[int] = None):
+                 seed: Optional[int] = None,
+                 maze_path: str = 'maze.csv',
+                 service_frames: Optional[int] = None):
         self.window = window
         self.strategy = strategy
         self.num_trucks = num_trucks
         self.num_stations = num_stations
         self.drones_per_station = drones_per_station
-        self.world = World()
+        self.maze_path = maze_path
+        # Swap service time (applies to both aerial and fixed-station swaps so
+        # latency comparisons stay fair); default from config.
+        self.drone_service_frames = service_frames or config.DRONE_SERVICE_FRAMES
+        self.station_service_frames = service_frames or config.STATION_SERVICE_FRAMES
+        self.world = World(maze_path)
         self.sprites = None
         self.frame_count = 0
 
@@ -135,11 +142,12 @@ class Simulation:
 
     # ----------------------------------------------------------------- status
     def is_done(self) -> bool:
-        """True when all assigned tasks are delivered and all trucks returned home."""
+        """True when all tasks are delivered, every truck is back at the
+        warehouse, and every drone is docked at its base station."""
         tasks_complete = all(len(t.completed) == len(t.tasks) for t in self.trucks)
         trucks_home = all(t.at_warehouse for t in self.trucks)
         drones_idle = all(not d.on_mission for d in self.drones)
-        return tasks_complete and (trucks_home or tasks_complete) and drones_idle
+        return tasks_complete and trucks_home and drones_idle
 
     def get_metrics(self) -> Dict:
         """Compute performance metrics for benchmarking."""
@@ -293,7 +301,7 @@ class Simulation:
                 if dist <= config.DRONE_SERVICE_DIST:
                     # Hover over holding truck while mobile swap executes
                     drone.service_timer += 1
-                    if drone.service_timer >= config.DRONE_SERVICE_FRAMES:
+                    if drone.service_timer >= self.drone_service_frames:
                         # REPLENISH TRUCK FUEL
                         truck.fuel = config.TRUCK_RANGE
                         truck.swaps_received += 1
@@ -343,7 +351,6 @@ class Simulation:
 
     def _plan_truck_path(self, truck: Truck, truck_idx: int):
         w = self.world
-        current_cell = None
 
         if truck.at_warehouse:
             while truck.task_index < len(truck.tasks) and \
@@ -354,15 +361,17 @@ class Simulation:
             start = w.warehouse_cell
             next_task = truck.tasks[truck.task_index]
         else:
+            # Plan from the cell the truck is actually in — the previous path
+            # may already be cleared (task arrival) or stale (mid-route replan
+            # after a drone swap), and using anything else sends the truck in
+            # a straight line through walls.
+            start = w.canvas_to_cell(*truck.pos)
             remaining = [t for t in truck.tasks if t not in truck.completed]
             if not remaining:
                 # All assigned tasks completed: return to warehouse
-                path_home = w.find_shortest_path(truck.path[-1] if truck.path else w.warehouse_cell,
-                                                  w.warehouse_cell)
-                self._set_truck_path(truck, path_home)
+                self._set_truck_path(truck, w.find_shortest_path(start, w.warehouse_cell))
                 truck.detouring_to_warehouse = True
                 return
-            start = truck.path[-1] if truck.path else truck.tasks[max(0, truck.task_index - 1)]
             next_task = remaining[0]
 
         current_cell = start
@@ -473,7 +482,7 @@ class Simulation:
             truck.detouring_to_warehouse = False
         elif truck.detouring_to_station and end_cell in self.station_cells:
             # Arrived at fixed charging station
-            truck.station_service_timer = config.STATION_SERVICE_FRAMES
+            truck.station_service_timer = self.station_service_frames
             truck.holding = True
         else:
             # Arrived at task

@@ -1,3 +1,6 @@
 __pycache__/
 *.pyc
 .idea/
+gazebo_emulation/ws/build/
+gazebo_emulation/ws/install/
+gazebo_emulation/ws/log/

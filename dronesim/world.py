@@ -47,6 +47,12 @@ class World:
         y = config.BOUNDARY_Y - (row - 1) * self.cell_size - self.cell_size / 2
         return x, y
 
+    def canvas_to_cell(self, x, y):
+        """Nearest (row, col) cell for a canvas position (inverse of cell_to_canvas)."""
+        col = round((x + config.BOUNDARY_X - self.cell_size / 2) / self.cell_size) + 1
+        row = round((config.BOUNDARY_Y - y - self.cell_size / 2) / self.cell_size) + 1
+        return (max(1, min(self.max_row, row)), max(1, min(self.max_col, col)))
+
     def find_shortest_path(self, start, end):
         try:
             return nx.shortest_path(self.graph, source=tuple(start), target=tuple(end))

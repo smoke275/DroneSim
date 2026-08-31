@@ -22,12 +22,25 @@ SUMMARY_FIELDS = [
 ]
 
 
-def run_one(strategy, seed, max_iter):
-    sim = Simulation(window=None, strategy=strategy, seed=seed)
+def run_one(strategy, seed, max_iter, maze, num_trucks=None, drones_per_station=None,
+            service_frames=None):
+    from dronesim import config
+    kwargs = dict(window=None, strategy=strategy, seed=seed, maze_path=maze)
+    if num_trucks is not None:
+        kwargs['num_trucks'] = num_trucks
+    if drones_per_station is not None:
+        kwargs['drones_per_station'] = drones_per_station
+    if service_frames is not None:
+        kwargs['service_frames'] = service_frames
+    sim = Simulation(**kwargs)
     start = time.perf_counter()
     sim.run(max_iterations=max_iter)
     metrics = sim.get_metrics()
     metrics['seed'] = seed
+    metrics['maze'] = os.path.basename(maze)
+    metrics['num_trucks'] = sim.num_trucks
+    metrics['drones_per_station'] = sim.drones_per_station
+    metrics['service_frames'] = sim.drone_service_frames
     metrics['wall_time_s'] = round(time.perf_counter() - start, 2)
     return metrics
 
@@ -53,6 +66,13 @@ def main():
     parser.add_argument('--out', default='results', help='output directory')
     parser.add_argument('--strategies', nargs='*', default=[s.value for s in Strategy],
                         help='subset of strategies to run')
+    parser.add_argument('--mazes', nargs='*', default=['maze.csv'],
+                        help='maze CSVs to benchmark on (default: maze.csv)')
+    parser.add_argument('--trucks', type=int, default=None, help='override fleet size')
+    parser.add_argument('--drones-per-station', type=int, default=None,
+                        help='override drones per base station')
+    parser.add_argument('--service-frames', type=int, default=None,
+                        help='override swap service time (frames; 120 frames = 1 s)')
     args = parser.parse_args()
 
     strategies = [Strategy(s) for s in args.strategies]
@@ -60,15 +80,19 @@ def main():
     os.makedirs(args.out, exist_ok=True)
 
     all_rows = []
-    for strategy in strategies:
-        for seed in seeds:
-            row = run_one(strategy, seed, args.max_iter)
-            all_rows.append(row)
-            status = 'ok' if row['completed'] else 'INCOMPLETE'
-            viol = f"  FUEL<0 x{row['fuel_violations']}" if row['fuel_violations'] else ''
-            print(f"{strategy.value:<20} seed {seed:>3}  makespan {row['makespan']:>7}  "
-                  f"uptime {row['uptime_ratio']:.3f}  detour {row['detour_percentage']:5.1f}%  "
-                  f"[{status}]{viol}  ({row['wall_time_s']}s)")
+    for maze in args.mazes:
+        for strategy in strategies:
+            for seed in seeds:
+                row = run_one(strategy, seed, args.max_iter, maze,
+                              num_trucks=args.trucks,
+                              drones_per_station=args.drones_per_station,
+                              service_frames=args.service_frames)
+                all_rows.append(row)
+                status = 'ok' if row['completed'] else 'INCOMPLETE'
+                viol = f"  FUEL<0 x{row['fuel_violations']}" if row['fuel_violations'] else ''
+                print(f"{row['maze']:<24} {strategy.value:<20} seed {seed:>3}  "
+                      f"makespan {row['makespan']:>7}  uptime {row['uptime_ratio']:.3f}  "
+                      f"detour {row['detour_percentage']:5.1f}%  [{status}]{viol}  ({row['wall_time_s']}s)")
 
     csv_path = os.path.join(args.out, 'benchmark_results.csv')
     fieldnames = list(all_rows[0].keys())

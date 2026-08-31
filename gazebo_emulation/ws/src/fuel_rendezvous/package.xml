@@ -1,0 +1,21 @@
+<?xml version="1.0"?>
+<?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
+<package format="3">
+  <name>fuel_rendezvous</name>
+  <version>0.1.0</version>
+  <description>Gazebo (gz-sim) emulation of the FUEL aerial battery-swap rendezvous:
+    a quadcopter intercepts a holding ground robot, hovers for T_swap, and returns.</description>
+  <maintainer email="shashwata275@gmail.com">Shashwata Mandal</maintainer>
+  <license>MIT</license>
+
+  <depend>rclpy</depend>
+  <depend>geometry_msgs</depend>
+  <depend>nav_msgs</depend>
+  <depend>std_msgs</depend>
+  <exec_depend>ros_gz_sim</exec_depend>
+  <exec_depend>ros_gz_bridge</exec_depend>
+
+  <export>
+    <build_type>ament_python</build_type>
+  </export>
+</package>
