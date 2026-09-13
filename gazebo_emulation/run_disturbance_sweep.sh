@@ -24,8 +24,12 @@ declare -A COND=(
   [gnss05]="pos_noise:=0.5"
   [drop20]="drop_prob:=0.2"
   [combined]="wind_speed:=6.0 wind_dir_deg:=45.0 wind_gust:=2.0 pos_noise:=0.5 drop_prob:=0.1"
+  # Same wind conditions with integral action in the drone position loop
+  [wind6_gust2_pi]="wind_speed:=6.0 wind_dir_deg:=45.0 wind_gust:=2.0 pos_ki:=0.3"
+  [wind9_gust3_pi]="wind_speed:=9.0 wind_dir_deg:=45.0 wind_gust:=3.0 pos_ki:=0.3"
+  [combined_pi]="wind_speed:=6.0 wind_dir_deg:=45.0 wind_gust:=2.0 pos_noise:=0.5 drop_prob:=0.1 pos_ki:=0.3"
 )
-ORDER=(calm wind3 wind6_gust2 wind9_gust3 gnss05 drop20 combined)
+ORDER=(calm wind3 wind6_gust2 wind9_gust3 gnss05 drop20 combined wind6_gust2_pi wind9_gust3_pi combined_pi)
 if [ $# -gt 0 ]; then ORDER=("$@"); fi
 
 if [ -z "$(docker ps -q -f name="^${CONTAINER}$")" ]; then

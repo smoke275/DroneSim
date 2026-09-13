@@ -1,0 +1,8 @@
+condition,label,cycles,dispatches,approach_mean_s,approach_std_s,hover_mean_cm,hover_p95_cm,hover_max_cm,within_tol_pct,capture_losses,cycle_mean_s,cycle_std_s,strandings,wind
+calm,"Nominal (calm, RTK)",14,18,22.05,8.91,6.1,39.9,58.2,83.4,0,63.9,15.5,0,calm
+wind3,Wind 3 m/s steady,15,18,18.99,8.43,31.6,49.0,79.4,0.3,1,59.2,15.7,0,3.0 (max 3.0)
+wind6_gust2,"Wind 6 m/s, gusts $\sigma$=2",5,9,31.92,27.21,44.4,56.9,59.9,0.0,0,164.3,70.6,4,6.6 (max 11.3)
+wind9_gust3,"Wind 9 m/s, gusts $\sigma$=3",0,4,,,,,,,,,,3,9.9 (max 17.0)
+gnss05,GNSS noise $\sigma$=0.5 m,15,19,18.26,7.76,34.1,97.5,209.8,20.4,3,58.3,15.8,0,calm
+drop20,Telemetry loss 20\%,15,19,19.65,10.5,6.3,39.9,58.4,82.4,0,59.7,18.8,1,calm
+combined,Wind 6/2 + GNSS 0.5 + loss 10\%,8,12,19.37,9.68,73.0,115.9,196.0,0.0,11,67.6,37.2,0,6.6 (max 11.3)

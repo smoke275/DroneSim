@@ -34,29 +34,20 @@ LABEL = {
 def ms(vals, nd=1):
     if not vals:
         return 'n/a'
-    return f'{st.mean(vals):.{nd}f} $\\pm$ {st.stdev(vals) if len(vals) > 1 else 0:.{nd}f}'
+    return f'{st.mean(vals):.{nd}f} +- {st.stdev(vals) if len(vals) > 1 else 0:.{nd}f}'
 
 
 def main():
     rows_out = []
     conds = [c for c in ORDER if os.path.isdir(os.path.join(ROOT, c))]
     conds += sorted(c for c in os.listdir(ROOT) if os.path.isdir(os.path.join(ROOT, c)) and c not in conds)
-    print(f"{'condition':<14}{'cycles':>7}{'approach s':>18}{'hover mean cm':>15}{'p95 cm':>9}{'max cm':>9}"
-          f"{'<10cm %':>9}{'losses':>8}{'cycle s':>16}{'strand':>8}{'wind m/s':>10}")
+    print(f"{'condition':<16}{'cycles':>7} {'approach s':>14} {'hover mean cm':>14} {'p95 cm':>12} {'max cm':>7}"
+          f" {'<10cm %':>8} {'losses':>7} {'cycle s':>15} {'strand':>7}  {'wind m/s':<16}")
     for c in conds:
         d = os.path.join(ROOT, c)
         cyc = []
         for f in glob.glob(os.path.join(d, 'rendezvous_metrics_*.csv')):
             cyc += list(csv.DictReader(open(f)))
-        if not cyc:
-            continue
-        approach = [float(r['approach_time_s']) for r in cyc]
-        hover = [100 * float(r['hover_mean_err_m']) for r in cyc]
-        p95 = [100 * float(r.get('hover_p95_err_m', r['hover_max_err_m'])) for r in cyc]
-        hmax = [100 * float(r['hover_max_err_m']) for r in cyc]
-        tol = [100 * float(r.get('frac_within_tol', 0)) for r in cyc]
-        losses = sum(int(r.get('capture_losses', 0)) for r in cyc)
-        total = [float(r['cycle_total_s']) for r in cyc]
         log = open(os.path.join(d, 'launch.log')).read() if os.path.exists(os.path.join(d, 'launch.log')) else ''
         strands = len(re.findall(r'STRANDED', log))
         dispatches = len(re.findall(r'DISPATCH ', log))
@@ -66,8 +57,25 @@ def main():
             w = [float(r['speed']) for r in csv.DictReader(open(wf))]
             if w:
                 wind = f'{st.mean(w):.1f} (max {max(w):.1f})'
-        print(f"{c:<14}{len(cyc):>7}{ms(approach):>18}{ms(hover):>15}{ms(p95, 1):>9}{max(hmax):>9.0f}"
-              f"{st.mean(tol):>9.0f}{losses:>8}{ms(total):>16}{strands:>8}{wind:>10}")
+        if not cyc:
+            # No rendezvous completed: the capture failed under this condition
+            print(f"{c:<16}{0:>7} {'n/a':>14} {'n/a':>14} {'n/a':>12} {'n/a':>7} {'n/a':>8} {'n/a':>7} {'n/a':>15} {strands:>7}  {wind:<16}")
+            rows_out.append({
+                'condition': c, 'label': LABEL.get(c, c), 'cycles': 0, 'dispatches': dispatches,
+                'approach_mean_s': '', 'approach_std_s': '', 'hover_mean_cm': '', 'hover_p95_cm': '', 'hover_max_cm': '',
+                'within_tol_pct': '', 'capture_losses': '', 'cycle_mean_s': '', 'cycle_std_s': '',
+                'strandings': strands, 'wind': wind,
+            })
+            continue
+        approach = [float(r['approach_time_s']) for r in cyc]
+        hover = [100 * float(r['hover_mean_err_m']) for r in cyc]
+        p95 = [100 * float(r.get('hover_p95_err_m', r['hover_max_err_m'])) for r in cyc]
+        hmax = [100 * float(r['hover_max_err_m']) for r in cyc]
+        tol = [100 * float(r.get('frac_within_tol', 0)) for r in cyc]
+        losses = sum(int(r.get('capture_losses', 0)) for r in cyc)
+        total = [float(r['cycle_total_s']) for r in cyc]
+        print(f"{c:<16}{len(cyc):>7} {ms(approach):>14} {ms(hover):>14} {ms(p95, 1):>12} {max(hmax):>7.0f}"
+              f" {st.mean(tol):>8.0f} {losses:>7} {ms(total):>15} {strands:>7}  {wind:<16}")
         rows_out.append({
             'condition': c, 'label': LABEL.get(c, c), 'cycles': len(cyc), 'dispatches': dispatches,
             'approach_mean_s': round(st.mean(approach), 2), 'approach_std_s': round(st.stdev(approach) if len(approach) > 1 else 0, 2),
@@ -82,6 +90,9 @@ def main():
         w.writerows(rows_out)
     with open(os.path.join(ROOT, 'summary_table.tex'), 'w') as f:
         for r in rows_out:
+            if r['cycles'] == 0:
+                f.write(f"{r['label']} & 0 & \\multicolumn{{7}}{{c}}{{no rendezvous completed ({r['dispatches']} dispatched)}} & {r['strandings']} \\\\\n")
+                continue
             f.write(f"{r['label']} & {r['cycles']} & ${r['approach_mean_s']:.1f} \\pm {r['approach_std_s']:.1f}$ & "
                     f"${r['hover_mean_cm']:.1f}$ & ${r['hover_p95_cm']:.1f}$ & ${r['hover_max_cm']:.0f}$ & "
                     f"{r['within_tol_pct']:.0f} & {r['capture_losses']} & ${r['cycle_mean_s']:.1f} \\pm {r['cycle_std_s']:.1f}$ & {r['strandings']} \\\\\n")

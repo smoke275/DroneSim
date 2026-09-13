@@ -11,3 +11,7 @@ Summary: 1 package finished [0.73s]
 === gnss05: 360s  [pos_noise:=0.5]
     cycles: 15  dispatches: 19  strandings: 0
 === drop20: 360s  [drop_prob:=0.2]
+    cycles: 15  dispatches: 19  strandings: 1
+=== combined: 360s  [wind_speed:=6.0 wind_dir_deg:=45.0 wind_gust:=2.0 pos_noise:=0.5 drop_prob:=0.1]
+    cycles: 8  dispatches: 12  strandings: 0
+done -> ../results/gazebo
