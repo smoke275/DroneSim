@@ -15,7 +15,8 @@ import statistics as st
 import sys
 
 ROOT = sys.argv[1] if len(sys.argv) > 1 else os.path.join(os.path.dirname(__file__), '..', 'results', 'gazebo')
-ORDER = ['calm', 'wind3', 'wind6_gust2', 'wind9_gust3', 'gnss05', 'drop20', 'combined']
+ORDER = ['calm', 'wind3', 'wind6_gust2', 'wind9_gust3', 'gnss05', 'drop20', 'combined',
+         'wind6_gust2_pi', 'wind9_gust3_pi', 'combined_pi']
 LABEL = {
     'calm': 'Nominal (calm, RTK)',
     'wind3': 'Wind 3 m/s steady',
@@ -24,6 +25,9 @@ LABEL = {
     'gnss05': 'GNSS noise $\\sigma$=0.5 m',
     'drop20': 'Telemetry loss 20\\%',
     'combined': 'Wind 6/2 + GNSS 0.5 + loss 10\\%',
+    'wind6_gust2_pi': 'Wind 6 m/s, gusts $\\sigma$=2 (PI)',
+    'wind9_gust3_pi': 'Wind 9 m/s, gusts $\\sigma$=3 (PI)',
+    'combined_pi': 'Combined (PI)',
 }
 
 

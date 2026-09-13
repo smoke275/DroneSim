@@ -7,3 +7,7 @@ Summary: 1 package finished [0.73s]
 === wind6_gust2: 360s  [wind_speed:=6.0 wind_dir_deg:=45.0 wind_gust:=2.0]
     cycles: 5  dispatches: 9  strandings: 4
 === wind9_gust3: 360s  [wind_speed:=9.0 wind_dir_deg:=45.0 wind_gust:=3.0]
+    cycles: 0  dispatches: 4  strandings: 3
+=== gnss05: 360s  [pos_noise:=0.5]
+    cycles: 15  dispatches: 19  strandings: 0
+=== drop20: 360s  [drop_prob:=0.2]

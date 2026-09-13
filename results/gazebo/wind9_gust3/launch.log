@@ -1,0 +1,127 @@
+[INFO] [launch]: All log files can be found below /root/.ros/log/2026-09-13-03-01-38-961077-cd553ad9148e-9633
+[INFO] [launch]: Default logging verbosity is set to INFO
+[INFO] [gazebo-1]: process started with pid [9636]
+[INFO] [parameter_bridge-2]: process started with pid [9637]
+[INFO] [bms_dispatcher-3]: process started with pid [9638]
+[INFO] [wind_field-4]: process started with pid [9640]
+[INFO] [drone_agent-5]: process started with pid [9641]
+[INFO] [drone_agent-6]: process started with pid [9642]
+[INFO] [drone_agent-7]: process started with pid [9643]
+[INFO] [drone_agent-8]: process started with pid [9644]
+[INFO] [ugv_agent-9]: process started with pid [9645]
+[INFO] [ugv_agent-10]: process started with pid [9646]
+[INFO] [ugv_agent-11]: process started with pid [9647]
+[INFO] [ugv_agent-12]: process started with pid [9648]
+[INFO] [ugv_agent-13]: process started with pid [9649]
+[INFO] [ugv_agent-14]: process started with pid [9650]
+[wind_field-4] [INFO] [1789268499.190327158] [wind_field]: wind_field: mean 9.0 m/s @ 45 deg, gust std 3.0 m/s, period 5.0 s
+[ugv_agent-13] [INFO] [1789268499.192323812] [ugv_agent_ugv_4]: ugv_4: route of 10 waypoints
+[ugv_agent-12] [INFO] [1789268499.192340521] [ugv_agent_ugv_3]: ugv_3: route of 13 waypoints
+[bms_dispatcher-3] [INFO] [1789268499.202967667] [bms_dispatcher]: BMS up: drones ['x3_0', 'x3_1', 'x3_2', 'x3_3'], trucks ['ugv_0', 'ugv_1', 'ugv_2', 'ugv_3', 'ugv_4', 'ugv_5'], dispatch below SOC 55%
+[ugv_agent-14] [INFO] [1789268499.203275487] [ugv_agent_ugv_5]: ugv_5: route of 8 waypoints
+[drone_agent-5] [INFO] [1789268499.207174674] [drone_agent_x3_0]: x3_0: pad (-30.0, 30.0), serving ['ugv_0', 'ugv_1', 'ugv_2', 'ugv_3', 'ugv_4', 'ugv_5']
+[drone_agent-7] [INFO] [1789268499.210382228] [drone_agent_x3_2]: x3_2: pad (-30.0, -24.0), serving ['ugv_0', 'ugv_1', 'ugv_2', 'ugv_3', 'ugv_4', 'ugv_5']
+[ugv_agent-10] [INFO] [1789268499.217849123] [ugv_agent_ugv_1]: ugv_1: route of 12 waypoints
+[ugv_agent-11] [INFO] [1789268499.220503378] [ugv_agent_ugv_2]: ugv_2: route of 13 waypoints
+[drone_agent-8] [INFO] [1789268499.223838832] [drone_agent_x3_3]: x3_3: pad (24.0, -24.0), serving ['ugv_0', 'ugv_1', 'ugv_2', 'ugv_3', 'ugv_4', 'ugv_5']
+[ugv_agent-9] [INFO] [1789268499.223941291] [ugv_agent_ugv_0]: ugv_0: route of 12 waypoints
+[drone_agent-6] [INFO] [1789268499.224175037] [drone_agent_x3_1]: x3_1: pad (24.0, 30.0), serving ['ugv_0', 'ugv_1', 'ugv_2', 'ugv_3', 'ugv_4', 'ugv_5']
+[parameter_bridge-2] [INFO] [1789268500.106094490] [ros_gz_bridge]: Creating ROS->GZ Bridge: [/x3_0/cmd_vel (geometry_msgs/msg/Twist) -> /X3_0/gazebo/command/twist (gz.msgs.Twist)] (Lazy 0)
+[parameter_bridge-2] [INFO] [1789268500.107846364] [ros_gz_bridge]: Creating ROS->GZ Bridge: [/x3_0/enable (std_msgs/msg/Bool) -> /X3_0/enable (gz.msgs.Boolean)] (Lazy 0)
+[parameter_bridge-2] [INFO] [1789268500.108221926] [ros_gz_bridge]: Creating GZ->ROS Bridge: [/model/x3_0/odometry (gz.msgs.Odometry) -> /x3_0/odometry (nav_msgs/msg/Odometry)] (Lazy 0)
+[parameter_bridge-2] [INFO] [1789268500.109105224] [ros_gz_bridge]: Creating ROS->GZ Bridge: [/x3_1/cmd_vel (geometry_msgs/msg/Twist) -> /X3_1/gazebo/command/twist (gz.msgs.Twist)] (Lazy 0)
+[parameter_bridge-2] [INFO] [1789268500.109315639] [ros_gz_bridge]: Creating ROS->GZ Bridge: [/x3_1/enable (std_msgs/msg/Bool) -> /X3_1/enable (gz.msgs.Boolean)] (Lazy 0)
+[parameter_bridge-2] [INFO] [1789268500.109504467] [ros_gz_bridge]: Creating GZ->ROS Bridge: [/model/x3_1/odometry (gz.msgs.Odometry) -> /x3_1/odometry (nav_msgs/msg/Odometry)] (Lazy 0)
+[parameter_bridge-2] [INFO] [1789268500.109686637] [ros_gz_bridge]: Creating ROS->GZ Bridge: [/x3_2/cmd_vel (geometry_msgs/msg/Twist) -> /X3_2/gazebo/command/twist (gz.msgs.Twist)] (Lazy 0)
+[parameter_bridge-2] [INFO] [1789268500.109857247] [ros_gz_bridge]: Creating ROS->GZ Bridge: [/x3_2/enable (std_msgs/msg/Bool) -> /X3_2/enable (gz.msgs.Boolean)] (Lazy 0)
+[parameter_bridge-2] [INFO] [1789268500.110019867] [ros_gz_bridge]: Creating GZ->ROS Bridge: [/model/x3_2/odometry (gz.msgs.Odometry) -> /x3_2/odometry (nav_msgs/msg/Odometry)] (Lazy 0)
+[parameter_bridge-2] [INFO] [1789268500.110183826] [ros_gz_bridge]: Creating ROS->GZ Bridge: [/x3_3/cmd_vel (geometry_msgs/msg/Twist) -> /X3_3/gazebo/command/twist (gz.msgs.Twist)] (Lazy 0)
+[parameter_bridge-2] [INFO] [1789268500.110444001] [ros_gz_bridge]: Creating ROS->GZ Bridge: [/x3_3/enable (std_msgs/msg/Bool) -> /X3_3/enable (gz.msgs.Boolean)] (Lazy 0)
+[parameter_bridge-2] [INFO] [1789268500.110648226] [ros_gz_bridge]: Creating GZ->ROS Bridge: [/model/x3_3/odometry (gz.msgs.Odometry) -> /x3_3/odometry (nav_msgs/msg/Odometry)] (Lazy 0)
+[parameter_bridge-2] [INFO] [1789268500.110824063] [ros_gz_bridge]: Creating ROS->GZ Bridge: [/ugv_0/cmd_vel (geometry_msgs/msg/Twist) -> /model/ugv_0/cmd_vel (gz.msgs.Twist)] (Lazy 0)
+[parameter_bridge-2] [INFO] [1789268500.111019785] [ros_gz_bridge]: Creating GZ->ROS Bridge: [/model/ugv_0/odometry (gz.msgs.Odometry) -> /ugv_0/odometry (nav_msgs/msg/Odometry)] (Lazy 0)
+[parameter_bridge-2] [INFO] [1789268500.111235040] [ros_gz_bridge]: Creating ROS->GZ Bridge: [/ugv_1/cmd_vel (geometry_msgs/msg/Twist) -> /model/ugv_1/cmd_vel (gz.msgs.Twist)] (Lazy 0)
+[parameter_bridge-2] [INFO] [1789268500.111412211] [ros_gz_bridge]: Creating GZ->ROS Bridge: [/model/ugv_1/odometry (gz.msgs.Odometry) -> /ugv_1/odometry (nav_msgs/msg/Odometry)] (Lazy 0)
+[parameter_bridge-2] [INFO] [1789268500.111610367] [ros_gz_bridge]: Creating ROS->GZ Bridge: [/ugv_2/cmd_vel (geometry_msgs/msg/Twist) -> /model/ugv_2/cmd_vel (gz.msgs.Twist)] (Lazy 0)
+[parameter_bridge-2] [INFO] [1789268500.111797686] [ros_gz_bridge]: Creating GZ->ROS Bridge: [/model/ugv_2/odometry (gz.msgs.Odometry) -> /ugv_2/odometry (nav_msgs/msg/Odometry)] (Lazy 0)
+[parameter_bridge-2] [INFO] [1789268500.111987260] [ros_gz_bridge]: Creating ROS->GZ Bridge: [/ugv_3/cmd_vel (geometry_msgs/msg/Twist) -> /model/ugv_3/cmd_vel (gz.msgs.Twist)] (Lazy 0)
+[parameter_bridge-2] [INFO] [1789268500.112200038] [ros_gz_bridge]: Creating GZ->ROS Bridge: [/model/ugv_3/odometry (gz.msgs.Odometry) -> /ugv_3/odometry (nav_msgs/msg/Odometry)] (Lazy 0)
+[parameter_bridge-2] [INFO] [1789268500.112399100] [ros_gz_bridge]: Creating ROS->GZ Bridge: [/ugv_4/cmd_vel (geometry_msgs/msg/Twist) -> /model/ugv_4/cmd_vel (gz.msgs.Twist)] (Lazy 0)
+[parameter_bridge-2] [INFO] [1789268500.112589873] [ros_gz_bridge]: Creating GZ->ROS Bridge: [/model/ugv_4/odometry (gz.msgs.Odometry) -> /ugv_4/odometry (nav_msgs/msg/Odometry)] (Lazy 0)
+[parameter_bridge-2] [INFO] [1789268500.112784331] [ros_gz_bridge]: Creating ROS->GZ Bridge: [/ugv_5/cmd_vel (geometry_msgs/msg/Twist) -> /model/ugv_5/cmd_vel (gz.msgs.Twist)] (Lazy 0)
+[parameter_bridge-2] [INFO] [1789268500.112968774] [ros_gz_bridge]: Creating GZ->ROS Bridge: [/model/ugv_5/odometry (gz.msgs.Odometry) -> /ugv_5/odometry (nav_msgs/msg/Odometry)] (Lazy 0)
+[parameter_bridge-2] [INFO] [1789268500.113347118] [ros_gz_bridge]: Passing message from ROS geometry_msgs/msg/Twist to Gazebo gz.msgs.Twist (showing msg only once per type)
+[wind_field-4] [INFO] [1789268526.259023689] [wind_field]: wind now 10.2 m/s
+[wind_field-4] [INFO] [1789268552.476501533] [wind_field]: wind now 9.6 m/s
+[bms_dispatcher-3] [INFO] [1789268556.695727833] [bms_dispatcher]: DISPATCH x3_2 -> ugv_5 (SOC 55%)
+[drone_agent-7] [INFO] [1789268556.696443580] [drone_agent_x3_2]: x3_2: phase -> ARM
+[drone_agent-7] [INFO] [1789268556.696649321] [drone_agent_x3_2]: x3_2: dispatched to ugv_5
+[parameter_bridge-2] [INFO] [1789268556.702636794] [ros_gz_bridge]: Passing message from ROS std_msgs/msg/Bool to Gazebo gz.msgs.Boolean (showing msg only once per type)
+[drone_agent-7] [INFO] [1789268557.702968886] [drone_agent_x3_2]: x3_2: phase -> TAKEOFF
+[bms_dispatcher-3] [INFO] [1789268559.195749014] [bms_dispatcher]: DISPATCH x3_1 -> ugv_4 (SOC 55%)
+[drone_agent-6] [INFO] [1789268559.196228206] [drone_agent_x3_1]: x3_1: phase -> ARM
+[drone_agent-6] [INFO] [1789268559.196447946] [drone_agent_x3_1]: x3_1: dispatched to ugv_4
+[drone_agent-6] [INFO] [1789268560.217351002] [drone_agent_x3_1]: x3_1: phase -> TAKEOFF
+[drone_agent-7] [INFO] [1789268562.102933729] [drone_agent_x3_2]: x3_2: phase -> INTERCEPT
+[bms_dispatcher-3] [INFO] [1789268563.195860705] [bms_dispatcher]: DISPATCH x3_3 -> ugv_3 (SOC 55%)
+[drone_agent-8] [INFO] [1789268563.196664983] [drone_agent_x3_3]: x3_3: phase -> ARM
+[drone_agent-8] [INFO] [1789268563.196873783] [drone_agent_x3_3]: x3_3: dispatched to ugv_3
+[drone_agent-8] [INFO] [1789268564.217183742] [drone_agent_x3_3]: x3_3: phase -> TAKEOFF
+[drone_agent-6] [INFO] [1789268564.567488425] [drone_agent_x3_1]: x3_1: phase -> INTERCEPT
+[bms_dispatcher-3] [INFO] [1789268565.695809021] [bms_dispatcher]: DISPATCH x3_0 -> ugv_2 (SOC 55%)
+[drone_agent-5] [INFO] [1789268565.696305690] [drone_agent_x3_0]: x3_0: phase -> ARM
+[drone_agent-5] [INFO] [1789268565.696463269] [drone_agent_x3_0]: x3_0: dispatched to ugv_2
+[drone_agent-5] [INFO] [1789268566.700166306] [drone_agent_x3_0]: x3_0: phase -> TAKEOFF
+[drone_agent-8] [INFO] [1789268568.816866628] [drone_agent_x3_3]: x3_3: phase -> INTERCEPT
+[drone_agent-5] [INFO] [1789268571.100117912] [drone_agent_x3_0]: x3_0: phase -> INTERCEPT
+[drone_agent-7] [INFO] [1789268571.203057377] [drone_agent_x3_2]: x3_2: phase -> HOVER_SWAP
+[wind_field-4] [INFO] [1789268578.889555470] [wind_field]: wind now 12.4 m/s
+[drone_agent-7] [INFO] [1789268581.253106524] [drone_agent_x3_2]: x3_2: phase -> RETURN
+[ugv_agent-14] [INFO] [1789268581.253440962] [ugv_agent_ugv_5]: ugv_5: battery swapped, SOC 100%
+[wind_field-4] [INFO] [1789268605.407624191] [wind_field]: wind now 11.2 m/s
+[wind_field-4] [INFO] [1789268631.824243206] [wind_field]: wind now 9.2 m/s
+[ugv_agent-9] [WARN] [1789268655.966374657] [ugv_agent_ugv_0]: ugv_0: STRANDED (SOC 0), waiting for a drone
+[wind_field-4] [INFO] [1789268658.542683007] [wind_field]: wind now 10.3 m/s
+[wind_field-4] [INFO] [1789268685.060372918] [wind_field]: wind now 12.5 m/s
+[ugv_agent-14] [WARN] [1789268701.796102006] [ugv_agent_ugv_5]: ugv_5: STRANDED (SOC 0), waiting for a drone
+[wind_field-4] [INFO] [1789268711.577204217] [wind_field]: wind now 10.4 m/s
+[wind_field-4] [INFO] [1789268738.193133875] [wind_field]: wind now 14.4 m/s
+[ugv_agent-10] [WARN] [1789268759.310767688] [ugv_agent_ugv_1]: ugv_1: STRANDED (SOC 0), waiting for a drone
+[drone_agent-5] [INFO] [1789268763.450069050] [drone_agent_x3_0]: x3_0: phase -> HOVER_SWAP
+[wind_field-4] [INFO] [1789268764.658642802] [wind_field]: wind now 8.1 m/s
+[drone_agent-5] [INFO] [1789268773.500232214] [drone_agent_x3_0]: x3_0: phase -> RETURN
+[ugv_agent-11] [INFO] [1789268773.500406598] [ugv_agent_ugv_2]: ugv_2: battery swapped, SOC 100%
+[wind_field-4] [INFO] [1789268791.372822112] [wind_field]: wind now 9.4 m/s
+[wind_field-4] [INFO] [1789268817.837763366] [wind_field]: wind now 8.6 m/s
+[wind_field-4] [INFO] [1789268844.303258697] [wind_field]: wind now 14.7 m/s
+[WARNING] [launch]: user interrupted with ctrl-c (SIGINT)
+[parameter_bridge-2] [INFO] [1789268858.847754739] [rclcpp]: signal_handler(SIGINT/SIGTERM)
+[INFO] [ugv_agent-14]: sending signal 'SIGINT' to process[ugv_agent-14]
+[INFO] [ugv_agent-13]: sending signal 'SIGINT' to process[ugv_agent-13]
+[INFO] [ugv_agent-12]: sending signal 'SIGINT' to process[ugv_agent-12]
+[INFO] [ugv_agent-11]: sending signal 'SIGINT' to process[ugv_agent-11]
+[INFO] [ugv_agent-10]: sending signal 'SIGINT' to process[ugv_agent-10]
+[INFO] [ugv_agent-9]: sending signal 'SIGINT' to process[ugv_agent-9]
+[INFO] [drone_agent-8]: sending signal 'SIGINT' to process[drone_agent-8]
+[INFO] [drone_agent-7]: sending signal 'SIGINT' to process[drone_agent-7]
+[INFO] [drone_agent-6]: sending signal 'SIGINT' to process[drone_agent-6]
+[INFO] [drone_agent-5]: sending signal 'SIGINT' to process[drone_agent-5]
+[INFO] [wind_field-4]: sending signal 'SIGINT' to process[wind_field-4]
+[INFO] [bms_dispatcher-3]: sending signal 'SIGINT' to process[bms_dispatcher-3]
+[INFO] [parameter_bridge-2]: sending signal 'SIGINT' to process[parameter_bridge-2]
+[ERROR] [ugv_agent-12]: process has died [pid 9648, exit code -2, cmd '/ws/install/fuel_rendezvous/lib/fuel_rendezvous/ugv_agent --ros-args -r __node:=ugv_agent_ugv_3 --params-file /tmp/launch_params_c7c9y2lu'].
+[ERROR] [ugv_agent-11]: process has died [pid 9647, exit code -2, cmd '/ws/install/fuel_rendezvous/lib/fuel_rendezvous/ugv_agent --ros-args -r __node:=ugv_agent_ugv_2 --params-file /tmp/launch_params_r2spwr6w'].
+[ERROR] [ugv_agent-13]: process has died [pid 9649, exit code -2, cmd '/ws/install/fuel_rendezvous/lib/fuel_rendezvous/ugv_agent --ros-args -r __node:=ugv_agent_ugv_4 --params-file /tmp/launch_params_fdpvkv58'].
+[ERROR] [ugv_agent-14]: process has died [pid 9650, exit code -2, cmd '/ws/install/fuel_rendezvous/lib/fuel_rendezvous/ugv_agent --ros-args -r __node:=ugv_agent_ugv_5 --params-file /tmp/launch_params__ltfkhs1'].
+[ERROR] [ugv_agent-10]: process has died [pid 9646, exit code -2, cmd '/ws/install/fuel_rendezvous/lib/fuel_rendezvous/ugv_agent --ros-args -r __node:=ugv_agent_ugv_1 --params-file /tmp/launch_params_vcy06ehv'].
+[ERROR] [drone_agent-6]: process has died [pid 9642, exit code -2, cmd '/ws/install/fuel_rendezvous/lib/fuel_rendezvous/drone_agent --ros-args -r __node:=drone_agent_x3_1 --params-file /tmp/launch_params_31v5k2go'].
+[ERROR] [ugv_agent-9]: process has died [pid 9645, exit code -2, cmd '/ws/install/fuel_rendezvous/lib/fuel_rendezvous/ugv_agent --ros-args -r __node:=ugv_agent_ugv_0 --params-file /tmp/launch_params_83b6brdb'].
+[ERROR] [drone_agent-7]: process has died [pid 9643, exit code -2, cmd '/ws/install/fuel_rendezvous/lib/fuel_rendezvous/drone_agent --ros-args -r __node:=drone_agent_x3_2 --params-file /tmp/launch_params_rcv9r_g9'].
+[ERROR] [drone_agent-5]: process has died [pid 9641, exit code -2, cmd '/ws/install/fuel_rendezvous/lib/fuel_rendezvous/drone_agent --ros-args -r __node:=drone_agent_x3_0 --params-file /tmp/launch_params_c9okbqyg'].
+[INFO] [gazebo-1]: sending signal 'SIGINT' to process[gazebo-1]
+[ERROR] [drone_agent-8]: process has died [pid 9644, exit code -2, cmd '/ws/install/fuel_rendezvous/lib/fuel_rendezvous/drone_agent --ros-args -r __node:=drone_agent_x3_3 --params-file /tmp/launch_params_i468x87m'].
+[parameter_bridge-2] [INFO] [1789268858.867687218] [rclcpp]: signal_handler(SIGINT/SIGTERM)
+[ERROR] [wind_field-4]: process has died [pid 9640, exit code -2, cmd '/ws/install/fuel_rendezvous/lib/fuel_rendezvous/wind_field --ros-args --params-file /tmp/launch_params_wju8fncr'].
+[ERROR] [bms_dispatcher-3]: process has died [pid 9638, exit code -2, cmd '/ws/install/fuel_rendezvous/lib/fuel_rendezvous/bms_dispatcher --ros-args --params-file /tmp/launch_params_vfkly7js'].
+[INFO] [parameter_bridge-2]: process has finished cleanly [pid 9637]
+[ERROR] [gazebo-1]: process has died [pid 9636, exit code -2, cmd 'ruby /opt/ros/jazzy/opt/gz_tools_vendor/bin/gz sim -r -s /ws/install/fuel_rendezvous/share/fuel_rendezvous/worlds/swap_world.sdf --force-version 8'].

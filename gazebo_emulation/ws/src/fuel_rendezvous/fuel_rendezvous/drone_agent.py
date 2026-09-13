@@ -50,6 +50,13 @@ class DroneAgent(Node):
         self.wind_gust = float(p('wind_gust', 0.0).value)
         self.rng = random.Random(int(p('seed', 0).value) * 1000 + sum(map(ord, self.name)))
         self.capture_tol = float(p('capture_tol', 0.10).value)       # mechanism tolerance (RTK +-10 cm)
+        # Integral gain of the position loop (0 = proportional-only guidance,
+        # the paper's nominal controller). A steady wind leaves a P-only loop
+        # with a constant offset ~ F_wind/(m*k_p); integral action removes it.
+        self.ki = float(p('pos_ki', 0.0).value)
+        self.i_max = float(p('pos_i_max', 2.0).value)                 # anti-windup [m/s]
+        self.i_err = [0.0, 0.0, 0.0]
+        self.last_tick = None
 
         self.cmd_pub = self.create_publisher(Twist, f'/{self.name}/cmd_vel', 10)
         self.enable_pub = self.create_publisher(Bool, f'/{self.name}/enable', 10)
@@ -149,13 +156,21 @@ class DroneAgent(Node):
         self.get_logger().info(f'{self.name}: phase -> {phase.name}')
         self.phase = phase
         self.phase_t0 = self._now()
+        self.i_err = [0.0, 0.0, 0.0]  # fresh integrator per phase / setpoint
 
     def _fly_to(self, tx, ty, tz, gain=0.8):
         x, y, z = self.pos
         kd = 0.5
-        vx = max(-self.vmax_xy, min(self.vmax_xy, gain * (tx - x) - kd * self.vel[0]))
-        vy = max(-self.vmax_xy, min(self.vmax_xy, gain * (ty - y) - kd * self.vel[1]))
-        vz = max(-self.vmax_z, min(self.vmax_z, 1.0 * (tz - z) - kd * self.vel[2]))
+        now = self._now()
+        dt = 0.05 if self.last_tick is None else max(0.0, min(0.2, now - self.last_tick))
+        self.last_tick = now
+        if self.ki > 0.0:
+            for i, e in enumerate((tx - x, ty - y, tz - z)):
+                self.i_err[i] = max(-self.i_max, min(self.i_max, self.i_err[i] + self.ki * e * dt))
+        ix, iy, iz = self.i_err
+        vx = max(-self.vmax_xy, min(self.vmax_xy, gain * (tx - x) + ix - kd * self.vel[0]))
+        vy = max(-self.vmax_xy, min(self.vmax_xy, gain * (ty - y) + iy - kd * self.vel[1]))
+        vz = max(-self.vmax_z, min(self.vmax_z, 1.0 * (tz - z) + iz - kd * self.vel[2]))
         c, s = math.cos(-self.yaw), math.sin(-self.yaw)
         cmd = Twist()
         cmd.linear.x = c * vx - s * vy
@@ -261,6 +276,7 @@ class DroneAgent(Node):
             'wind_gust': self.wind_gust,
             'pos_noise': self.pos_noise_std,
             'drop_prob': self.drop_prob,
+            'pos_ki': self.ki,
             'run_tag': self.tag,
         }
         new_file = not os.path.exists(self.metrics_path)

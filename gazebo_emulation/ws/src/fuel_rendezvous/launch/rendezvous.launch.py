@@ -49,6 +49,8 @@ def generate_launch_description():
                               description='probability that an odometry/telemetry message is lost'),
         DeclareLaunchArgument('seed', default_value='0',
                               description='random seed for noise and drops'),
+        DeclareLaunchArgument('pos_ki', default_value='0.0',
+                              description='integral gain of the drone position loop (0 = P-only nominal guidance)'),
     ]
 
     nodes = [
@@ -82,7 +84,8 @@ def generate_launch_description():
                          'seed': ParameterValue(LaunchConfiguration('seed'), value_type=int),
                          'run_tag': ParameterValue(LaunchConfiguration('run_tag'), value_type=str),
                          'wind_speed': fparam('wind_speed'),
-                         'wind_gust': fparam('wind_gust')}]))
+                         'wind_gust': fparam('wind_gust'),
+                         'pos_ki': fparam('pos_ki')}]))
     for t in trucks:
         nodes.append(Node(
             package='fuel_rendezvous', executable='ugv_agent', output='screen',
