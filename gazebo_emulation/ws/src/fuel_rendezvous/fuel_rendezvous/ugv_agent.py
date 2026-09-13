@@ -28,6 +28,8 @@ class UgvAgent(Node):
         self.soc = 1.0
         self.hold = False
         self.route_idx = 1
+        self.stranded = False
+        self.strand_events = 0
 
         self.cmd_pub = self.create_publisher(Twist, f'/{self.name}/cmd_vel', 10)
         self.soc_pub = self.create_publisher(Float32, f'/{self.name}/soc', 10)
@@ -54,11 +56,19 @@ class UgvAgent(Node):
     def _swap(self, msg):
         if msg.data:
             self.soc = 1.0
+            if self.stranded:
+                self.stranded = False
+                self.get_logger().info(f'{self.name}: RESCUED by drone swap')
             self.get_logger().info(f'{self.name}: battery swapped, SOC 100%')
 
     def _tick(self):
         cmd = Twist()
-        if self.pos is None or self.yaw is None or self.hold or len(self.route) < 2:
+        if self.soc <= 0.0 and not self.stranded:
+            # Energy enforcement: an empty battery immobilises the truck
+            self.stranded = True
+            self.strand_events += 1
+            self.get_logger().warn(f'{self.name}: STRANDED (SOC 0), waiting for a drone')
+        if self.pos is None or self.yaw is None or self.hold or self.stranded or len(self.route) < 2:
             self.cmd_pub.publish(cmd)
             return
         if self.route_idx >= len(self.route):

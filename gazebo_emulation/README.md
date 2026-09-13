@@ -53,11 +53,49 @@ python3 gen_world.py --maze ../maze.csv --trucks 6 --drones 4 --cell 3.0
 bridge config, and `config/fleet.yaml` (routes/pads consumed by the launch
 file). Any maze CSV from the fleet simulator works (`../maps/*.csv`).
 
+### Disturbances (wind, GNSS noise, telemetry loss)
+
+The launch file takes disturbance arguments; all default to the nominal
+(undisturbed) experiment:
+
+| Argument | Meaning | Default |
+|---|---|---|
+| `wind_speed`, `wind_dir_deg` | mean horizontal wind [m/s], direction [deg] | 0, 0 |
+| `wind_gust`, `wind_gust_period` | Ornstein-Uhlenbeck gust std [m/s] and correlation time [s] | 0, 5 |
+| `pos_noise` | Gaussian GNSS noise on the drone's own and truck position estimates [m] | 0 |
+| `drop_prob` | probability that an odometry/telemetry message is lost (estimate goes stale) | 0 |
+| `seed`, `run_tag` | RNG seed; tag written into the metrics file names and rows | 0, '' |
+
+```bash
+ros2 launch fuel_rendezvous rendezvous.launch.py headless:=true wind_speed:=6 wind_gust:=2 pos_noise:=0.5
+```
+
+Wind is physical: the world carries Gazebo's `WindEffects` system and the
+drones use a local, wind-enabled copy of the X3 model (`models/x3_wind`). The
+`wind_field` node sets the wind vector at runtime on `/world/swap_world/wind`
+and logs the realised wind to `/tmp/wind_<tag>.csv`. The plugin applies
+`F = m * k * (v_wind - v_link)` with `k = 0.1` (`gen_world.py --wind-drag`),
+about 0.75 N on the 1.5 kg X3 at 5 m/s, comparable to its bluff-body drag.
+Control uses the noisy/stale estimates; metrics use ground truth. A truck
+whose SOC reaches zero is immobilised (`STRANDED` in the log) until a drone
+rescues it.
+
+The sweep script runs every condition headless for a fixed wall time and
+collects the results, then the summary script tabulates them:
+
+```bash
+./run_disturbance_sweep.sh                    # 7 conditions x 300 s -> ../results/gazebo/<condition>/
+DURATION=120 ./run_disturbance_sweep.sh calm wind6_gust2
+python3 summarize_gazebo.py                   # -> results/gazebo/summary.csv, summary_table.tex
+```
+
 ### Metrics
 
 Each drone appends one row per completed rendezvous to
-`/tmp/rendezvous_metrics_<name>.csv` inside the container (takeoff, approach
-time, hover mean/max error, return time, cycle total):
+`/tmp/rendezvous_metrics_[<tag>_]<name>.csv` inside the container (takeoff,
+approach time, hover mean / p95 / max error, fraction of hover samples within
+the 10 cm mechanism tolerance and within the capture cone, capture losses,
+return time, cycle total, realised message-drop fraction, condition):
 
 ```bash
 docker cp fuel-gz-run:/tmp/rendezvous_metrics_x3_0.csv .
@@ -78,10 +116,13 @@ blue discs = drone pads. Entity Tree → right-click a robot → *Move To* or
 | Piece | File | Role |
 |---|---|---|
 | world generator | `gen_world.py` | maze CSV → SDF world + bridge + fleet config |
-| drone controller (×N) | `fuel_rendezvous/drone_agent.py` | flight FSM: IDLE → ARM → TAKEOFF → INTERCEPT → HOVER_SWAP → RETURN → LAND → RECHARGE; per-cycle metrics |
+| drone controller (×N) | `fuel_rendezvous/drone_agent.py` | flight FSM: IDLE → ARM → TAKEOFF → INTERCEPT → HOVER_SWAP → RETURN → LAND → RECHARGE; GNSS noise / message loss on estimates; per-cycle metrics |
+| wind field (×1) | `fuel_rendezvous/wind_field.py` | mean wind + OU gusts published to Gazebo's WindEffects at runtime |
 | truck controller (×M) | `fuel_rendezvous/ugv_agent.py` | waypoint route follower (ping-pong patrol), distance-based battery model, hold/swap handling |
 | BMS dispatcher (×1) | `fuel_rendezvous/bms_dispatcher.py` | SOC monitoring, nearest-idle-drone assignment, lost-message-safe re-publish |
 | bridge | `config/bridge.yaml` (generated) | per-robot ROS ↔ Gazebo topics |
+| wind-enabled X3 | `models/x3_wind/` | OpenRobotics X3 v4 with `enable_wind`, local meshes |
+| sweep / summary | `run_disturbance_sweep.sh`, `summarize_gazebo.py` | disturbance conditions → `results/gazebo/` |
 | launch | `launch/rendezvous.launch.py` | gz sim + bridge + one node per robot + BMS |
 
 ### Topics (per robot `i`/`j`)

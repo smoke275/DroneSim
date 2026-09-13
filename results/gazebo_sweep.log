@@ -1,0 +1,9 @@
+syncing sources and rebuilding in fuel-gz-run...
+Summary: 1 package finished [0.73s]
+=== calm: 360s  []
+    cycles: 14  dispatches: 18  strandings: 0
+=== wind3: 360s  [wind_speed:=3.0 wind_dir_deg:=45.0]
+    cycles: 15  dispatches: 18  strandings: 0
+=== wind6_gust2: 360s  [wind_speed:=6.0 wind_dir_deg:=45.0 wind_gust:=2.0]
+    cycles: 5  dispatches: 9  strandings: 4
+=== wind9_gust3: 360s  [wind_speed:=9.0 wind_dir_deg:=45.0 wind_gust:=3.0]

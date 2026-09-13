@@ -16,6 +16,10 @@ setup(
         (os.path.join('share', package_name, 'launch'), glob('launch/*.py')),
         (os.path.join('share', package_name, 'worlds'), glob('worlds/*.sdf')),
         (os.path.join('share', package_name, 'config'), glob('config/*.yaml')),
+        (os.path.join('share', package_name, 'models', 'x3_wind'),
+         ['models/x3_wind/model.sdf', 'models/x3_wind/model.config']),
+        (os.path.join('share', package_name, 'models', 'x3_wind', 'meshes'),
+         glob('models/x3_wind/meshes/*')),
     ],
     install_requires=['setuptools'],
     zip_safe=True,
@@ -27,6 +31,7 @@ setup(
             'drone_agent = fuel_rendezvous.drone_agent:main',
             'ugv_agent = fuel_rendezvous.ugv_agent:main',
             'bms_dispatcher = fuel_rendezvous.bms_dispatcher:main',
+            'wind_field = fuel_rendezvous.wind_field:main',
         ],
     },
 )

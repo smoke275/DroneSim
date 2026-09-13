@@ -5,6 +5,7 @@ land -> recharge) and reports per-cycle metrics. One instance per drone."""
 import csv
 import math
 import os
+import random
 from enum import Enum, auto
 
 import rclpy
@@ -41,6 +42,14 @@ class DroneAgent(Node):
         self.t_recharge = p('t_recharge', 8.0).value
         self.vmax_xy = p('vmax_xy', 2.5).value
         self.vmax_z = p('vmax_z', 1.5).value
+        # Disturbance / logging parameters (nominal = 0)
+        self.pos_noise_std = float(p('pos_noise_std', 0.0).value)   # GNSS noise on estimates [m]
+        self.drop_prob = float(p('drop_prob', 0.0).value)           # telemetry loss probability
+        self.tag = p('run_tag', '').value
+        self.wind_speed = float(p('wind_speed', 0.0).value)         # recorded for the CSV only
+        self.wind_gust = float(p('wind_gust', 0.0).value)
+        self.rng = random.Random(int(p('seed', 0).value) * 1000 + sum(map(ord, self.name)))
+        self.capture_tol = float(p('capture_tol', 0.10).value)       # mechanism tolerance (RTK +-10 cm)
 
         self.cmd_pub = self.create_publisher(Twist, f'/{self.name}/cmd_vel', 10)
         self.enable_pub = self.create_publisher(Bool, f'/{self.name}/enable', 10)
@@ -52,15 +61,14 @@ class DroneAgent(Node):
 
         self.create_subscription(Odometry, f'/{self.name}/odometry', self._odom, 20)
         self.create_subscription(String, f'/{self.name}/assign', self._assign, 10)
-        self.truck_pos = {}
+        self.truck_pos = {}        # estimated (noisy, possibly stale) truck positions
+        self.truck_true = {}       # ground truth, metrics only
         for t in self.truck_names:
-            self.create_subscription(
-                Odometry, f'/{t}/odometry',
-                lambda msg, t=t: self.truck_pos.__setitem__(
-                    t, (msg.pose.pose.position.x, msg.pose.pose.position.y,
-                        msg.pose.pose.position.z)), 20)
+            self.create_subscription(Odometry, f'/{t}/odometry',
+                                     lambda msg, t=t: self._truck_odom(t, msg), 20)
 
-        self.pos = None
+        self.pos = None            # estimated own position (control)
+        self.true_pos = None       # ground truth (metrics)
         self.yaw = 0.0
         self.vel = (0.0, 0.0, 0.0)
         self.phase = Phase.IDLE
@@ -69,17 +77,46 @@ class DroneAgent(Node):
         self.t_start = None
         self.marks = {}
         self.hover_errors = []
+        self.capture_losses = 0
+        self.captured = False
+        self.dropped = 0
+        self.received = 0
         self.cycle = 0
-        self.metrics_path = f'/tmp/rendezvous_metrics_{self.name}.csv'
+        suffix = f'{self.tag}_{self.name}' if self.tag else self.name
+        self.metrics_path = f'/tmp/rendezvous_metrics_{suffix}.csv'
 
         self.create_timer(0.05, self._tick)
         self.create_timer(0.5, self._publish_status)
         self.get_logger().info(f'{self.name}: pad {self.pad}, serving {self.truck_names}')
 
     # ------------------------------------------------------------- callbacks
+    def _noisy(self, x, y):
+        if self.pos_noise_std > 0.0:
+            return x + self.rng.gauss(0.0, self.pos_noise_std), y + self.rng.gauss(0.0, self.pos_noise_std)
+        return x, y
+
+    def _dropped(self):
+        self.received += 1
+        if self.drop_prob > 0.0 and self.rng.random() < self.drop_prob:
+            self.dropped += 1
+            return True
+        return False
+
+    def _truck_odom(self, t, msg):
+        pos = msg.pose.pose.position
+        self.truck_true[t] = (pos.x, pos.y, pos.z)
+        if self._dropped():
+            return  # stale estimate persists
+        x, y = self._noisy(pos.x, pos.y)
+        self.truck_pos[t] = (x, y, pos.z)
+
     def _odom(self, msg):
         pos = msg.pose.pose.position
-        self.pos = (pos.x, pos.y, pos.z)
+        self.true_pos = (pos.x, pos.y, pos.z)
+        if self._dropped():
+            return
+        x, y = self._noisy(pos.x, pos.y)
+        self.pos = (x, y, pos.z)
         q = msg.pose.pose.orientation
         self.yaw = math.atan2(2.0 * (q.w * q.z + q.x * q.y),
                               1.0 - 2.0 * (q.y * q.y + q.z * q.z))
@@ -94,6 +131,8 @@ class DroneAgent(Node):
             self.t_start = self._now()
             self.marks = {}
             self.hover_errors = []
+            self.capture_losses = 0
+            self.captured = False
             self._enter(Phase.ARM)
             self.get_logger().info(f'{self.name}: dispatched to {self.target}')
 
@@ -161,8 +200,17 @@ class DroneAgent(Node):
         elif self.phase == Phase.HOVER_SWAP:
             self._set_hold(True)
             ux, uy, uz = self.truck_pos[self.target]
-            dxy, _ = self._fly_to(ux, uy, uz + self.hover_alt, gain=1.2)
-            self.hover_errors.append(dxy)
+            self._fly_to(ux, uy, uz + self.hover_alt, gain=1.2)
+            # Metrics use ground truth: the true deck-to-drone offset
+            tx, ty, _ = self.truck_true.get(self.target, (ux, uy, uz))
+            px, py, _ = self.true_pos if self.true_pos else self.pos
+            err = math.hypot(tx - px, ty - py)
+            self.hover_errors.append(err)
+            if err <= self.delta:
+                self.captured = True
+            elif self.captured:
+                self.captured = False
+                self.capture_losses += 1  # drifted out of the capture cone
             if self._now() - self.phase_t0 >= self.t_swap:
                 self.swap_pubs[self.target].publish(Bool(data=True))
                 self._set_hold(False)
@@ -188,7 +236,12 @@ class DroneAgent(Node):
     # -------------------------------------------------------------- metrics
     def _report(self):
         m = self.marks
-        mean_err = sum(self.hover_errors) / max(1, len(self.hover_errors))
+        errs = sorted(self.hover_errors)
+        n = max(1, len(errs))
+        mean_err = sum(errs) / n
+        p95 = errs[min(len(errs) - 1, int(0.95 * len(errs)))] if errs else 0.0
+        within_tol = sum(1 for e in errs if e <= self.capture_tol) / n
+        within_delta = sum(1 for e in errs if e <= self.delta) / n
         row = {
             'cycle': self.cycle,
             'truck': self.target,
@@ -196,9 +249,19 @@ class DroneAgent(Node):
             'approach_time_s': round(m.get('HOVER_SWAP', 0.0) - m.get('INTERCEPT', 0.0), 2),
             'swap_hover_s': round(self.t_swap, 2),
             'hover_mean_err_m': round(mean_err, 3),
-            'hover_max_err_m': round(max(self.hover_errors), 3) if self.hover_errors else 0.0,
+            'hover_p95_err_m': round(p95, 3),
+            'hover_max_err_m': round(max(errs), 3) if errs else 0.0,
+            'frac_within_tol': round(within_tol, 3),
+            'frac_within_delta': round(within_delta, 3),
+            'capture_losses': self.capture_losses,
             'return_land_s': round(m.get('RECHARGE', 0.0) - m.get('RETURN', 0.0), 2),
             'cycle_total_s': round(m.get('RECHARGE', 0.0), 2),
+            'msg_drop_frac': round(self.dropped / max(1, self.received), 3),
+            'wind_speed': self.wind_speed,
+            'wind_gust': self.wind_gust,
+            'pos_noise': self.pos_noise_std,
+            'drop_prob': self.drop_prob,
+            'run_tag': self.tag,
         }
         new_file = not os.path.exists(self.metrics_path)
         with open(self.metrics_path, 'a', newline='') as f:

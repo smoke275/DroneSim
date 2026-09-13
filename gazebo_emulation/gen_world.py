@@ -52,7 +52,7 @@ def drone_sdf(name, ns, x, y):
                        for i, d in enumerate(['ccw', 'ccw', 'cw', 'cw']))
     return f'''
     <include>
-      <uri>https://fuel.gazebosim.org/1.0/OpenRobotics/models/X3 UAV/4</uri>
+      <uri>model://x3_wind</uri>
       <name>{name}</name>
       <pose>{x:.2f} {y:.2f} 0.35 0 0 0</pose>
 {motors}
@@ -172,6 +172,9 @@ def main():
     parser.add_argument('--trucks', type=int, default=6)
     parser.add_argument('--drones', type=int, default=4)
     parser.add_argument('--route-cells', type=int, default=22)
+    parser.add_argument('--wind-drag', type=float, default=0.1,
+                        help='WindEffects force_approximation_scaling_factor: force = m * k * (v_wind - v_link); '
+                             '0.1 gives ~0.75 N on the 1.5 kg X3 at 5 m/s, comparable to its bluff-body drag')
     args = parser.parse_args()
 
     w = World(args.maze)
@@ -247,6 +250,15 @@ def main():
     <plugin filename="gz-sim-physics-system" name="gz::sim::systems::Physics"/>
     <plugin filename="gz-sim-scene-broadcaster-system" name="gz::sim::systems::SceneBroadcaster"/>
     <plugin filename="gz-sim-user-commands-system" name="gz::sim::systems::UserCommands"/>
+    <!-- Wind: base velocity is set at runtime by the wind_field node on
+         /world/swap_world/wind (gz.msgs.Wind); the plugin applies
+         F = m * k * (v_wind - v_link) to every link with enable_wind. -->
+    <wind><linear_velocity>0 0 0</linear_velocity></wind>
+    <plugin filename="gz-sim-wind-effects-system" name="gz::sim::systems::WindEffects">
+      <force_approximation_scaling_factor>{args.wind_drag}</force_approximation_scaling_factor>
+      <horizontal><magnitude><time_for_rise>1.0</time_for_rise></magnitude>
+                  <direction><time_for_rise>1.0</time_for_rise></direction></horizontal>
+    </plugin>
 
     <light type="directional" name="sun">
       <cast_shadows>true</cast_shadows>
