@@ -1,0 +1,4 @@
+cycle,truck,takeoff_end_s,approach_time_s,swap_hover_s,hover_mean_err_m,hover_p95_err_m,hover_max_err_m,frac_within_tol,frac_within_delta,capture_losses,return_land_s,cycle_total_s,msg_drop_frac,wind_speed,wind_gust,pos_noise,drop_prob,pos_ki,run_tag
+1,ugv_4,4.71,15.1,10.0,0.585,1.239,1.279,0.04,0.612,1,13.65,43.51,0.101,6.0,2.0,0.5,0.1,0.3,combined_pi
+2,ugv_3,4.76,31.9,10.0,0.396,0.725,1.676,0.065,0.935,0,28.0,74.71,0.101,6.0,2.0,0.5,0.1,0.3,combined_pi
+3,ugv_2,4.71,17.5,10.0,0.476,0.813,1.537,0.0,0.766,2,22.7,54.96,0.101,6.0,2.0,0.5,0.1,0.3,combined_pi

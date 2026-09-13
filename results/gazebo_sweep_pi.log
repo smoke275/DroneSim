@@ -1,3 +1,9 @@
 syncing sources and rebuilding in fuel-gz-run...
 Summary: 1 package finished [0.73s]
 === wind6_gust2_pi: 360s  [wind_speed:=6.0 wind_dir_deg:=45.0 wind_gust:=2.0 pos_ki:=0.3]
+    cycles: 14  dispatches: 18  strandings: 0
+=== wind9_gust3_pi: 360s  [wind_speed:=9.0 wind_dir_deg:=45.0 wind_gust:=3.0 pos_ki:=0.3]
+    cycles: 12  dispatches: 15  strandings: 2
+=== combined_pi: 360s  [wind_speed:=6.0 wind_dir_deg:=45.0 wind_gust:=2.0 pos_noise:=0.5 drop_prob:=0.1 pos_ki:=0.3]
+    cycles: 16  dispatches: 19  strandings: 0
+done -> ../results/gazebo

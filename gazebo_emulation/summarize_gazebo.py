@@ -24,7 +24,7 @@ LABEL = {
     'wind9_gust3': 'Wind 9 m/s, gusts $\\sigma$=3',
     'gnss05': 'GNSS noise $\\sigma$=0.5 m',
     'drop20': 'Telemetry loss 20\\%',
-    'combined': 'Wind 6/2 + GNSS 0.5 + loss 10\\%',
+    'combined': 'Combined (wind 6/2, GNSS 0.5, loss 10\\%)',
     'wind6_gust2_pi': 'Wind 6 m/s, gusts $\\sigma$=2 (PI)',
     'wind9_gust3_pi': 'Wind 9 m/s, gusts $\\sigma$=3 (PI)',
     'combined_pi': 'Combined (PI)',
@@ -96,6 +96,7 @@ def main():
             f.write(f"{r['label']} & {r['cycles']} & ${r['approach_mean_s']:.1f} \\pm {r['approach_std_s']:.1f}$ & "
                     f"${r['hover_mean_cm']:.1f}$ & ${r['hover_p95_cm']:.1f}$ & ${r['hover_max_cm']:.0f}$ & "
                     f"{r['within_tol_pct']:.0f} & {r['capture_losses']} & ${r['cycle_mean_s']:.1f} \\pm {r['cycle_std_s']:.1f}$ & {r['strandings']} \\\\\n")
+        f.write('\\hline%\n')
     print(f'\nwrote {ROOT}/summary.csv and summary_table.tex')
 
 
