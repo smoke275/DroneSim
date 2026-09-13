@@ -1,0 +1,17 @@
+fleet: trucks=2 done
+fleet: trucks=4 done
+fleet: trucks=6 done
+fleet: trucks=8 done
+fleet: trucks=12 done
+results/sweeps_v2/fleet_scaling.csv: 300 rows
+latency: 150 frames done
+latency: 600 frames done
+latency: 1800 frames done
+latency: 3600 frames done
+latency: 7200 frames done
+results/sweeps_v2/swap_latency.csv: 160 rows
+density: maze.csv done
+density: maps/maze_35x35_loop20_s1.csv done
+density: maps/maze_35x35_loop80_s1.csv done
+density: maps/maze_50x50_loop60_s1.csv done
+results/sweeps_v2/map_density.csv: 160 rows

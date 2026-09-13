@@ -35,6 +35,8 @@ docker rm -f dronesim-run       # stop the container (from the host)
 | `--maze PATH` | maze CSV to load | `maze.csv` |
 | `--strategy S` | `depot_only` \| `fixed_station_evrp` \| `reactive_drone` \| `proactive_fuel` | `proactive_fuel` |
 | `--seed N` | scenario seed (tasks + station placement) | random |
+| `--trucks N` | fleet size override | `config.NUM_TRUCKS` |
+| `--truck-range R` | battery range override | `config.TRUCK_RANGE` |
 
 ### In-window controls
 
@@ -48,6 +50,47 @@ docker rm -f dronesim-run       # stop the container (from the host)
 
 The simulation runs until every task is delivered and all trucks are back at
 the warehouse.
+
+### Planning pipeline (shared by every strategy)
+
+Every strategy runs on the **same** seeded scenario and the **same** plan:
+
+1. **Routing** (`dronesim/planning.py`): road-graph shortest-path distances
+   between depot, tasks and base stations, then a min-max multi-vehicle TSP
+   (minimise the longest truck route, total distance as tie-break). The
+   default solver is a deterministic pure-Python construction + local search
+   (`config.ROUTING_SOLVER = 'local_search'`); set it to `'ortools'` to use
+   Google OR-Tools when installed (`pip install ortools`). Note: on hosts
+   where scikit-learn/scipy come from Anaconda, importing OR-Tools after them
+   segfaults, which is why it is opt-in.
+2. **Replenishment planning**: an exact resource-constrained shortest path
+   over each truck's remaining route decides where to refill so that no
+   segment exceeds the usable range (`TRUCK_RANGE - SAFE_RETURN_MARGIN`).
+   Strategies differ only in the options the planner may use:
+   depot detour (Depot-Return), station or depot detour (E-VRP-BSS),
+   aerial swap or depot detour (FUEL). The reactive baseline plans nothing
+   and dispatches on a battery threshold.
+3. **Dispatch** (FUEL): a swap request activates once the truck's time to
+   its planned rendezvous node is within a drone's ETA (+ lead); active
+   requests are matched to idle drones with the Hungarian algorithm on
+   expected waiting time. The drone flies to the node; the truck parks
+   there only if the drone is late.
+
+Routes are cached per (maze, seed, fleet size) inside a process, so the
+paired strategies of one benchmark seed share one routing solve.
+
+**Energy enforcement** (`config.STRAND_ON_EMPTY`, default on): a truck whose
+battery reaches zero is stranded and cannot move. Drone strategies rescue it
+with a drone swap at the truck's position; ground strategies wait for a
+recovery vehicle (a road round trip from the depot plus the swap time). The
+`strand_events` / `stranded_frames` metrics count these rescues, and
+`fuel_violations` counts trucks that ran out at least once.
+
+**Important:** with real routing, the default scenario (6 trucks, 35–40
+tasks, range 3000) never needs a swap — every strategy ties. Energy only
+binds with fewer trucks (`--trucks 2` or `3`) or a shorter range
+(`--truck-range`); a range below twice the farthest task's depot distance
+makes Depot-Return infeasible for that task (reported as an energy violation).
 
 ### Benchmark (headless, no display needed)
 
@@ -65,6 +108,8 @@ python benchmark.py --strategies proactive_fuel depot_only --trucks 8
 | `--trucks N` | fleet size override |
 | `--drones-per-station N` | drone count override |
 | `--service-frames N` | swap service time (120 frames = 1 s) |
+| `--truck-range R` | truck battery range override (canvas units) |
+| `--tasks N` | task-count override (default random in `[MIN_TASKS, MAX_TASKS]`) |
 | `--max-iter N` | frame cap per run |
 | `--out DIR` | output directory (default `results/`) |
 
@@ -74,8 +119,9 @@ prints at the end.
 ### Sensitivity sweeps and plots
 
 ```bash
-python sweep.py --seeds 10      # fleet scaling, swap latency, map topology -> results/sweeps/*.csv
-python3 plot_sweeps.py          # renders the three paper figures -> results/sweeps/*.png
+python sweep.py --seeds 10                 # fleet scaling, swap latency, map topology -> results/sweeps/*.csv
+python3 plot_sweeps.py                     # renders the three paper figures -> results/sweeps/*.png
+python3 plot_sweeps.py results/sweeps_v2   # same, from another sweep directory
 ```
 
 ### Maze generator

@@ -1,11 +1,15 @@
 """Core multi-strategy simulation engine for autonomous delivery vehicles and
 aerial battery swapping drones.
 
-Supports 4 comparative logistics strategies:
-1. DEPOT_ONLY: Central Depot E-VRP (return to warehouse to refuel)
-2. FIXED_STATION_EVRP: Classical E-VRP-BSS (detour to nearest static base station)
-3. REACTIVE_DRONE: Drone dispatched reactively when truck SOC is critically low
-4. PROACTIVE_FUEL: Predictive BMS aerial drone swap (Algorithm 2)
+Every strategy shares the same scenario (seeded), the same min-max mTSP routes
+and the same exact replenishment planner (dronesim.planning); they differ only
+in which replenishment options the planner may use:
+
+1. DEPOT_ONLY:          {depot detour}                      (classical depot E-VRP)
+2. FIXED_STATION_EVRP:  {station detour, depot detour}      (classical E-VRP-BSS)
+3. REACTIVE_DRONE:      threshold-triggered aerial swap, no planning (baseline)
+4. PROACTIVE_FUEL:      {aerial swap, depot detour} + predictive ETA dispatch
+                        with Hungarian drone assignment (proposed, Algorithm 2)
 """
 
 import math
@@ -16,9 +20,8 @@ from typing import Dict, List, Optional, Set, Tuple
 
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QColor
-from sklearn.cluster import KMeans
 
-from . import config
+from . import config, planning
 from .config import Strategy
 from .render import OPERATION
 from .sprites import SpriteStore
@@ -28,11 +31,17 @@ TRUCK_COLORS = [Qt.darkCyan, Qt.darkMagenta, Qt.darkRed, Qt.darkGreen,
                 Qt.darkBlue, Qt.darkYellow, Qt.darkGray, Qt.black]
 STATION_COLORS = [Qt.gray, Qt.cyan, Qt.magenta, Qt.darkYellow]
 
+# Caches shared across runs in one process: the world is immutable, and the
+# routes depend only on (maze, seed, fleet size, solver), so the paired
+# strategies of a benchmark seed reuse them instead of re-solving.
+_WORLD_CACHE: Dict[str, World] = {}
+_ROUTE_CACHE: Dict[tuple, List[List[int]]] = {}
+
 
 @dataclass
 class Truck:
     pos: tuple
-    tasks: list  # (row, col) tuples, in patrol order
+    tasks: list  # (row, col) tuples, in route order
     color: object
     path_color: QColor
     fuel: float = config.TRUCK_RANGE
@@ -50,8 +59,18 @@ class Truck:
     active_distance: float = 0.0
     detour_distance: float = 0.0
     active_frames: int = 0
+    hold_frames: int = 0
     swaps_received: int = 0
     min_fuel: float = config.TRUCK_RANGE  # lowest fuel seen; < 0 flags an energy violation
+    # Predictive aerial swap bookkeeping (planned strategies only)
+    swap_cell: Optional[tuple] = None    # route cell where the planned swap must be done by
+    waiting_for_swap: bool = False       # parked at swap_cell until the swap completes
+    route_length: float = 0.0            # planned depot-to-depot route length
+    # Energy enforcement: stranded trucks cannot move until rescued
+    stranded: bool = False
+    strand_events: int = 0
+    stranded_frames: int = 0
+    rescue_timer: int = 0                # ground recovery countdown (frames)
 
 
 @dataclass
@@ -60,6 +79,7 @@ class Drone:
     home: int  # base station index
     range_left: float = config.DRONE_RANGE
     target: int = None  # index of the truck being serviced, or None
+    target_point: tuple = None  # planned rendezvous point (FUEL); None = chase the truck
     returning: bool = False
     service_timer: int = 0
     total_flight_dist: float = 0.0
@@ -78,18 +98,25 @@ class Simulation:
                  drones_per_station: int = config.DRONES_PER_STATION,
                  seed: Optional[int] = None,
                  maze_path: str = 'maze.csv',
-                 service_frames: Optional[int] = None):
+                 service_frames: Optional[int] = None,
+                 truck_range: Optional[float] = None,
+                 solver: Optional[str] = None,
+                 num_tasks: Optional[int] = None):
         self.window = window
         self.strategy = strategy
         self.num_trucks = num_trucks
         self.num_stations = num_stations
         self.drones_per_station = drones_per_station
         self.maze_path = maze_path
+        self.truck_range = float(truck_range or config.TRUCK_RANGE)
+        self.solver = solver or config.ROUTING_SOLVER
         # Swap service time (applies to both aerial and fixed-station swaps so
         # latency comparisons stay fair); default from config.
         self.drone_service_frames = service_frames or config.DRONE_SERVICE_FRAMES
         self.station_service_frames = service_frames or config.STATION_SERVICE_FRAMES
-        self.world = World(maze_path)
+        if maze_path not in _WORLD_CACHE:
+            _WORLD_CACHE[maze_path] = World(maze_path)
+        self.world = _WORLD_CACHE[maze_path]
         self.sprites = None
         self.frame_count = 0
 
@@ -107,26 +134,29 @@ class Simulation:
                               self.world.sample_cells(self.num_stations, random_state=station_rs)]
         self.base_stations = [self.world.cell_to_canvas(r, c) for r, c in self.station_cells]
 
-        # Random tasks, clustered into one group per truck
-        num_tasks = random.randint(config.MIN_TASKS, config.MAX_TASKS)
-        all_tasks = self.world.sample_cells(num_tasks, random_state=task_rs)
-        kmeans_seed = seed if seed is not None else 0
-        labels = KMeans(n_clusters=self.num_trucks, random_state=kmeans_seed).fit(all_tasks).labels_
-        clustered = [[] for _ in range(self.num_trucks)]
-        for task, label in zip(all_tasks, labels):
-            clustered[label].append(tuple(task))
+        # Random tasks, routed with a min-max multi-vehicle TSP on road
+        # distances (identical for every strategy on the same seed).
+        drawn = random.randint(config.MIN_TASKS, config.MAX_TASKS)  # always drawn: keeps seeds stable
+        num_tasks = num_tasks or drawn
+        all_tasks = [tuple(c) for c in self.world.sample_cells(num_tasks, random_state=task_rs)]
+        self._build_planning_graph(all_tasks)
+        routes = self._plan_routes(seed)
 
         self.trucks: List[Truck] = []
         for i in range(self.num_trucks):
             color = TRUCK_COLORS[i % len(TRUCK_COLORS)]
             path_color = QColor(color)
             path_color.setAlpha(130)
-            self.trucks.append(Truck(
+            truck = Truck(
                 pos=self.world.warehouse_pos,
-                tasks=clustered[i],
+                tasks=[self.cells[n] for n in routes[i]],
                 color=color,
-                path_color=path_color
-            ))
+                path_color=path_color,
+                fuel=self.truck_range,
+                min_fuel=self.truck_range,
+            )
+            truck.route_length = planning.route_length(self.dist, self.depot_node, routes[i])
+            self.trucks.append(truck)
 
         self.drones: List[Drone] = []
         if self.strategy in (Strategy.REACTIVE_DRONE, Strategy.PROACTIVE_FUEL):
@@ -139,6 +169,57 @@ class Simulation:
                     ))
 
         self.targeted_trucks: Set[int] = set()
+        self.replenishment_opts = self._make_options()
+
+    # ------------------------------------------------------------- planning
+    def _build_planning_graph(self, tasks):
+        """Depot + tasks + stations as planning nodes with road distances."""
+        self.cells: List[tuple] = [self.world.warehouse_cell] + list(tasks) + list(self.station_cells)
+        self.depot_node = 0
+        self.task_nodes = list(range(1, 1 + len(tasks)))
+        self.station_nodes = list(range(1 + len(tasks), len(self.cells)))
+        self.node_index: Dict[tuple, int] = {}
+        for i, c in enumerate(self.cells):
+            self.node_index.setdefault(c, i)
+        self.dist = planning.distance_matrix(self.world, self.cells)
+        # Aerial swap feasibility/cost per node: nearest base by straight-line
+        # flight; a full drone must be able to fly there and back.
+        self._swap_cost_cache: Dict[Optional[int], Optional[float]] = {}
+
+    def _plan_routes(self, seed):
+        key = (self.maze_path, seed, self.num_trucks, self.solver, tuple(self.cells[n] for n in self.task_nodes))
+        if seed is not None and key in _ROUTE_CACHE:
+            return _ROUTE_CACHE[key]
+        routes = planning.plan_routes(self.dist, self.depot_node, self.task_nodes,
+                                      self.num_trucks, seed=seed or 0, solver=self.solver)
+        if seed is not None:
+            _ROUTE_CACHE[key] = routes
+        return routes
+
+    def _swap_cost_at(self, pos_xy) -> Optional[float]:
+        """Planning cost (frames) of an aerial swap at a canvas position."""
+        best = min(math.dist(pos_xy, base) for base in self.base_stations)
+        if 2 * best + config.DRONE_RETURN_MARGIN > config.DRONE_RANGE:
+            return None
+        return self.drone_service_frames + config.SWAP_ENERGY_WEIGHT * 2 * best
+
+    def _make_options(self) -> Optional[planning.ReplenishmentOptions]:
+        if self.strategy == Strategy.DEPOT_ONLY:
+            return planning.ReplenishmentOptions(allow_depot=True, truck_speed=config.TRUCK_SPEED)
+        if self.strategy == Strategy.FIXED_STATION_EVRP:
+            return planning.ReplenishmentOptions(
+                allow_depot=True, allow_station=True, station_nodes=self.station_nodes,
+                service_frames=self.station_service_frames, truck_speed=config.TRUCK_SPEED)
+        if self.strategy == Strategy.PROACTIVE_FUEL:
+            def swap_cost(node):
+                if node is None:  # current truck location, resolved by the caller
+                    return self._swap_cost_here
+                if node not in self._swap_cost_cache:
+                    self._swap_cost_cache[node] = self._swap_cost_at(self.world.cell_to_canvas(*self.cells[node]))
+                return self._swap_cost_cache[node]
+            return planning.ReplenishmentOptions(
+                allow_depot=True, swap_cost=swap_cost, truck_speed=config.TRUCK_SPEED)
+        return None  # reactive baseline plans nothing
 
     # ----------------------------------------------------------------- status
     def is_done(self) -> bool:
@@ -174,17 +255,23 @@ class Simulation:
             'completed': self.is_done(),
             'tasks_done': tasks_done,
             'tasks_total': tasks_total,
-            'fuel_violations': sum(1 for t in self.trucks if t.min_fuel < 0),
+            'fuel_violations': sum(1 for t in self.trucks if t.min_fuel < 0 or t.strand_events > 0),
+            'strand_events': sum(t.strand_events for t in self.trucks),
+            'stranded_frames': sum(t.stranded_frames for t in self.trucks),
             'min_fuel': round(min((t.min_fuel for t in self.trucks), default=0.0), 2),
             'total_truck_distance': round(total_truck_dist, 2),
             'active_distance': round(total_active_dist, 2),
             'detour_distance': round(total_detour_dist, 2),
             'detour_percentage': round((total_detour_dist / max(1.0, total_truck_dist)) * 100, 2),
             'uptime_ratio': round(uptime_ratio, 4),
+            'hold_frames': sum(t.hold_frames for t in self.trucks),
             'total_swaps': total_swaps,
             'drone_flight_distance': round(total_drone_flight, 2),
             'drone_energy': round(total_drone_energy, 2),
             'drone_efficiency_percentage': round(efficiency * 100, 2),
+            'max_route_length': round(max((t.route_length for t in self.trucks), default=0.0), 2),
+            'truck_range': self.truck_range,
+            'num_tasks': tasks_total,
         }
 
     # ----------------------------------------------------------------- main loop
@@ -192,6 +279,8 @@ class Simulation:
         """Execute one simulation tick."""
         self.frame_count += 1
         self._update_holding()
+        if self.strategy == Strategy.PROACTIVE_FUEL:
+            self._dispatch_predictive()
         self._update_drones()
         self._update_trucks()
 
@@ -221,20 +310,36 @@ class Simulation:
 
     # -------------------------------------------------------------- helpers
     def _update_holding(self):
-        """Trucks hold position while an inbound drone is within the rendezvous radius."""
+        """Trucks hold while parked for a planned swap, while a fixed station
+        services them, or while an inbound drone is within the rendezvous radius."""
         for truck in self.trucks:
-            if not truck.detouring_to_station or truck.station_service_timer <= 0:
-                truck.holding = False
+            if truck.detouring_to_station and truck.station_service_timer > 0:
+                continue
+            truck.holding = truck.waiting_for_swap or truck.stranded
 
         for drone in self.drones:
-            if drone.target is not None and not drone.returning:
+            if drone.target is not None and not drone.returning and drone.target_point is None:
                 truck = self.trucks[drone.target]
                 d = math.hypot(drone.pos[0] - truck.pos[0], drone.pos[1] - truck.pos[1])
                 if d <= config.DRONE_STOP_RADIUS:
                     truck.holding = True
 
+        for truck in self.trucks:
+            if truck.holding:
+                truck.hold_frames += 1
+
+    def _drone_can_serve(self, drone: Drone, point_xy) -> Optional[float]:
+        """Flight distance to ``point_xy`` if the drone can get there and
+        still return home (constraint 7d), else None."""
+        flight = math.dist(drone.pos, point_xy)
+        back = math.dist(point_xy, self.base_stations[drone.home])
+        if flight + back + config.DRONE_RETURN_MARGIN > drone.range_left:
+            return None
+        return flight
+
     def _dispatch_drone(self, truck_index: int) -> bool:
-        """Send the nearest available drone from any base station to intercept the truck."""
+        """Reactive baseline: send the nearest idle drone that can reach the
+        truck and return home."""
         if self.strategy not in (Strategy.REACTIVE_DRONE, Strategy.PROACTIVE_FUEL):
             return False
         if truck_index in self.targeted_trucks:
@@ -243,12 +348,10 @@ class Simulation:
         truck = self.trucks[truck_index]
         best_drone = None
         best_dist = float('inf')
-
         for drone in self.drones:
-            if drone.target is None and not drone.returning and \
-                    drone.range_left >= config.DRONE_RANGE / 2:
-                d = math.hypot(drone.pos[0] - truck.pos[0], drone.pos[1] - truck.pos[1])
-                if d < best_dist:
+            if drone.target is None and not drone.returning:
+                d = self._drone_can_serve(drone, truck.pos)
+                if d is not None and d < best_dist:
                     best_drone = drone
                     best_dist = d
 
@@ -258,6 +361,81 @@ class Simulation:
             return True
         return False
 
+    def _frames_to_cell(self, truck: Truck, cell: tuple) -> float:
+        """Truck travel time (frames) along its route to ``cell``."""
+        if truck.waiting_for_swap or not truck.path_canvas:
+            return 0.0
+        path = truck.path_canvas
+        dist = 0.0
+        if truck.path_index + 1 < len(path):
+            dist += math.dist(truck.pos, path[truck.path_index + 1])
+            for a, b in zip(path[truck.path_index + 1:], path[truck.path_index + 2:]):
+                dist += math.dist(a, b)
+        end_cell = tuple(truck.path[-1])
+        if end_cell != cell:
+            remaining = [t for t in truck.tasks if t not in truck.completed]
+            prev = self.node_index.get(end_cell)
+            for t in remaining:
+                if prev is None:
+                    break
+                if t == end_cell:
+                    continue
+                cur = self.node_index[t]
+                dist += self.dist[prev][cur]
+                prev = cur
+                if t == cell:
+                    break
+        return dist / config.TRUCK_SPEED
+
+    def _dispatch_predictive(self):
+        """FUEL: ETA-triggered dispatch with Hungarian drone assignment.
+
+        A pending request (truck with a planned swap cell, no drone inbound)
+        activates once the truck's time-to-node is within the closest feasible
+        drone's ETA (+ lead), or immediately if the truck is already parked.
+        Active requests are assigned to drones minimising total expected
+        truck waiting time (lateness), ETA as tie-break.
+        """
+        pending = []
+        for k, truck in enumerate(self.trucks):
+            if truck.swap_cell is None or k in self.targeted_trucks:
+                continue
+            pending.append((k, self.world.cell_to_canvas(*truck.swap_cell),
+                            self._frames_to_cell(truck, truck.swap_cell)))
+        if not pending:
+            return
+        idle = [d for d in self.drones if d.target is None and not d.returning]
+        if not idle:
+            return
+
+        cost = []
+        rows = []
+        for k, point, t_truck in pending:
+            row = []
+            for drone in idle:
+                flight = self._drone_can_serve(drone, point)
+                if flight is None:
+                    row.append(planning.INF)
+                    continue
+                eta = flight / config.DRONE_SPEED
+                row.append((max(0.0, eta - t_truck), eta))
+            feasible = [c for c in row if c != planning.INF]
+            if not feasible:
+                continue
+            best_eta = min(c[1] for c in feasible)
+            active = self.trucks[k].waiting_for_swap or t_truck <= best_eta + config.DISPATCH_LEAD_FRAMES
+            if not active:
+                continue
+            cost.append([c if c == planning.INF else c[0] + 1e-3 * c[1] for c in row])
+            rows.append(k)
+        if not rows:
+            return
+        for r, c in planning.assign_drones(cost):
+            truck_index = rows[r]
+            idle[c].target = truck_index
+            idle[c].target_point = self.world.cell_to_canvas(*self.trucks[truck_index].swap_cell)
+            self.targeted_trucks.add(truck_index)
+
     def _release_drone(self, drone: Drone):
         if drone.target is not None:
             # The truck may be idling while it waits for this drone (reactive
@@ -266,6 +444,7 @@ class Simulation:
             self.trucks[drone.target].needs_path_update = True
         self.targeted_trucks.discard(drone.target)
         drone.target = None
+        drone.target_point = None
         drone.service_timer = 0
         drone.returning = True
 
@@ -295,26 +474,38 @@ class Simulation:
 
             if drone.target is not None and not drone.returning:
                 truck = self.trucks[drone.target]
-                dx, dy = truck.pos[0] - x, truck.pos[1] - y
+                # Planned rendezvous: fly to the node; once the truck is parked
+                # there, close on the truck itself so the service radius is met.
+                goal = truck.pos if (drone.target_point is None or truck.waiting_for_swap) else drone.target_point
+                dx, dy = goal[0] - x, goal[1] - y
                 dist = math.hypot(dx, dy)
+                truck_dist = math.hypot(truck.pos[0] - x, truck.pos[1] - y)
 
-                if dist <= config.DRONE_SERVICE_DIST:
+                if truck_dist <= config.DRONE_SERVICE_DIST:
                     # Hover over holding truck while mobile swap executes
                     drone.service_timer += 1
                     if drone.service_timer >= self.drone_service_frames:
                         # REPLENISH TRUCK FUEL
-                        truck.fuel = config.TRUCK_RANGE
+                        truck.fuel = self.truck_range
                         truck.swaps_received += 1
+                        truck.swap_cell = None
+                        truck.waiting_for_swap = False
+                        truck.stranded = False
                         drone.swaps_delivered += 1
                         self._release_drone(drone)
+                elif dist <= config.DRONE_SERVICE_DIST:
+                    pass  # hovering at the rendezvous point, waiting for the truck
                 else:
                     step = min(config.DRONE_SPEED, dist)
-                    drone.pos[0] += step * dx / dist
-                    drone.pos[1] += step * dy / dist
+                    nx_, ny_ = x + step * dx / dist, y + step * dy / dist
+                    home_after = math.dist((nx_, ny_), self.base_stations[drone.home])
+                    if drone.range_left - step < home_after + config.DRONE_RETURN_MARGIN:
+                        # Continuing would strand the drone: abort and go home
+                        self._release_drone(drone)
+                        continue
+                    drone.pos[0], drone.pos[1] = nx_, ny_
                     drone.range_left -= step
                     drone.total_flight_dist += step
-                    if drone.range_left < config.DRONE_RANGE / 2:
-                        self._release_drone(drone)
 
             elif drone.returning:
                 hx, hy = self.base_stations[drone.home]
@@ -332,13 +523,30 @@ class Simulation:
 
     def _update_trucks(self):
         for i, truck in enumerate(self.trucks):
+            if truck.stranded:
+                truck.stranded_frames += 1
+                if truck.rescue_timer > 0:
+                    # Ground recovery: a service vehicle drives out from the
+                    # depot with a battery and back (2 x road distance) and
+                    # performs the exchange.
+                    truck.rescue_timer -= 1
+                    if truck.rescue_timer <= 0:
+                        truck.fuel = self.truck_range
+                        truck.swaps_received += 1
+                        truck.stranded = False
+                        truck.needs_path_update = True
+                elif self.strategy == Strategy.REACTIVE_DRONE:
+                    self._dispatch_drone(i)  # keep asking until a drone accepts
+                continue
+
             # Fixed station servicing hold
             if truck.detouring_to_station and truck.station_service_timer > 0:
                 truck.station_service_timer -= 1
                 if truck.station_service_timer <= 0:
-                    truck.fuel = config.TRUCK_RANGE
+                    truck.fuel = self.truck_range
                     truck.swaps_received += 1
                     truck.detouring_to_station = False
+                    truck.holding = False
                     truck.needs_path_update = True
                 continue
 
@@ -351,98 +559,143 @@ class Simulation:
 
     def _plan_truck_path(self, truck: Truck, truck_idx: int):
         w = self.world
+        # Plan from the cell the truck is actually in — the previous path
+        # may already be cleared (task arrival) or stale (mid-route replan
+        # after a drone swap), and using anything else sends the truck in
+        # a straight line through walls.
+        start = w.warehouse_cell if truck.at_warehouse else w.canvas_to_cell(*truck.pos)
+        remaining = [t for t in truck.tasks if t not in truck.completed]
 
-        if truck.at_warehouse:
-            while truck.task_index < len(truck.tasks) and \
-                    truck.tasks[truck.task_index] in truck.completed:
-                truck.task_index += 1
-            if truck.task_index >= len(truck.tasks):
-                return
-            start = w.warehouse_cell
-            next_task = truck.tasks[truck.task_index]
-        else:
-            # Plan from the cell the truck is actually in — the previous path
-            # may already be cleared (task arrival) or stale (mid-route replan
-            # after a drone swap), and using anything else sends the truck in
-            # a straight line through walls.
-            start = w.canvas_to_cell(*truck.pos)
-            remaining = [t for t in truck.tasks if t not in truck.completed]
-            if not remaining:
+        if not remaining:
+            if not truck.at_warehouse:
                 # All assigned tasks completed: return to warehouse
                 self._set_truck_path(truck, w.find_shortest_path(start, w.warehouse_cell))
                 truck.detouring_to_warehouse = True
-                return
-            next_task = remaining[0]
-
-        current_cell = start
-        path_to_task = w.find_shortest_path(current_cell, next_task)
-        if not path_to_task:
             return
 
+        if self.strategy == Strategy.REACTIVE_DRONE:
+            self._plan_truck_path_reactive(truck, truck_idx, start, remaining)
+            return
+
+        # A drone is already inbound for a committed swap: keep driving the
+        # route (the plan guarantees the swap cell is reachable); the truck
+        # parks there if the drone has not met it en route.
+        if truck.swap_cell is not None and truck_idx in self.targeted_trucks:
+            self._drive_to(truck, start, remaining[0])
+            return
+
+        route_nodes = [self.node_index[t] for t in remaining] + [self.depot_node]
+        start_dists = planning.cell_distances(w, start, self.cells)
+        fuel = self.truck_range if truck.at_warehouse else truck.fuel
+        if self.strategy == Strategy.PROACTIVE_FUEL:
+            self._swap_cost_here = self._swap_cost_at(truck.pos)
+        plan = planning.plan_replenishment(
+            self.dist, route_nodes, self.depot_node, start_dists, fuel,
+            self.truck_range, config.SAFE_RETURN_MARGIN, self.replenishment_opts,
+            allow_start_refill=not truck.at_warehouse)
+
+        truck.swap_cell = None
+        truck.waiting_for_swap = False
+        if plan is None:
+            self._plan_truck_path_fallback(truck, truck_idx, start, remaining, start_dists)
+            return
+
+        first = plan[0] if plan else None
+        if first is not None and first[0] == 0:
+            pos, kind, station = first
+            if kind == 'depot':
+                self._set_truck_path(truck, w.find_shortest_path(start, w.warehouse_cell))
+                truck.at_warehouse = False
+                truck.detouring_to_warehouse = True
+                return
+            if kind == 'station':
+                self._set_truck_path(truck, w.find_shortest_path(start, self.cells[station]))
+                truck.at_warehouse = False
+                truck.detouring_to_station = True
+                return
+            # swap now: park here until a drone completes the exchange
+            truck.swap_cell = start
+            truck.waiting_for_swap = True
+            self._drive_to(truck, start, remaining[0])
+            return
+
+        self._drive_to(truck, start, remaining[0])
+        if first is not None and first[1] == 'swap':
+            truck.swap_cell = remaining[first[0] - 1]
+
+    def _drive_to(self, truck: Truck, start, cell):
+        self._set_truck_path(truck, self.world.find_shortest_path(start, cell))
+        truck.at_warehouse = False
+        truck.detouring_to_warehouse = False
+        truck.detouring_to_station = False
+
+    def _plan_truck_path_fallback(self, truck, truck_idx, start, remaining, start_dists):
+        """No feasible plan exists (some task cannot be reached and left again
+        within the usable range under this strategy's options). Fall back to
+        the myopic per-leg rule of Algorithm 2: proceed if the leg plus the
+        return to the depot is affordable, otherwise swap (FUEL) or go home."""
+        w = self.world
+        next_task = remaining[0]
+        fuel = self.truck_range if truck.at_warehouse else truck.fuel
+        need = (start_dists[self.node_index[next_task]]
+                + self.dist[self.node_index[next_task]][self.depot_node]
+                + config.SAFE_RETURN_MARGIN)
+        if truck.at_warehouse or fuel >= need:
+            self._drive_to(truck, start, next_task)
+        elif self.strategy == Strategy.PROACTIVE_FUEL and self._swap_cost_at(truck.pos) is not None:
+            truck.swap_cell = start
+            truck.waiting_for_swap = True
+            self._drive_to(truck, start, next_task)
+        else:
+            self._set_truck_path(truck, w.find_shortest_path(start, w.warehouse_cell))
+            truck.at_warehouse = False
+            truck.detouring_to_warehouse = True
+
+    def _plan_truck_path_reactive(self, truck, truck_idx, start, remaining):
+        """Baseline 3: no prediction. Drive if the next leg is reachable and
+        call a drone only once the battery is below the critical threshold."""
+        w = self.world
+        next_task = remaining[0]
+        path_to_task = w.find_shortest_path(start, next_task)
+        if not path_to_task:
+            return
         dist_to_task = self._path_length(path_to_task)
-        path_task_to_depot = w.find_shortest_path(next_task, w.warehouse_cell)
-        dist_task_to_depot = self._path_length(path_task_to_depot)
+        dist_task_to_depot = self._path_length(w.find_shortest_path(next_task, w.warehouse_cell))
         safe_margin = config.SAFE_RETURN_MARGIN
 
-        # Strategy Decisions
-        if self.strategy == Strategy.DEPOT_ONLY:
-            # Baseline 1: Standard Depot Return
-            if truck.fuel >= dist_to_task + dist_task_to_depot + safe_margin or truck.at_warehouse:
-                self._set_truck_path(truck, path_to_task)
-                truck.at_warehouse = False
-                truck.detouring_to_warehouse = False
-            elif not truck.at_warehouse:
-                self._set_truck_path(truck, w.find_shortest_path(current_cell, w.warehouse_cell))
-                truck.detouring_to_warehouse = True
-
-        elif self.strategy == Strategy.FIXED_STATION_EVRP:
-            # Baseline 2: Classical E-VRP-BSS (Detour to closest static base station)
-            if truck.fuel >= dist_to_task + dist_task_to_depot + safe_margin or truck.at_warehouse:
-                self._set_truck_path(truck, path_to_task)
-                truck.at_warehouse = False
-                truck.detouring_to_station = False
-                truck.detouring_to_warehouse = False
-            elif not truck.at_warehouse:
-                _, station_path, station_dist = self._find_nearest_station(current_cell)
-                if station_path and truck.fuel >= station_dist:
-                    self._set_truck_path(truck, station_path)
-                    truck.detouring_to_station = True
-                else:
-                    self._set_truck_path(truck, w.find_shortest_path(current_cell, w.warehouse_cell))
-                    truck.detouring_to_warehouse = True
-
-        elif self.strategy == Strategy.REACTIVE_DRONE:
-            # Baseline 3: Reactive Drone Swap (dispatched when fuel is critical)
-            if truck.fuel >= dist_to_task + dist_task_to_depot + safe_margin or truck.at_warehouse:
-                self._set_truck_path(truck, path_to_task)
-                truck.at_warehouse = False
-            elif truck.fuel >= dist_to_task + safe_margin:
-                self._set_truck_path(truck, path_to_task)
-                truck.at_warehouse = False
-                if truck.fuel / config.TRUCK_RANGE <= config.REACTIVE_THRESHOLD:
-                    self._dispatch_drone(truck_idx)
-            elif not truck.at_warehouse:
-                # Critical: try requesting drone on the spot or return to warehouse
-                dispatched = self._dispatch_drone(truck_idx)
-                if not dispatched:
-                    self._set_truck_path(truck, w.find_shortest_path(current_cell, w.warehouse_cell))
-                    truck.detouring_to_warehouse = True
-
-        elif self.strategy == Strategy.PROACTIVE_FUEL:
-            # Proposed: Predictive FUEL (Algorithm 2)
-            if truck.fuel >= dist_to_task + dist_task_to_depot + safe_margin or truck.at_warehouse:
-                self._set_truck_path(truck, path_to_task)
-                truck.at_warehouse = False
-                truck.detouring_to_warehouse = False
-            elif truck.fuel + config.SWAP_BOOST_CAPACITY >= dist_to_task + dist_task_to_depot + safe_margin and \
-                    truck.fuel >= dist_to_task:
-                # Algorithm 2: Preemptively dispatch drone to swap while vehicle executes task
+        if truck.fuel >= dist_to_task + dist_task_to_depot + safe_margin or truck.at_warehouse:
+            self._set_truck_path(truck, path_to_task)
+            truck.at_warehouse = False
+        elif truck.fuel >= dist_to_task + safe_margin:
+            self._set_truck_path(truck, path_to_task)
+            truck.at_warehouse = False
+            if truck.fuel / self.truck_range <= config.REACTIVE_THRESHOLD:
                 self._dispatch_drone(truck_idx)
-                self._set_truck_path(truck, path_to_task)
-                truck.at_warehouse = False
-            elif not truck.at_warehouse:
-                self._set_truck_path(truck, w.find_shortest_path(current_cell, w.warehouse_cell))
+        else:
+            # Critical: try requesting drone on the spot or return to warehouse
+            dispatched = self._dispatch_drone(truck_idx)
+            if not dispatched:
+                self._set_truck_path(truck, w.find_shortest_path(start, w.warehouse_cell))
                 truck.detouring_to_warehouse = True
+
+    def _strand(self, index: int, truck: Truck):
+        """Battery exhausted: the truck stops where it is until rescued."""
+        truck.fuel = 0.0
+        truck.min_fuel = min(truck.min_fuel, 0.0)
+        truck.stranded = True
+        truck.strand_events += 1
+        cell = self.world.canvas_to_cell(*truck.pos)
+        aerial = (self.strategy in (Strategy.REACTIVE_DRONE, Strategy.PROACTIVE_FUEL)
+                  and self._swap_cost_at(truck.pos) is not None)
+        if aerial:
+            if self.strategy == Strategy.PROACTIVE_FUEL:
+                truck.swap_cell = cell
+                truck.waiting_for_swap = True
+            else:
+                self._dispatch_drone(index)
+        else:
+            road = planning.cell_distances(self.world, cell, [self.world.warehouse_cell])[0]
+            truck.rescue_timer = int(2 * road / config.TRUCK_SPEED) + self.station_service_frames
 
     def _set_truck_path(self, truck: Truck, path: Optional[List]):
         if not path:
@@ -459,6 +712,9 @@ class Simulation:
 
         if dist > 1:
             step = config.TRUCK_SPEED
+            if config.STRAND_ON_EMPTY and truck.fuel < step:
+                self._strand(index, truck)
+                return
             truck.pos = (truck.pos[0] + step * dx / dist, truck.pos[1] + step * dy / dist)
             truck.fuel -= step
             truck.min_fuel = min(truck.min_fuel, truck.fuel)
@@ -476,8 +732,8 @@ class Simulation:
 
         # Arrived at end of path
         end_cell = tuple(truck.path[-1])
-        if end_cell == self.world.warehouse_cell:
-            truck.fuel = config.TRUCK_RANGE
+        if end_cell == self.world.warehouse_cell and truck.detouring_to_warehouse:
+            truck.fuel = self.truck_range
             truck.at_warehouse = True
             truck.detouring_to_warehouse = False
         elif truck.detouring_to_station and end_cell in self.station_cells:
@@ -489,16 +745,9 @@ class Simulation:
             truck.completed.add(end_cell)
             truck.task_index += 1
             truck.at_warehouse = False
-
-            if self.strategy == Strategy.PROACTIVE_FUEL and index not in self.targeted_trucks:
-                # Check if next leg requires proactive swap
-                remaining = [t for t in truck.tasks if t not in truck.completed]
-                if remaining:
-                    p_next = self.world.find_shortest_path(end_cell, remaining[0])
-                    p_home = self.world.find_shortest_path(remaining[0], self.world.warehouse_cell)
-                    req = self._path_length(p_next) + self._path_length(p_home) + config.SAFE_RETURN_MARGIN
-                    if truck.fuel < req:
-                        self._dispatch_drone(index)
+            if truck.swap_cell == end_cell:
+                # Planned swap point reached before the drone met us: park.
+                truck.waiting_for_swap = True
 
         truck.path = None
         truck.path_canvas = None
@@ -554,6 +803,11 @@ class Simulation:
             if truck.path_canvas:
                 for (x1, y1), (x2, y2) in zip(truck.path_canvas, truck.path_canvas[1:]):
                     self.window.draw([OPERATION.dotted_line, x1, y1, x2, y2, 1, truck.path_color])
+            if truck.swap_cell is not None:
+                sx, sy = self.world.cell_to_canvas(*truck.swap_cell)
+                ring = QColor('#2980b9')
+                ring.setAlpha(160)
+                self.window.draw([OPERATION.circle, sx, sy, 12, 2, ring])
 
     def _draw_trucks(self, frame):
         draw = self.window.draw
@@ -567,7 +821,7 @@ class Simulation:
 
             image = self.sprites.rotated('truck', angle)
             draw([OPERATION.image, x - image.width() // 2, y - image.height() // 2, image])
-            self._draw_gauge(x, y + 30, 30, 5, truck.fuel / config.TRUCK_RANGE)
+            self._draw_gauge(x, y + 30, 30, 5, truck.fuel / self.truck_range)
 
             if i in self.targeted_trucks:
                 pulse = config.DRONE_STOP_RADIUS * (0.92 + 0.08 * math.sin(frame * 0.15))
@@ -576,6 +830,10 @@ class Simulation:
                 draw([OPERATION.circle, x, y, pulse, 2, ring])
                 if truck.holding:
                     draw([OPERATION.text, x - 28, -(y + 40), 1, QColor('#c0392b'), 'HOLDING'])
+            elif truck.stranded:
+                draw([OPERATION.text, x - 28, -(y + 40), 1, QColor('#c0392b'), 'STRANDED'])
+            elif truck.waiting_for_swap:
+                draw([OPERATION.text, x - 28, -(y + 40), 1, QColor('#c0392b'), 'WAITING'])
             elif truck.detouring_to_station and truck.station_service_timer > 0:
                 draw([OPERATION.text, x - 28, -(y + 40), 1, QColor('#27ae60'), 'SWAPPING'])
 
@@ -586,10 +844,11 @@ class Simulation:
             dx = dy = 0
             if drone.target is not None and not drone.returning:
                 truck = self.trucks[drone.target]
-                dx, dy = truck.pos[0] - x, truck.pos[1] - y
+                goal = drone.target_point if drone.target_point is not None else truck.pos
+                dx, dy = goal[0] - x, goal[1] - y
                 link = QColor('#2980b9')
                 link.setAlpha(150)
-                draw([OPERATION.dotted_line, x, y, truck.pos[0], truck.pos[1], 1, link])
+                draw([OPERATION.dotted_line, x, y, goal[0], goal[1], 1, link])
             elif drone.returning:
                 hx, hy = self.base_stations[drone.home]
                 dx, dy = hx - x, hy - y

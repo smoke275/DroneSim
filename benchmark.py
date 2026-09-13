@@ -17,13 +17,14 @@ from dronesim.simulation import Simulation
 
 SUMMARY_FIELDS = [
     'makespan', 'total_truck_distance', 'active_distance', 'detour_distance',
-    'detour_percentage', 'uptime_ratio', 'total_swaps',
+    'detour_percentage', 'uptime_ratio', 'hold_frames', 'stranded_frames', 'total_swaps',
     'drone_flight_distance', 'drone_energy', 'drone_efficiency_percentage',
+    'max_route_length',
 ]
 
 
 def run_one(strategy, seed, max_iter, maze, num_trucks=None, drones_per_station=None,
-            service_frames=None):
+            service_frames=None, truck_range=None, num_tasks=None):
     from dronesim import config
     kwargs = dict(window=None, strategy=strategy, seed=seed, maze_path=maze)
     if num_trucks is not None:
@@ -32,6 +33,10 @@ def run_one(strategy, seed, max_iter, maze, num_trucks=None, drones_per_station=
         kwargs['drones_per_station'] = drones_per_station
     if service_frames is not None:
         kwargs['service_frames'] = service_frames
+    if truck_range is not None:
+        kwargs['truck_range'] = truck_range
+    if num_tasks is not None:
+        kwargs['num_tasks'] = num_tasks
     sim = Simulation(**kwargs)
     start = time.perf_counter()
     sim.run(max_iterations=max_iter)
@@ -55,6 +60,7 @@ def summarize(rows):
         out[f] = (mean, std)
     out['completed'] = sum(1 for r in rows if r['completed'])
     out['fuel_violations'] = sum(int(r['fuel_violations']) for r in rows)
+    out['strand_events'] = sum(int(r['strand_events']) for r in rows)
     return out
 
 
@@ -73,6 +79,10 @@ def main():
                         help='override drones per base station')
     parser.add_argument('--service-frames', type=int, default=None,
                         help='override swap service time (frames; 120 frames = 1 s)')
+    parser.add_argument('--tasks', type=int, default=None,
+                        help='override task count (default: random in [MIN_TASKS, MAX_TASKS])')
+    parser.add_argument('--truck-range', type=float, default=None,
+                        help='override truck battery range (canvas units; default config.TRUCK_RANGE)')
     args = parser.parse_args()
 
     strategies = [Strategy(s) for s in args.strategies]
@@ -86,7 +96,9 @@ def main():
                 row = run_one(strategy, seed, args.max_iter, maze,
                               num_trucks=args.trucks,
                               drones_per_station=args.drones_per_station,
-                              service_frames=args.service_frames)
+                              service_frames=args.service_frames,
+                              truck_range=args.truck_range,
+                              num_tasks=args.tasks)
                 all_rows.append(row)
                 status = 'ok' if row['completed'] else 'INCOMPLETE'
                 viol = f"  FUEL<0 x{row['fuel_violations']}" if row['fuel_violations'] else ''
@@ -110,7 +122,7 @@ def main():
         cells = ''.join(f'{by_strategy[s][f][0]:>11.1f}±{by_strategy[s][f][1]:<6.1f}'
                         for s in strategies)
         print(f'{f:<28}{cells}')
-    for f in ('completed', 'fuel_violations'):
+    for f in ('completed', 'fuel_violations', 'strand_events'):
         cells = ''.join(f'{by_strategy[s][f]:>18}' for s in strategies)
         print(f'{f + f"/{len(seeds)}" if f == "completed" else f:<28}{cells}')
     print('=' * 100)

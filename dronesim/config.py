@@ -41,6 +41,14 @@ TRUCK_SPEED = 1
 DRONE_SPEED = 3
 SAFE_RETURN_MARGIN = 50      # B_safe buffer for reachability guarantees
 REACTIVE_THRESHOLD = 0.25    # 25% battery threshold for reactive drone dispatch
+DRONE_RETURN_MARGIN = 20     # drones abort a mission once continuing would strand them
+STRAND_ON_EMPTY = True       # a truck at 0 battery stops until rescued (drone swap, or a
+                             # recovery vehicle round trip from the depot for ground policies)
+
+# Planning (shared by every strategy so the benchmark stays paired)
+ROUTING_SOLVER = 'local_search'  # 'local_search' (pure Python, deterministic) | 'ortools' | 'auto'
+SWAP_ENERGY_WEIGHT = 0.02    # lambda_2: frames of planning cost per unit of drone round-trip distance
+DISPATCH_LEAD_FRAMES = 30    # dispatch a drone once truck time-to-node <= drone ETA + this slack
 
 # Energy coefficients
 ENERGY_TRUCK_PER_DIST = 1.0  # alpha_T

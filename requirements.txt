@@ -1,6 +1,6 @@
 PyQt5
 pandas
 networkx
-scikit-learn
+scipy
 numpy
 matplotlib

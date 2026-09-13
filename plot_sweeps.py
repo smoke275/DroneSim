@@ -1,10 +1,12 @@
 """Render the paper's sensitivity figures from results/sweeps/*.csv.
 
-    python3 plot_sweeps.py            # writes PNGs to results/sweeps/
+    python3 plot_sweeps.py                    # writes PNGs to results/sweeps/
+    python3 plot_sweeps.py results/sweeps_v2  # any directory holding the sweep CSVs
 """
 
 import csv
 import os
+import sys
 from collections import defaultdict
 from statistics import mean, stdev
 
@@ -12,7 +14,7 @@ import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 
-OUT = 'results/sweeps'
+OUT = sys.argv[1] if len(sys.argv) > 1 else 'results/sweeps'
 
 # Categorical palette (CVD-validated); color follows the strategy everywhere.
 STRAT_COLOR = {
