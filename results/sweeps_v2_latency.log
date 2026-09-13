@@ -1,0 +1,6 @@
+latency: 150 frames done
+latency: 600 frames done
+latency: 1800 frames done
+latency: 3600 frames done
+latency: 7200 frames done
+results/sweeps_v2/swap_latency.csv: 160 rows
