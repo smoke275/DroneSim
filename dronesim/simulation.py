@@ -79,7 +79,7 @@ class Drone:
     home: int  # base station index
     range_left: float = config.DRONE_RANGE
     target: int = None  # index of the truck being serviced, or None
-    target_point: tuple = None  # planned rendezvous point (FUEL); None = chase the truck
+    target_point: tuple = None  # planned rendezvous point (CHARGE); None = chase the truck
     returning: bool = False
     service_timer: int = 0
     total_flight_dist: float = 0.0
@@ -388,7 +388,7 @@ class Simulation:
         return dist / config.TRUCK_SPEED
 
     def _dispatch_predictive(self):
-        """FUEL: ETA-triggered dispatch with Hungarian drone assignment.
+        """CHARGE: ETA-triggered dispatch with Hungarian drone assignment.
 
         A pending request (truck with a planned swap cell, no drone inbound)
         activates once the truck's time-to-node is within the closest feasible
@@ -633,7 +633,7 @@ class Simulation:
         """No feasible plan exists (some task cannot be reached and left again
         within the usable range under this strategy's options). Fall back to
         the myopic per-leg rule of Algorithm 2: proceed if the leg plus the
-        return to the depot is affordable, otherwise swap (FUEL) or go home."""
+        return to the depot is affordable, otherwise swap (CHARGE) or go home."""
         w = self.world
         next_task = remaining[0]
         fuel = self.truck_range if truck.at_warehouse else truck.fuel
@@ -880,7 +880,7 @@ class Simulation:
         tasks_left = sum(len(t.tasks) - len(t.completed) for t in self.trucks)
 
         draw([OPERATION.hud_panel, 10, 10, 370, 72])
-        draw([OPERATION.hud_text, 20, 28, '#263238', f'STRATEGY: {self.strategy.value.upper()}'])
+        draw([OPERATION.hud_text, 20, 28, '#263238', f'STRATEGY: {config.STRATEGY_LABEL.get(self.strategy, self.strategy.value.upper())}'])
         draw([OPERATION.hud_text, 20, 48, '#263238',
               f'DRONES  en route {en_route}  returning {returning}  docked {docked}'])
         draw([OPERATION.hud_text, 20, 68, '#263238',

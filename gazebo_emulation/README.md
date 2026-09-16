@@ -1,6 +1,6 @@
-# FUEL Fleet Emulation (ROS 2 Jazzy + Gazebo Harmonic)
+# CHARGE Fleet Emulation (ROS 2 Jazzy + Gazebo Harmonic)
 
-Docker-based high-fidelity recreation of the FUEL experiment: **6 delivery
+Docker-based high-fidelity recreation of the CHARGE experiment: **6 delivery
 trucks** start at the central warehouse and patrol routes through the full
 maze; **4 quadcopters** (X3 model from the Gazebo Fuel library, full
 multicopter rotor dynamics) dock at base stations in the four quadrants. Every

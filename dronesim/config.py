@@ -7,8 +7,17 @@ class Strategy(Enum):
     DEPOT_ONLY = 'depot_only'                  # Baseline 1: Return to central depot to refuel
     FIXED_STATION_EVRP = 'fixed_station_evrp'  # Baseline 2: Detour to nearest static base station
     REACTIVE_DRONE = 'reactive_drone'          # Baseline 3: Drone swap dispatched at low battery threshold
-    PROACTIVE_FUEL = 'proactive_fuel'          # Proposed: Predictive BMS aerial drone swap (Algorithm 2)
+    PROACTIVE_FUEL = 'proactive_fuel'          # Proposed (CHARGE): Predictive BMS aerial drone swap (Algorithm 2)
 
+
+# Display names used in the GUI/HUD and figures. The enum *values* are kept
+# as-is because every results CSV and sweep file is keyed on them.
+STRATEGY_LABEL = {
+    Strategy.DEPOT_ONLY: 'DEPOT-RETURN',
+    Strategy.FIXED_STATION_EVRP: 'E-VRP-BSS',
+    Strategy.REACTIVE_DRONE: 'REACTIVE DRONE',
+    Strategy.PROACTIVE_FUEL: 'CHARGE (proposed)',
+}
 
 # Simulation Strategy
 DEFAULT_STRATEGY = Strategy.PROACTIVE_FUEL

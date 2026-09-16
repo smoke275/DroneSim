@@ -1,4 +1,4 @@
-# DroneSim — FUEL: Drone-Delivered Battery Swaps for Last-Mile Fleets
+# DroneSim — CHARGE: Drone-Delivered Battery Swaps for Last-Mile Fleets
 
 Two runnable systems live in this repo:
 
@@ -68,9 +68,9 @@ Every strategy runs on the **same** seeded scenario and the **same** plan:
    segment exceeds the usable range (`TRUCK_RANGE - SAFE_RETURN_MARGIN`).
    Strategies differ only in the options the planner may use:
    depot detour (Depot-Return), station or depot detour (E-VRP-BSS),
-   aerial swap or depot detour (FUEL). The reactive baseline plans nothing
+   aerial swap or depot detour (CHARGE). The reactive baseline plans nothing
    and dispatches on a battery threshold.
-3. **Dispatch** (FUEL): a swap request activates once the truck's time to
+3. **Dispatch** (CHARGE): a swap request activates once the truck's time to
    its planned rendezvous node is within a drone's ETA (+ lead); active
    requests are matched to idle drones with the Hungarian algorithm on
    expected waiting time. The drone flies to the node; the truck parks

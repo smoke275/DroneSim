@@ -24,7 +24,7 @@ STRAT_COLOR = {
     'reactive_drone': '#eda100',
 }
 STRAT_LABEL = {
-    'proactive_fuel': 'FUEL (proposed)',
+    'proactive_fuel': 'CHARGE (proposed)',
     'depot_only': 'Depot-Return',
     'fixed_station_evrp': 'E-VRP-BSS',
     'reactive_drone': 'Reactive Drone',
@@ -73,7 +73,7 @@ def fig_fleet():
     by = agg(rows, ['strategy', 'num_trucks'])
     for s in ('depot_only', 'fixed_station_evrp', 'reactive_drone', 'proactive_fuel'):
         ys = [by[(s, str(t))][0] for t in trucks]
-        # Reactive nearly coincides with FUEL: dash it so both stay readable
+        # Reactive nearly coincides with CHARGE: dash it so both stay readable
         ax.plot(trucks, ys, color=STRAT_COLOR[s], linewidth=2, marker='o',
                 markersize=4.5, label=STRAT_LABEL[s],
                 linestyle=(0, (3, 1.5)) if s == 'reactive_drone' else '-',
